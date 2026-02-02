@@ -20,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -121,16 +122,28 @@ python = "3.12.*"
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
 
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
+[tool.pixi.feature.canary]
+channels = ["conda-forge", "conda-canary/label/dev"]
+
+[tool.pixi.feature.canary.dependencies]
+conda = { version = "*", channel = "conda-canary/label/dev" }
+
 [tool.pixi.environments]
 build-py310 = ["build", "py310"]
 build-py311 = ["build", "py311"]
 build-py312 = ["build", "py312"]
 build-py313 = ["build", "py313"]
+build-py314 = ["build", "py314"]
 docs = ["docs"]
 test-py310 = ["test", "py310"]
 test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
+test-py314 = ["test", "py314"]
+test-py314-canary = ["test", "py314", "canary"]
 
 [tool.hatch.version]
 source = "vcs"
