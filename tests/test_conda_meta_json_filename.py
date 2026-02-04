@@ -17,7 +17,7 @@ def test_extract_whl_sets_fn_correctly(
     Test that extract_whl_as_conda_pkg sets the fn field correctly in index.json.
     This is a unit test that directly tests the metadata creation.
     """
-    from conda_pypi.pre_command.extract_whl import extract_whl_as_conda_pkg
+    from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
 
     extract_whl_as_conda_pkg(str(pypi_demo_package_wheel_path), str(tmp_path))
 

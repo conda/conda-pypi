@@ -6,7 +6,8 @@ from conda.plugins.types import CondaSubcommand, CondaPostCommand
 from conda_pypi import cli
 from conda_pypi import post_command
 from conda_pypi.main import ensure_target_env_has_externally_managed
-from conda_pypi.whl import add_whl_support
+from conda.plugins.types import CondaPackageExtractor
+from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
 
 
 @hookimpl
@@ -33,22 +34,10 @@ def conda_post_commands():
     )
 
 
-# @hookimpl
-# def conda_pre_commands() -> Generator[plugins.CondaPreCommand, None, None]:
-#     yield CondaPreCommand(
-#         name="conda-whl-support",
-#         action=lambda _ : add_whl_support(),
-#         run_for={
-#             "create",
-#             "install",
-#             "remove",
-#             "rename",
-#             "update",
-#             "env_create",
-#             "env_update",
-#             "list",
-#         },
-#     )
-
-# Commenting out the plugin implementation and directly calling `add_whl_support`.
-add_whl_support()
+@hookimpl
+def conda_package_extractors():
+    yield CondaPackageExtractor(
+        name="wheel-package",
+        extensions=[".whl"],
+        extract=extract_whl_as_conda_pkg,
+    )
