@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from pathlib import Path
 
@@ -8,6 +10,9 @@ from conda.common.path import get_python_short_path
 from conda_pypi.convert_tree import ConvertTree
 from conda_pypi.downloader import find_and_fetch, get_package_finder
 from conda_pypi.build import build_conda
+
+# Use the same Python version as the test environment
+PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
 # @pytest.mark.benchmark
@@ -38,7 +43,7 @@ from conda_pypi.build import build_conda
 
 #         monkeypatch.setattr("platformdirs.user_data_dir", lambda s: str(repo_dir))
 
-#         conda_cli("create", "--yes", "--prefix", prefix, "python=3.11")
+#         conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
 #         return (prefix,), {}
 
 #     def target(prefix):
@@ -66,8 +71,8 @@ from conda_pypi.build import build_conda
     "packages",
     [
         pytest.param(("imagesize",), id="imagesize"),  # small package, few dependencies
-        pytest.param(("jupyterlab",), id="jupyterlab"),  # large package
-        pytest.param(("numpy>2.0",), id="numpy>2.0"),  # package with version constraint
+        pytest.param(("certifi",), id="certifi"),  # another small package
+        pytest.param(("click>=8.0",), id="click>=8.0"),  # package with version constraint
     ],
 )
 def test_convert_tree(
@@ -78,12 +83,15 @@ def test_convert_tree(
 ):
     """Benchmark convert_tree. This test overrides channels so the whole
     dependency tree is converted.
+
+    Note: We use small packages to keep benchmark runtime reasonable.
+    Larger packages like jupyterlab were removed as they took 2+ hours.
     """
 
     def setup():
         repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo")
         prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}"))
-        conda_cli("create", "--yes", "--prefix", prefix, "python=3.11")
+        conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
 
         tree_converter = ConvertTree(prefix, True, repo_dir)
         return (tree_converter,), {}
@@ -95,7 +103,7 @@ def test_convert_tree(
     benchmark.pedantic(
         target,
         setup=setup,
-        rounds=2,
+        rounds=1,
         warmup_rounds=0,  # no warm up, cleaning the cache every time
     )
 
@@ -105,7 +113,7 @@ def test_convert_tree(
     "package",
     [
         pytest.param("imagesize", id="imagesize"),
-        pytest.param("jupyterlab", id="jupyterlab"),
+        pytest.param("certifi", id="certifi"),
     ],
 )
 def test_build_conda(
@@ -114,7 +122,11 @@ def test_build_conda(
     package: str,
     benchmark,
 ):
-    """Benchmark building the conda package from a wheel."""
+    """Benchmark building the conda package from a wheel.
+
+    Note: We use small packages to keep benchmark runtime reasonable.
+    Larger packages like jupyterlab were removed as they took 2+ hours.
+    """
     wheel_dir = tmp_path_factory.mktemp("wheel_dir")
 
     def setup():
@@ -122,7 +134,7 @@ def test_build_conda(
         build_path = tmp_path_factory.mktemp(f"build-{package}")
         output_path = tmp_path_factory.mktemp(f"output-{package}")
 
-        conda_cli("create", "--yes", "--prefix", prefix, "python=3.11")
+        conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
 
         python_exe = Path(prefix, get_python_short_path())
         finder = get_package_finder(prefix)
@@ -142,6 +154,6 @@ def test_build_conda(
     benchmark.pedantic(
         target,
         setup=setup,
-        rounds=2,
+        rounds=1,
         warmup_rounds=0,  # no warm up, cleaning the cache every time
     )
