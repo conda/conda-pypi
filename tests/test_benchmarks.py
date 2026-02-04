@@ -66,8 +66,8 @@ from conda_pypi.build import build_conda
     "packages",
     [
         pytest.param(("imagesize",), id="imagesize"),  # small package, few dependencies
-        pytest.param(("jupyterlab",), id="jupyterlab"),  # large package
-        pytest.param(("numpy>2.0",), id="numpy>2.0"),  # package with version constraint
+        pytest.param(("certifi",), id="certifi"),  # another small package
+        pytest.param(("click>=8.0",), id="click>=8.0"),  # package with version constraint
     ],
 )
 def test_convert_tree(
@@ -78,6 +78,9 @@ def test_convert_tree(
 ):
     """Benchmark convert_tree. This test overrides channels so the whole
     dependency tree is converted.
+
+    Note: We use small packages to keep benchmark runtime reasonable.
+    Larger packages like jupyterlab were removed as they took 2+ hours.
     """
 
     def setup():
@@ -95,7 +98,7 @@ def test_convert_tree(
     benchmark.pedantic(
         target,
         setup=setup,
-        rounds=2,
+        rounds=1,
         warmup_rounds=0,  # no warm up, cleaning the cache every time
     )
 
@@ -105,7 +108,7 @@ def test_convert_tree(
     "package",
     [
         pytest.param("imagesize", id="imagesize"),
-        pytest.param("jupyterlab", id="jupyterlab"),
+        pytest.param("certifi", id="certifi"),
     ],
 )
 def test_build_conda(
@@ -114,7 +117,11 @@ def test_build_conda(
     package: str,
     benchmark,
 ):
-    """Benchmark building the conda package from a wheel."""
+    """Benchmark building the conda package from a wheel.
+
+    Note: We use small packages to keep benchmark runtime reasonable.
+    Larger packages like jupyterlab were removed as they took 2+ hours.
+    """
     wheel_dir = tmp_path_factory.mktemp("wheel_dir")
 
     def setup():
@@ -142,6 +149,6 @@ def test_build_conda(
     benchmark.pedantic(
         target,
         setup=setup,
-        rounds=2,
+        rounds=1,
         warmup_rounds=0,  # no warm up, cleaning the cache every time
     )
