@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from conda.testing.fixtures import TmpEnvFixture
 from xprocess import ProcessStarter
 
 pytest_plugins = (
@@ -70,47 +71,32 @@ def clone_env(template_path: Path, target_path: Path) -> bool:
 
 
 @pytest.fixture(scope="session")
-def python_template_env(tmp_path_factory) -> Path | None:
+def python_template_env(session_tmp_env: TmpEnvFixture):
     """Create a session-scoped template Python environment.
 
     This template environment is created once at the start of the test session
-    and can be cloned for individual tests instead of running `conda create`
-    each time. This significantly speeds up tests that need Python environments.
+    using conda's built-in session_tmp_env fixture. It can be cloned for
+    individual tests instead of running `conda create` each time, significantly
+    speeding up tests that need Python environments.
 
     The template contains only Python, which is sufficient for most benchmark
     tests that just need a Python interpreter.
 
-    Returns:
+    Yields:
         Path to the template environment, or None if creation failed.
     """
-    template_env = tmp_path_factory.mktemp("python_template_env", numbered=False)
-
-    # Use sys.executable to find conda reliably
-    conda_cmd = [sys.executable, "-m", "conda"]
-
     try:
-        subprocess.run(
-            [
-                *conda_cmd,
-                "create",
-                "-p",
-                str(template_env),
-                f"python={PYTHON_VERSION}",
-                "-y",
-                "-q",
-                "--no-shortcuts",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        return template_env
-    except subprocess.CalledProcessError as e:
+        # Use conda's session_tmp_env fixture to create the template
+        # This leverages the official conda testing infrastructure
+        with session_tmp_env(f"python={PYTHON_VERSION}") as template_path:
+            # Yield the template path for the entire session
+            yield template_path
+    except Exception as e:
         # Don't fail tests if template creation fails
         import warnings
 
-        warnings.warn(f"Failed to create template environment: {e.stderr}")
-        return None
+        warnings.warn(f"Failed to create template environment: {e}")
+        yield None
 
 
 @pytest.fixture(autouse=True)
