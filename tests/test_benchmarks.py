@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from pathlib import Path
 
@@ -8,6 +10,9 @@ from conda.common.path import get_python_short_path
 from conda_pypi.convert_tree import ConvertTree
 from conda_pypi.downloader import find_and_fetch, get_package_finder
 from conda_pypi.build import build_conda
+
+# Use the same Python version as the test environment
+PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
 # @pytest.mark.benchmark
@@ -38,7 +43,7 @@ from conda_pypi.build import build_conda
 
 #         monkeypatch.setattr("platformdirs.user_data_dir", lambda s: str(repo_dir))
 
-#         conda_cli("create", "--yes", "--prefix", prefix, "python=3.11")
+#         conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
 #         return (prefix,), {}
 
 #     def target(prefix):
@@ -86,7 +91,7 @@ def test_convert_tree(
     def setup():
         repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo")
         prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}"))
-        conda_cli("create", "--yes", "--prefix", prefix, "python=3.11")
+        conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
 
         tree_converter = ConvertTree(prefix, True, repo_dir)
         return (tree_converter,), {}
@@ -129,7 +134,7 @@ def test_build_conda(
         build_path = tmp_path_factory.mktemp(f"build-{package}")
         output_path = tmp_path_factory.mktemp(f"output-{package}")
 
-        conda_cli("create", "--yes", "--prefix", prefix, "python=3.11")
+        conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
 
         python_exe = Path(prefix, get_python_short_path())
         finder = get_package_finder(prefix)
