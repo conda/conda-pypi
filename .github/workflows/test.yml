@@ -30,14 +30,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        pixi-env: ["test-py310", "test-py311", "test-py312", "test-py313", "test-py314", "test-canary"]
+        pixi-env: ["py310", "py311", "py312", "py313", "py314", "canary"]
         include:
           - os: macos-15-intel
-            pixi-env: "test-py310"
+            pixi-env: "py310"
           - os: macos-latest
-            pixi-env: "test-py314"
+            pixi-env: "py314"
     env:
-      PIXI_ENV_NAME: ${{ matrix.pixi-env }}
+      PIXI_ENV_NAME: test-${{ matrix.pixi-env }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -63,14 +63,14 @@ jobs:
         run: pixi run --environment ${{ env.PIXI_ENV_NAME }} test --basetemp=${{ runner.os == 'Windows' && 'D:\\temp' || runner.temp }} -vv
 
   linux-benchmarks:
-    name: benchmarks ${{ matrix.pixi-env }}
+    name: benchmarks py${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        pixi-env: ["test-py312"]
+        python-version: ["312"]
     env:
-      PIXI_ENV_NAME: ${{ matrix.pixi-env }}
+      PIXI_ENV_NAME: test-py${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
