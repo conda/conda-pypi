@@ -1,18 +1,15 @@
-import sys
-
-import pytest
 from pathlib import Path
 
-from conda.testing.fixtures import CondaCLIFixture
-from conda.models.match_spec import MatchSpec
+import pytest
 from conda.common.path import get_python_short_path
+from conda.models.match_spec import MatchSpec
+from conda.testing.fixtures import CondaCLIFixture
 
+from conda_pypi.build import build_conda
 from conda_pypi.convert_tree import ConvertTree
 from conda_pypi.downloader import find_and_fetch, get_package_finder
-from conda_pypi.build import build_conda
 
-# Use the same Python version as the test environment
-PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
+from conftest import clone_env
 
 
 # @pytest.mark.benchmark
@@ -78,6 +75,7 @@ PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 def test_convert_tree(
     tmp_path_factory,
     conda_cli: CondaCLIFixture,
+    python_template_env: Path | None,
     packages: tuple[str],
     benchmark,
 ):
@@ -86,12 +84,24 @@ def test_convert_tree(
 
     Note: We use small packages to keep benchmark runtime reasonable.
     Larger packages like jupyterlab were removed as they took 2+ hours.
+
+    Optimization: Uses environment cloning from a session-scoped template
+    instead of running `conda create` each time (~10s -> ~2s per setup).
     """
+    # Track setup iteration for unique paths
+    setup_counter = [0]
 
     def setup():
-        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo")
-        prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}"))
-        conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
+        setup_counter[0] += 1
+        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo-{setup_counter[0]}")
+        prefix_path = tmp_path_factory.getbasetemp() / f"{'-'.join(packages)}-{setup_counter[0]}"
+
+        # Clone from template if available, otherwise fall back to conda create
+        if python_template_env and clone_env(python_template_env, prefix_path):
+            prefix = str(prefix_path)
+        else:
+            prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}-fallback-{setup_counter[0]}"))
+            conda_cli("create", "--yes", "--prefix", prefix, "python")
 
         tree_converter = ConvertTree(prefix, True, repo_dir)
         return (tree_converter,), {}
@@ -119,6 +129,7 @@ def test_convert_tree(
 def test_build_conda(
     tmp_path_factory,
     conda_cli: CondaCLIFixture,
+    python_template_env: Path | None,
     package: str,
     benchmark,
 ):
@@ -126,15 +137,26 @@ def test_build_conda(
 
     Note: We use small packages to keep benchmark runtime reasonable.
     Larger packages like jupyterlab were removed as they took 2+ hours.
+
+    Optimization: Uses environment cloning from a session-scoped template
+    instead of running `conda create` each time (~10s -> ~2s per setup).
     """
     wheel_dir = tmp_path_factory.mktemp("wheel_dir")
+    # Track setup iteration for unique paths
+    setup_counter = [0]
 
     def setup():
-        prefix = str(tmp_path_factory.mktemp(f"{package}"))
-        build_path = tmp_path_factory.mktemp(f"build-{package}")
-        output_path = tmp_path_factory.mktemp(f"output-{package}")
+        setup_counter[0] += 1
+        prefix_path = tmp_path_factory.getbasetemp() / f"{package}-build-{setup_counter[0]}"
+        build_path = tmp_path_factory.mktemp(f"build-{package}-{setup_counter[0]}")
+        output_path = tmp_path_factory.mktemp(f"output-{package}-{setup_counter[0]}")
 
-        conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
+        # Clone from template if available, otherwise fall back to conda create
+        if python_template_env and clone_env(python_template_env, prefix_path):
+            prefix = str(prefix_path)
+        else:
+            prefix = str(tmp_path_factory.mktemp(f"{package}-fallback-{setup_counter[0]}"))
+            conda_cli("create", "--yes", "--prefix", prefix, "python")
 
         python_exe = Path(prefix, get_python_short_path())
         finder = get_package_finder(prefix)

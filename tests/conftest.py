@@ -1,8 +1,10 @@
-import pytest
 import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from xprocess import ProcessStarter
 
 pytest_plugins = (
@@ -11,6 +13,104 @@ pytest_plugins = (
     "conda.testing.fixtures",
 )
 HERE = Path(__file__).parent
+
+# Use the same Python version as the test environment
+PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
+
+
+def clone_env(template_path: Path, target_path: Path) -> bool:
+    """Clone a conda environment using platform-specific fast copy methods.
+
+    Uses copy-on-write or reflink cloning where available:
+    - macOS (APFS): cp -c for copy-on-write (~1.8s)
+    - Linux: cp --reflink=auto for reflinks on btrfs/xfs, else regular copy
+    - Windows: shutil.copytree (~2.5s)
+
+    This is much faster than creating an environment from scratch (~10s)
+    because it avoids the conda solver and package extraction steps.
+
+    Args:
+        template_path: Path to the template environment to clone
+        target_path: Path where the cloned environment should be created
+
+    Returns:
+        True if cloning succeeded, False otherwise
+    """
+    try:
+        if sys.platform == "darwin":
+            # macOS: APFS copy-on-write
+            result = subprocess.run(
+                ["cp", "-cR", str(template_path), str(target_path)],
+                capture_output=True,
+            )
+            if result.returncode == 0:
+                return True
+            # Fall through to shutil.copytree if APFS clone fails
+
+        elif sys.platform.startswith("linux"):
+            # Linux: try reflink (works on btrfs, xfs with reflink support)
+            # --reflink=auto falls back to regular copy if not supported
+            result = subprocess.run(
+                ["cp", "-R", "--reflink=auto", str(template_path), str(target_path)],
+                capture_output=True,
+            )
+            if result.returncode == 0:
+                return True
+            # Fall through to shutil.copytree if cp fails
+
+        # Windows or fallback: use Python's cross-platform copy
+        shutil.copytree(template_path, target_path)
+        return True
+
+    except (OSError, shutil.Error, subprocess.SubprocessError):
+        # If clone fails, clean up and return False
+        if target_path.exists():
+            shutil.rmtree(target_path, ignore_errors=True)
+        return False
+
+
+@pytest.fixture(scope="session")
+def python_template_env(tmp_path_factory) -> Path | None:
+    """Create a session-scoped template Python environment.
+
+    This template environment is created once at the start of the test session
+    and can be cloned for individual tests instead of running `conda create`
+    each time. This significantly speeds up tests that need Python environments.
+
+    The template contains only Python, which is sufficient for most benchmark
+    tests that just need a Python interpreter.
+
+    Returns:
+        Path to the template environment, or None if creation failed.
+    """
+    template_env = tmp_path_factory.mktemp("python_template_env", numbered=False)
+
+    # Use sys.executable to find conda reliably
+    conda_cmd = [sys.executable, "-m", "conda"]
+
+    try:
+        subprocess.run(
+            [
+                *conda_cmd,
+                "create",
+                "-p",
+                str(template_env),
+                f"python={PYTHON_VERSION}",
+                "-y",
+                "-q",
+                "--no-shortcuts",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return template_env
+    except subprocess.CalledProcessError as e:
+        # Don't fail tests if template creation fails
+        import warnings
+
+        warnings.warn(f"Failed to create template environment: {e.stderr}")
+        return None
 
 
 @pytest.fixture(autouse=True)
