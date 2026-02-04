@@ -67,6 +67,14 @@ dev = 'python -c "from conda_pypi.python_paths import ensure_externally_managed 
 dependencies = { anaconda-client = "*", conda-build = "*" }
 tasks = { build = "conda build recipe" }
 
+[tool.pixi.feature.lint.dependencies]
+python = "3.12.*"
+pre-commit = "*"
+
+[tool.pixi.feature.lint.tasks]
+lint = "pre-commit"
+pre-commit = "pre-commit"
+
 [tool.pixi.feature.docs.tasks]
 docs = { cmd = "sphinx-build -M dirhtml . _build", cwd = "docs" }
 serve = { cmd = "python -m http.server", cwd = "docs/_build/dirhtml" }
@@ -87,14 +95,11 @@ sphinx-sitemap = "*"
 [tool.pixi.feature.test.tasks]
 test = 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()" && python -mpytest -m "not benchmark"'
 benchmark= 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()" && python -mpytest --codspeed'
-pre-commit = 'pre-commit'
 
 [tool.pixi.feature.test.dependencies]
 pytest = "7.4.3.*"
 fmt = "!=10.2.0"
 pytest-mock = "3.12.0.*"
-conda-build = "*"
-pre-commit = "*"
 pytest-xprocess = "*"
 # Build system dependencies
 conda-package-streaming = ">=0.11"
@@ -126,10 +131,10 @@ python = "3.13.*"
 python = "3.14.*"
 
 [tool.pixi.feature.canary]
-channels = ["conda-forge", "conda-canary/label/dev"]
+channels = ["conda-forge", {channel = "conda-canary/label/dev", priority = -1}]
 
 [tool.pixi.feature.canary.dependencies]
-conda = { version = "*", channel = "conda-canary/label/dev" }
+conda = { version = ">=26.1", channel = "conda-canary/label/dev" }
 
 [tool.pixi.environments]
 build-py310 = ["build", "py310"]
@@ -138,12 +143,13 @@ build-py312 = ["build", "py312"]
 build-py313 = ["build", "py313"]
 build-py314 = ["build", "py314"]
 docs = ["docs"]
+lint = ["lint"]
 test-py310 = ["test", "py310"]
 test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
 test-py314 = ["test", "py314"]
-test-py314-canary = ["test", "py314", "canary"]
+test-canary = ["test", "py313", "canary"]
 
 [tool.hatch.version]
 source = "vcs"
