@@ -24,20 +24,20 @@ concurrency:
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, py${{ matrix.python-version }}
+    name: ${{ matrix.os }}, ${{ matrix.pixi-env }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["310", "311", "312", "313", "314", "314-canary"]
+        pixi-env: ["test-py310", "test-py311", "test-py312", "test-py313", "test-py314", "test-canary"]
         include:
           - os: macos-15-intel
-            python-version: "310"
+            pixi-env: "test-py310"
           - os: macos-latest
-            python-version: "314-canary"
+            pixi-env: "test-py314"
     env:
-      PIXI_ENV_NAME: test-py${{ matrix.python-version }}
+      PIXI_ENV_NAME: ${{ matrix.pixi-env }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -52,23 +52,25 @@ jobs:
           # See: https://github.com/actions/runner-images/blob/6d025759810a/images/ubuntu/scripts/build/install-python.sh#L15-L21
           sudo rm /etc/pip.conf
       - name: Setup project
+        env:
+          CHANNELS: ${{ env.PIXI_ENV_NAME == 'test-canary' && 'conda-forge, conda-canary/label/dev' || 'conda-forge' }}
         run: |
           pixi reinstall --environment ${{ env.PIXI_ENV_NAME }} conda-pypi
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
-          echo "channels: [conda-forge]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
+          echo "channels: [${{ env.CHANNELS }}]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
       - name: Run tests
         run: pixi run --environment ${{ env.PIXI_ENV_NAME }} test --basetemp=${{ runner.os == 'Windows' && 'D:\\temp' || runner.temp }} -vv
 
   linux-benchmarks:
-    name: benchmarks py${{ matrix.python-version }}
+    name: benchmarks ${{ matrix.pixi-env }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["312"]
+        pixi-env: ["test-py312"]
     env:
-      PIXI_ENV_NAME: test-py${{ matrix.python-version }}
+      PIXI_ENV_NAME: ${{ matrix.pixi-env }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
