@@ -25,7 +25,7 @@ def clone_env(template_path: Path, target_path: Path) -> bool:
     Uses copy-on-write or reflink cloning where available:
     - macOS (APFS): cp -c for copy-on-write (~1.8s)
     - Linux: cp --reflink=auto for reflinks on btrfs/xfs, else regular copy
-    - Windows: shutil.copytree (~2.5s)
+    - Windows: robocopy /mir for multi-threaded copy, falls back to shutil.copytree
 
     This is much faster than creating an environment from scratch (~10s)
     because it avoids the conda solver and package extraction steps.
@@ -59,7 +59,32 @@ def clone_env(template_path: Path, target_path: Path) -> bool:
                 return True
             # Fall through to shutil.copytree if cp fails
 
-        # Windows or fallback: use Python's cross-platform copy
+        elif sys.platform == "win32":
+            # Windows: use robocopy for faster multi-threaded copying
+            # /e = copy subdirectories including empty ones
+            # /mt:8 = multi-threaded with 8 threads
+            # /nfl /ndl /njh /njs = suppress output for speed
+            # robocopy returns 0-7 for success, 8+ for errors
+            result = subprocess.run(
+                [
+                    "robocopy",
+                    str(template_path),
+                    str(target_path),
+                    "/e",
+                    "/mt:8",
+                    "/nfl",
+                    "/ndl",
+                    "/njh",
+                    "/njs",
+                ],
+                capture_output=True,
+            )
+            # robocopy exit codes: 0-7 = success, 8+ = error
+            if result.returncode < 8:
+                return True
+            # Fall through to shutil.copytree if robocopy fails
+
+        # Fallback: use Python's cross-platform copy
         shutil.copytree(template_path, target_path)
         return True
 
