@@ -93,3 +93,16 @@ jobs:
           mode: instrumentation
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: pixi run --environment ${{ env.PIXI_ENV_NAME }} benchmark
+
+  # required check
+  analyze:
+    needs: [tests, linux-benchmarks]
+    if: '!cancelled()'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine Success
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        id: alls-green
+        with:
+          jobs: ${{ toJSON(needs) }}
