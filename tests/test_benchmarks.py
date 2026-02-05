@@ -9,59 +9,6 @@ from conda_pypi.build import build_conda
 from conda_pypi.convert_tree import ConvertTree
 from conda_pypi.downloader import find_and_fetch, get_package_finder
 
-from conftest import clone_env
-
-
-# @pytest.mark.benchmark
-# @pytest.mark.parametrize(
-#     "packages",
-#     [
-#         pytest.param(("imagesize",), id="imagesize"),  # small package, few dependencies
-#         pytest.param(("scipy",), id="scipy"),  # slightly larger package
-#         pytest.param(("jupyterlab",), id="jupyterlab"),
-#     ],
-# )
-# def test_conda_pypi_install_basic(
-#     tmp_path_factory,
-#     conda_cli: CondaCLIFixture,
-#     packages: tuple[str],
-#     benchmark,
-#     monkeypatch: MonkeyPatch,
-# ):
-#     """Benchmark basic conda pypi install functionality."""
-
-#     def setup():
-#         # Setup function is run every time. So, using benchmarks to run multiple
-#         # iterations of the test will create new paths for repo_dir and
-#         # prefix for each iteration. This ensures a clean test without any
-#         # cached packages and in a clean environment.
-#         repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo")
-#         prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}"))
-
-#         monkeypatch.setattr("platformdirs.user_data_dir", lambda s: str(repo_dir))
-
-#         conda_cli("create", "--yes", "--prefix", prefix, f"python={PYTHON_VERSION}")
-#         return (prefix,), {}
-
-#     def target(prefix):
-#         _, _, rc = conda_cli(
-#             "pypi",
-#             "--yes",
-#             "install",
-#             "--prefix",
-#             prefix,
-#             *packages,
-#         )
-#         return rc
-
-#     result = benchmark.pedantic(
-#         target,
-#         setup=setup,
-#         rounds=2,
-#         warmup_rounds=0,  # no warm up, cleaning the cache every time
-#     )
-#     assert result == 0
-
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize(
@@ -85,8 +32,10 @@ def test_convert_tree(
     Note: We use small packages to keep benchmark runtime reasonable.
     Larger packages like jupyterlab were removed as they took 2+ hours.
 
-    Optimization: Uses environment cloning from a session-scoped template
-    instead of running `conda create` each time (~10s -> ~2s per setup).
+    Optimization: Uses `conda create --clone` from a session-scoped template
+    instead of running a full `conda create` each time. This is faster because
+    it skips the solver and package downloads while still properly handling
+    prefix relocation.
     """
     # Track setup iteration for unique paths
     setup_counter = [0]
@@ -94,13 +43,12 @@ def test_convert_tree(
     def setup():
         setup_counter[0] += 1
         repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo-{setup_counter[0]}")
-        prefix_path = tmp_path_factory.getbasetemp() / f"{'-'.join(packages)}-{setup_counter[0]}"
+        prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}-{setup_counter[0]}"))
 
-        # Clone from template if available, otherwise fall back to conda create
-        if python_template_env and clone_env(python_template_env, prefix_path):
-            prefix = str(prefix_path)
+        # Clone from template if available (faster), otherwise create from scratch
+        if python_template_env:
+            conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
         else:
-            prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}-fallback-{setup_counter[0]}"))
             conda_cli("create", "--yes", "--prefix", prefix, "python")
 
         tree_converter = ConvertTree(prefix, True, repo_dir)
@@ -138,8 +86,10 @@ def test_build_conda(
     Note: We use small packages to keep benchmark runtime reasonable.
     Larger packages like jupyterlab were removed as they took 2+ hours.
 
-    Optimization: Uses environment cloning from a session-scoped template
-    instead of running `conda create` each time (~10s -> ~2s per setup).
+    Optimization: Uses `conda create --clone` from a session-scoped template
+    instead of running a full `conda create` each time. This is faster because
+    it skips the solver and package downloads while still properly handling
+    prefix relocation.
     """
     wheel_dir = tmp_path_factory.mktemp("wheel_dir")
     # Track setup iteration for unique paths
@@ -147,15 +97,14 @@ def test_build_conda(
 
     def setup():
         setup_counter[0] += 1
-        prefix_path = tmp_path_factory.getbasetemp() / f"{package}-build-{setup_counter[0]}"
+        prefix = str(tmp_path_factory.mktemp(f"{package}-{setup_counter[0]}"))
         build_path = tmp_path_factory.mktemp(f"build-{package}-{setup_counter[0]}")
         output_path = tmp_path_factory.mktemp(f"output-{package}-{setup_counter[0]}")
 
-        # Clone from template if available, otherwise fall back to conda create
-        if python_template_env and clone_env(python_template_env, prefix_path):
-            prefix = str(prefix_path)
+        # Clone from template if available (faster), otherwise create from scratch
+        if python_template_env:
+            conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
         else:
-            prefix = str(tmp_path_factory.mktemp(f"{package}-fallback-{setup_counter[0]}"))
             conda_cli("create", "--yes", "--prefix", prefix, "python")
 
         python_exe = Path(prefix, get_python_short_path())
