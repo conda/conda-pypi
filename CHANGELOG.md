@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update URLs from `conda-incubator` to `conda` organization (#225)
 - Call `add_whl_support` on its own, without a plugin (#165)
 - Respect conda JSON output setting (#206)
-- Bump conda dependency version to >=25.1.1 (#230)
+- Require conda >=25.1.1 (#230)
 
 ### Fixed
 
