@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support converting wheels to conda packages from the CLI (#215)
-- Add editable install and convert commands (#145)
+- Add `conda pypi install --editable <path>` and `conda pypi convert` commands (#145)
 - Add codspeed benchmarks for performance tracking (#163)
 - Add Python 3.11, 3.12, 3.13, and 3.14 support (#148, #237)
 - Add canary testing with conda development builds (#237)
