@@ -24,20 +24,20 @@ concurrency:
 
 jobs:
   tests:
-    name: ${{ matrix.os }}, py${{ matrix.python-version }}
+    name: ${{ matrix.os }}, ${{ matrix.pixi-env }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["310", "311", "312", "313"]
+        pixi-env: ["py310", "py311", "py312", "py313", "py314", "canary"]
         include:
           - os: macos-15-intel
-            python-version: "310"
+            pixi-env: "py310"
           - os: macos-latest
-            python-version: "311"
+            pixi-env: "py314"
     env:
-      PIXI_ENV_NAME: test-py${{ matrix.python-version }}
+      PIXI_ENV_NAME: test-${{ matrix.pixi-env }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -52,10 +52,12 @@ jobs:
           # See: https://github.com/actions/runner-images/blob/6d025759810a/images/ubuntu/scripts/build/install-python.sh#L15-L21
           sudo rm /etc/pip.conf
       - name: Setup project
+        env:
+          CHANNELS: ${{ env.PIXI_ENV_NAME == 'test-canary' && 'conda-forge, conda-canary/label/dev' || 'conda-forge' }}
         run: |
           pixi reinstall --environment ${{ env.PIXI_ENV_NAME }} conda-pypi
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
-          echo "channels: [conda-forge]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
+          echo "channels: [${{ env.CHANNELS }}]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
       - name: Run tests
         run: pixi run --environment ${{ env.PIXI_ENV_NAME }} test --basetemp=${{ runner.os == 'Windows' && 'D:\\temp' || runner.temp }} -vv
@@ -93,3 +95,16 @@ jobs:
           mode: instrumentation
           token: ${{ secrets.CODSPEED_TOKEN }}
           run: pixi run --environment ${{ env.PIXI_ENV_NAME }} benchmark
+
+  # required check
+  analyze:
+    needs: [tests, linux-benchmarks]
+    if: '!cancelled()'
+
+    runs-on: ubuntu-slim
+    steps:
+      - name: Determine Success
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        id: alls-green
+        with:
+          jobs: ${{ toJSON(needs) }}
