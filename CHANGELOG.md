@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add support for converting wheels to conda packages directly from the CLI (#215)
+- Support converting wheels to conda packages from the CLI (#215)
 - Add editable install and convert commands (#145)
 - Add codspeed benchmarks for performance tracking (#163)
 - Add Python 3.11, 3.12, 3.13, and 3.14 support (#148, #237)
