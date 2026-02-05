@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `FileNotFoundError` during environment creation (#219)
 - Fix install errors for packages requiring hyphen normalization e.g. `huggingface-hub` -> `huggingface_hub` .(#212)
 - Fix conda-meta JSON filename format for wheel packages (#170)
-- Fix conda-index not found and drop pypi-simple dependency (#136)
+- Fix "conda-index not found" error. Drop pypi-simple dependency. (#136)
 - Fail fast when no compatible wheels are available (#157)
 - Fix some deprecation warnings (#162)
 
