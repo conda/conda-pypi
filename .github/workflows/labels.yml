@@ -1,0 +1,49 @@
+name: Sync Labels
+
+on:
+  # NOTE: github.event is workflow_dispatch payload:
+  # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      delete-unmapped:
+        description: Delete labels not mapped in either global or local label configurations.
+        default: false
+        type: boolean
+
+      dry-run:
+        description: Run label synchronization workflow without making any changes.
+        default: false
+        type: boolean
+
+jobs:
+  sync:
+    if: '!github.event.repository.fork'
+    runs-on: ubuntu-slim
+    env:
+      GLOBAL: https://raw.githubusercontent.com/conda/infra/main/.github/global.yml
+      LOCAL: .github/labels.yml
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: has_local
+        uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3.0.0
+        with:
+          files: ${{ env.LOCAL }}
+
+      - name: Global Only
+        uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2.3.3
+        if: steps.has_local.outputs.files_exists == 'false'
+        with:
+          config-file: ${{ env.GLOBAL }}
+          delete-other-labels: ${{ inputs.delete-unmapped }}
+          dry-run: ${{ inputs.dry-run }}
+
+      - name: Global & Local
+        uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2.3.3
+        if: steps.has_local.outputs.files_exists == 'true'
+        with:
+          config-file: |
+            ${{ env.GLOBAL }}
+            ${{ env.LOCAL }}
+          delete-other-labels: ${{ inputs.delete-unmapped }}
+          dry-run: ${{ inputs.dry-run }}
