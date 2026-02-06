@@ -22,7 +22,7 @@ from conda_pypi.downloader import find_and_fetch, get_package_finder
 def test_convert_tree(
     tmp_path_factory,
     conda_cli: CondaCLIFixture,
-    python_template_env: Path | None,
+    python_template_env: Path,
     packages: tuple[str],
     benchmark,
 ):
@@ -38,18 +38,15 @@ def test_convert_tree(
     prefix relocation.
     """
     # Track setup iteration for unique paths
-    setup_counter = [0]
+    setup_counter = 0
 
     def setup():
-        setup_counter[0] += 1
-        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo-{setup_counter[0]}")
-        prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}-{setup_counter[0]}"))
+        nonlocal setup_counter
+        setup_counter += 1
+        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo-{setup_counter}")
+        prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}-{setup_counter}"))
 
-        # Clone from template if available (faster), otherwise create from scratch
-        if python_template_env:
-            conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
-        else:
-            conda_cli("create", "--yes", "--prefix", prefix, "python")
+        conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
 
         tree_converter = ConvertTree(prefix, True, repo_dir)
         return (tree_converter,), {}
@@ -77,7 +74,7 @@ def test_convert_tree(
 def test_build_conda(
     tmp_path_factory,
     conda_cli: CondaCLIFixture,
-    python_template_env: Path | None,
+    python_template_env: Path,
     package: str,
     benchmark,
 ):
@@ -93,19 +90,16 @@ def test_build_conda(
     """
     wheel_dir = tmp_path_factory.mktemp("wheel_dir")
     # Track setup iteration for unique paths
-    setup_counter = [0]
+    setup_counter = 0
 
     def setup():
-        setup_counter[0] += 1
-        prefix = str(tmp_path_factory.mktemp(f"{package}-{setup_counter[0]}"))
-        build_path = tmp_path_factory.mktemp(f"build-{package}-{setup_counter[0]}")
-        output_path = tmp_path_factory.mktemp(f"output-{package}-{setup_counter[0]}")
+        nonlocal setup_counter
+        setup_counter += 1
+        prefix = str(tmp_path_factory.mktemp(f"{package}-{setup_counter}"))
+        build_path = tmp_path_factory.mktemp(f"build-{package}-{setup_counter}")
+        output_path = tmp_path_factory.mktemp(f"output-{package}-{setup_counter}")
 
-        # Clone from template if available (faster), otherwise create from scratch
-        if python_template_env:
-            conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
-        else:
-            conda_cli("create", "--yes", "--prefix", prefix, "python")
+        conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
 
         python_exe = Path(prefix, get_python_short_path())
         finder = get_package_finder(prefix)

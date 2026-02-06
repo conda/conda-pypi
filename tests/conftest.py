@@ -29,19 +29,13 @@ def python_template_env(tmp_path_factory, session_conda_cli: CondaCLIFixture):
     - Properly relocates prefixes in metadata and scripts
 
     Yields:
-        Path to the template environment, or None if creation failed.
+        Path to the template environment.
     """
     template_path = tmp_path_factory.mktemp("python-template-env")
-    try:
-        session_conda_cli(
-            "create", "--yes", "--prefix", str(template_path), f"python={PYTHON_VERSION}"
-        )
-        yield template_path
-    except Exception as e:
-        import warnings
-
-        warnings.warn(f"Failed to create template environment: {e}")
-        yield None
+    session_conda_cli(
+        "create", "--yes", "--prefix", str(template_path), f"python={PYTHON_VERSION}"
+    )
+    yield template_path
 
 
 @pytest.fixture(autouse=True)
