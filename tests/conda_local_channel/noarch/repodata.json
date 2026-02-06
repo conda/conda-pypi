@@ -1,0 +1,334 @@
+{
+    "info": {
+        "subdir": "noarch"
+    },
+    "packages": {},
+    "packages.conda": {},
+    "removed": [],
+    "repodata_version": 1,
+    "signatures": {},
+    "packages.whl": {
+        "annotated-types-0.7.0-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/78/b6/6307fbef88d9b5ee7421e68d78a9f162e0da4900bc5f5793f6d3d0e34fb8/annotated_types-0.7.0-py3-none-any.whl",
+            "record_version": 3,
+            "name": "annotated-types",
+            "version": "0.7.0",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "typing-extensions>=4.0.0",
+                "python >=3.8"
+            ],
+            "fn": "annotated-types-0.7.0-py3-none-any.whl",
+            "sha256": "1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53",
+            "size": 13643,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "anyio-4.9.0-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/a1/ee/48ca1a7c89ffec8b6a0c5d02b89c305671d5ffd8d3c94acf8b8c408575bb/anyio-4.9.0-py3-none-any.whl",
+            "record_version": 3,
+            "name": "anyio",
+            "version": "4.9.0",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "exceptiongroup>=1.0.2",
+                "idna>=2.8",
+                "sniffio>=1.1",
+                "typing_extensions>=4.5",
+                "python >=3.9"
+            ],
+            "fn": "anyio-4.9.0-py3-none-any.whl",
+            "sha256": "9f76d541cad6e36af7beb62e978876f3b41e3e04f2c1fbf0884604c0a9c4d93c",
+            "size": 100916,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "auto-all-1.4.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/cf/ae/1317a5362e0016be1efb445b77b98cfddc41f87ae95492da5b43e6537a07/auto_all-1.4.1-py2.py3-none-any.whl",
+            "record_version": 3,
+            "name": "auto-all",
+            "version": "1.4.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python "
+            ],
+            "fn": "auto-all-1.4.1-py3-none-any.whl",
+            "sha256": "48dae02a670e94c87e2da2985e20e33ec231dffd3ae29078777002680f9eee13",
+            "size": 5562,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "certifi-2024.12.14-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/a5/32/8f6669fc4798494966bf446c8c4a162e0b5d893dff088afddf76414f70e1/certifi-2024.12.14-py3-none-any.whl",
+            "record_version": 3,
+            "name": "certifi",
+            "version": "2024.12.14",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.6"
+            ],
+            "fn": "certifi-2024.12.14-py3-none-any.whl",
+            "sha256": "1275f7a45be9464efc1173084eaa30f866fe2e47d389406136d332ed4967ec56",
+            "size": 164927,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "charset_normalizer-3.3.2-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/2b/61/095a0aa1a84d1481998b534177c8566fdc50bb1233ea9a0478cd3cc075bd/charset_normalizer-3.3.2-cp310-cp310-macosx_10_9_universal2.whl",
+            "record_version": 3,
+            "name": "charset-normalizer",
+            "version": "3.3.2",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.7.0"
+            ],
+            "fn": "charset-normalizer-3.3.2-py3-none-any.whl",
+            "sha256": "25baf083bf6f6b341f4121c2f3c548875ee6f5339300e08be3f2b2ba1721cdd3",
+            "size": 194219,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "exceptiongroup-1.2.2-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl",
+            "record_version": 3,
+            "name": "exceptiongroup",
+            "version": "1.2.2",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.7"
+            ],
+            "fn": "exceptiongroup-1.2.2-py3-none-any.whl",
+            "sha256": "3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b",
+            "size": 16453,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "fastapi-0.116.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/e5/47/d63c60f59a59467fda0f93f46335c9d18526d7071f025cb5b89d5353ea42/fastapi-0.116.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "fastapi",
+            "version": "0.116.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "starlette<0.48.0,>=0.40.0",
+                "pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4",
+                "typing-extensions>=4.8.0",
+                "python >=3.8"
+            ],
+            "fn": "fastapi-0.116.1-py3-none-any.whl",
+            "sha256": "c46ac7c312df840f0c9e220f7964bada936781bc4e2e6eb71f1c4d7553786565",
+            "size": 95631,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "fire-0.7.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/e5/4c/93d0f85318da65923e4b91c1c2ff03d8a458cbefebe3bc612a6693c7906d/fire-0.7.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "fire",
+            "version": "0.7.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "termcolor",
+                "python >=3.7"
+            ],
+            "fn": "fire-0.7.1-py3-none-any.whl",
+            "sha256": "e43fd8a5033a9001e7e2973bab96070694b9f12f2e0ecf96d4683971b5ab1882",
+            "size": 115945,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "idna-3.10-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl",
+            "record_version": 3,
+            "name": "idna",
+            "version": "3.10",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.6"
+            ],
+            "fn": "idna-3.10-py3-none-any.whl",
+            "sha256": "946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3",
+            "size": 70442,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "requests-2.32.5-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl",
+            "record_version": 3,
+            "name": "requests",
+            "version": "2.32.5",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "charset_normalizer<4,>=2",
+                "idna<4,>=2.5",
+                "urllib3<3,>=1.21.1",
+                "certifi>=2017.4.17",
+                "python >=3.9"
+            ],
+            "fn": "requests-2.32.5-py3-none-any.whl",
+            "sha256": "2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6",
+            "size": 64738,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "setuptools-78.1.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/90/99/158ad0609729111163fc1f674a5a42f2605371a4cf036d0441070e2f7455/setuptools-78.1.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "setuptools",
+            "version": "78.1.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.9"
+            ],
+            "fn": "setuptools-78.1.1-py3-none-any.whl",
+            "sha256": "c3a9c4211ff4c309edb8b8c4f1cbfa7ae324c4ba9f91ff254e3d305b9fd54561",
+            "size": 1256462,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "sniffio-1.3.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "sniffio",
+            "version": "1.3.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.7"
+            ],
+            "fn": "sniffio-1.3.1-py3-none-any.whl",
+            "sha256": "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2",
+            "size": 10235,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "starlette-0.47.2-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/f7/1f/b876b1f83aef204198a42dc101613fefccb32258e5428b5f9259677864b4/starlette-0.47.2-py3-none-any.whl",
+            "record_version": 3,
+            "name": "starlette",
+            "version": "0.47.2",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "anyio<5,>=3.6.2",
+                "typing-extensions>=4.10.0",
+                "python >=3.9"
+            ],
+            "fn": "starlette-0.47.2-py3-none-any.whl",
+            "sha256": "c5847e96134e5c5371ee9fac6fdf1a67336d5815e09eb2a01fdb57a351ef915b",
+            "size": 72984,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "termcolor-2.5.0-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/7f/be/df630c387a0a054815d60be6a97eb4e8f17385d5d6fe660e1c02750062b4/termcolor-2.5.0-py3-none-any.whl",
+            "record_version": 3,
+            "name": "termcolor",
+            "version": "2.5.0",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.9"
+            ],
+            "fn": "termcolor-2.5.0-py3-none-any.whl",
+            "sha256": "37b17b5fc1e604945c2642c872a3764b5d547a48009871aea3edd3afa180afb8",
+            "size": 7755,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "typeguard-4.4.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/f2/53/9465dedf2d69fe26008e7732cf6e0a385e387c240869e7d54eed49782a3c/typeguard-4.4.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "typeguard",
+            "version": "4.4.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "typing-extensions>=4.10.0",
+                "importlib-metadata>=3.6",
+                "python >=3.9"
+            ],
+            "fn": "typeguard-4.4.1-py3-none-any.whl",
+            "sha256": "9324ec07a27ec67fc54a9c063020ca4c0ae6abad5e9f0f9804ca59aee68c6e21",
+            "size": 35635,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "typing-inspection-0.4.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/17/69/cd203477f944c353c31bade965f880aa1061fd6bf05ded0726ca845b6ff7/typing_inspection-0.4.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "typing-inspection",
+            "version": "0.4.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "typing-extensions>=4.12.0",
+                "python >=3.9"
+            ],
+            "fn": "typing-inspection-0.4.1-py3-none-any.whl",
+            "sha256": "389055682238f53b04f7badcb49b989835495a96700ced5dab2d8feae4b26f51",
+            "size": 14552,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "typing_extensions-4.14.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/b5/00/d631e67a838026495268c2f6884f3711a15a9a2a96cd244fdaea53b823fb/typing_extensions-4.14.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "typing-extensions",
+            "version": "4.14.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.9"
+            ],
+            "fn": "typing-extensions-4.14.1-py3-none-any.whl",
+            "sha256": "d1e1e3b58374dc93031d6eda2420a48ea44a36c2b4766a4fdeb3710755731d76",
+            "size": 43906,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "urllib3-2.2.3-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl",
+            "record_version": 3,
+            "name": "urllib3",
+            "version": "2.2.3",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.8"
+            ],
+            "fn": "urllib3-2.2.3-py3-none-any.whl",
+            "sha256": "ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac",
+            "size": 126338,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "wheel-0.45.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/0b/2c/87f3254fd8ffd29e4c02732eee68a83a1d3c346ae39bc6822dcbcb697f2b/wheel-0.45.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "wheel",
+            "version": "0.45.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.8"
+            ],
+            "fn": "wheel-0.45.1-py3-none-any.whl",
+            "sha256": "708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248",
+            "size": 72494,
+            "subdir": "noarch",
+            "noarch": "python"
+        }
+    }
+}

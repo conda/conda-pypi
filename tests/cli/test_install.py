@@ -155,3 +155,32 @@ def test_install_package_with_hyphens(tmp_env, conda_cli):
 
         # The converted package should use underscores
         assert "typing_extensions" in out or "typing-extensions" in out
+
+
+def test_install_from_whl_augmented_repodata(
+    tmp_env, monkeypatch, conda_cli, conda_local_channel, with_rattler_solver
+):
+    monkeypatch.setenv("CONDA_JSON", "True")
+    reset_context()
+
+    with tmp_env("python=3.12") as prefix:
+        out, err, rc = conda_cli(
+            "install",
+            "--prefix",
+            prefix,
+            "--channel",
+            conda_local_channel,
+            "--override-channels",
+            "idna",
+            "--yes",
+        )
+        assert rc == 0, f"Failed to install from wheel channel: {err}"
+
+        json_actions = json.loads(out)
+        installed = [act["name"] for act in json_actions["actions"]["LINK"]]
+        assert "idna" in installed, f"idna should be installed, got: {installed}"
+
+        idna_action = next(act for act in json_actions["actions"]["LINK"] if act["name"] == "idna")
+        assert conda_local_channel in idna_action.get("base_url", ""), (
+            f"idna should come from {conda_local_channel}"
+        )

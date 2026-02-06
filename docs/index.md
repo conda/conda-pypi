@@ -49,21 +49,15 @@ Read about why `conda-pypi` exists and when you should use it
 Overview of what `conda-pypi` can do for you
 :::
 
-:::{grid-item-card} 🏗️ Architecture
-:link: developer/architecture
-:link-type: doc
-Technical architecture and plugin system design
-:::
-
-::::
-
-::::{grid} 2
-
 :::{grid-item-card} 📚 Commands
 :link: reference/commands/index
 :link-type: doc
 Complete command-line interface documentation
 :::
+
+::::
+
+::::{grid} 2
 
 :::{grid-item-card} 🔧 Troubleshooting
 :link: reference/troubleshooting
@@ -71,10 +65,10 @@ Complete command-line interface documentation
 Common issues and how to resolve them
 :::
 
-:::{grid-item-card} 🔧 Developer Notes
-:link: developer/developer-notes
+:::{grid-item-card} 👩‍💻 Developer Guide
+:link: developer/index
 :link-type: doc
-Implementation details and technical insights
+Architecture, testing, and contribution guidelines
 :::
 
 ::::
@@ -87,8 +81,7 @@ why/index
 features
 modules
 changelog
-developer/architecture
-developer/developer-notes
+developer/index
 reference/commands/index
 reference/troubleshooting
 reference/conda-channels-naming-analysis
