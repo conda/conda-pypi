@@ -29,10 +29,7 @@ log = logging.getLogger(__name__)
 # add a warning if they differ since that would be a wheel authoring error
 # by the builder. TODO find a better way to handle this, if there is one.
 class _CondaWheelDestination(SchemeDictionaryDestination):
-    """Skip files that already exist at the target path.
-
-
-    """
+    """Skip files that already exist at the target path."""
 
     def write_to_fs(self, scheme, path, stream, is_executable):
         target_path = self._path_with_destdir(scheme, path)
@@ -40,9 +37,7 @@ class _CondaWheelDestination(SchemeDictionaryDestination):
             log.debug(f"Skipping already-installed file: {target_path}")
             data = Path(target_path).read_bytes()
             digest = (
-                base64.urlsafe_b64encode(
-                    hashlib.new(self.hash_algorithm, data).digest()
-                )
+                base64.urlsafe_b64encode(hashlib.new(self.hash_algorithm, data).digest())
                 .decode("ascii")
                 .rstrip("=")
             )
