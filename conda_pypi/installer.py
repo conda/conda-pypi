@@ -2,6 +2,8 @@
 Install a wheel / install a conda.
 """
 
+import base64
+import hashlib
 import os
 import subprocess
 import tempfile
@@ -13,9 +15,39 @@ from conda.cli.main import main_subshell
 from conda.core.package_cache_data import PackageCacheData
 from installer import install
 from installer.destinations import SchemeDictionaryDestination
+from installer.records import Hash, RecordEntry
 from installer.sources import WheelFile
 
 log = logging.getLogger(__name__)
+
+
+# We've seen some wheels placing identical files in multiple .data/ schemes
+# (e.g., pybind11-global duplicates headers in both data/include/ and
+# headers/). SchemeDictionaryDestination raises FileExistsError on the
+# second copy. Here, we record the already-written file instead. TODO
+# should we verify that the file contents are identical? We could also
+# add a warning if they differ since that would be a wheel authoring error
+# by the builder. TODO find a better way to handle this, if there is one.
+class _CondaWheelDestination(SchemeDictionaryDestination):
+    """Skip files that already exist at the target path.
+
+
+    """
+
+    def write_to_fs(self, scheme, path, stream, is_executable):
+        target_path = self._path_with_destdir(scheme, path)
+        if os.path.exists(target_path):
+            log.debug(f"Skipping already-installed file: {target_path}")
+            data = Path(target_path).read_bytes()
+            digest = (
+                base64.urlsafe_b64encode(
+                    hashlib.new(self.hash_algorithm, data).digest()
+                )
+                .decode("ascii")
+                .rstrip("=")
+            )
+            return RecordEntry(path, Hash(self.hash_algorithm, digest), len(data))
+        return super().write_to_fs(scheme, path, stream, is_executable)
 
 
 def install_installer(python_executable: str, whl: Path, build_path: Path):
@@ -24,17 +56,18 @@ def install_installer(python_executable: str, whl: Path, build_path: Path):
     site_packages = build_path / "site-packages"
     site_packages.mkdir(parents=True, exist_ok=True)
 
-    # Use minimal scheme to mimic pip --target: purelib, platlib, and scripts
-    # See sysconfig documentation for more details on scheme keys.
-    # https://docs.python.org/3/library/sysconfig.html#installation-paths
+    # Scheme keys are defined by PEP 427 (the wheel format spec) and must match
+    # what the installer library extracts from .data/ subdirectory names.
+    # https://packaging.python.org/en/latest/specifications/binary-distribution-format/
     scheme = {
         "purelib": str(site_packages),  # Pure Python packages
         "platlib": str(site_packages),  # Platform-specific packages
         "scripts": str(build_path / "bin"),  # Console scripts
         "data": str(build_path),  # Data files (JS, CSS, templates, etc.)
+        "headers": str(build_path / "include"),  # C/C++ headers (PEP 427 .data/headers/)
     }
 
-    destination = SchemeDictionaryDestination(
+    destination = _CondaWheelDestination(
         scheme,
         interpreter=str(python_executable),
         script_kind="posix",
