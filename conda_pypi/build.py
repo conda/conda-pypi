@@ -4,9 +4,7 @@ Create .conda packages from wheels.
 Create wheels from pypa projects.
 """
 
-import base64
 import csv
-import hashlib
 import itertools
 import json
 import os
@@ -26,6 +24,7 @@ from build import ProjectBuilder
 from conda_pypi import dependencies, installer, paths
 from conda_pypi.conda_build_utils import PathType, sha256_checksum
 from conda_pypi.translate import CondaMetadata
+from conda_pypi.utils import sha256_as_base64url
 
 
 log = logging.getLogger(__name__)
@@ -195,14 +194,8 @@ def update_RECORD(record_path: Path, base_path: Path, changed_path: Path):
     for row in record_rows:
         if row[0] == relpath:
             data = changed_path.read_bytes()
-            size = len(data)
-            checksum = (
-                base64.urlsafe_b64encode(hashlib.sha256(data).digest())
-                .rstrip(b"=")
-                .decode("utf-8")
-            )
-            row[1] = f"sha256={checksum}"
-            row[2] = str(size)
+            row[1] = f"sha256={sha256_as_base64url(data)}"
+            row[2] = str(len(data))
 
     with record_path.open(mode="w", newline="", encoding="utf-8") as record_file:
         writer = csv.writer(record_file)

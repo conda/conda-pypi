@@ -12,6 +12,8 @@ import installer.utils
 
 from typing import Literal, BinaryIO, Iterable, Tuple
 
+from conda_pypi.utils import sha256_base64url_to_hex
+
 
 SUPPORTED_SCEMES: Tuple[Scheme] = ("platlib", "purelib")
 
@@ -103,7 +105,7 @@ class MyWheelDestination(WheelDestination):
             path = {
                 "_path": f"site-packages/{record.path}",
                 "path_type": "hardlink",
-                "sha256": record.hash_.value,
+                "sha256": sha256_base64url_to_hex(record.hash_.value if record.hash_ else None),
                 "size_in_bytes": record.size,
             }
             paths.append(path)
