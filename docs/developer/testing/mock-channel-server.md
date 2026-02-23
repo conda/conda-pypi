@@ -49,7 +49,7 @@ def test_with_mock_channel(conda_local_channel):
 ```
 
 The fixture automatically:
-1. Starts an HTTP server on a port automatically 
+1. Starts an HTTP server on a port automatically
 2. Serves the `tests/conda_local_channel/` directory
 3. Returns the server URL
 4. Cleans up the server after the test completes
@@ -118,8 +118,8 @@ you'll need to update the repodata in order to include the new wheels
 you with to support. This is done by using the `tests/conda_local_channel/generate_noarch_wheel_repodata.py` script. Note, this script is designed for generating test repodata for
 conda-pypi only.
 
-1. **Update the list of wheels** in tests/conda_local_channel/wheel_packages.txt. 
-Add your package in the same form as a `requirements.txt` dependency, `<name>==<version>`, 
+1. **Update the list of wheels** in tests/conda_local_channel/wheel_packages.txt.
+Add your package in the same form as a `requirements.txt` dependency, `<name>==<version>`,
 for example
 
 ```
