@@ -23,9 +23,10 @@ def sha256_as_base64url(data: bytes) -> str:
 
 def sha256_base64url_to_hex(value: str | None) -> str | None:
     """Convert base64url hash (e.g. from installer) to hex for conda paths.json."""
-    if not value:
+    if not value or not value.strip():
         return None
     try:
+        value = value.strip()
         # Ensure value is padded to a multiple of 4 since installer strips padding
         value += "=" * (-len(value) % 4)
         return base64.urlsafe_b64decode(value).hex()
