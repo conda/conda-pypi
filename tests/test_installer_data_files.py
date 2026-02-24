@@ -4,9 +4,6 @@ Tests for installer data file handling.
 Tests that data files in wheels are properly installed.
 """
 
-import base64
-import hashlib
-import zipfile
 from pathlib import Path
 
 import pytest
@@ -17,47 +14,15 @@ from conda.base.context import context
 from conda_pypi import installer
 from conda_pypi.build import build_pypa
 
-
-def _record_row(path: str, content: bytes) -> str:
-    digest = base64.urlsafe_b64encode(hashlib.sha256(content).digest()).rstrip(b"=")
-    return f"{path},sha256={digest.decode()},{len(content)}"
+HERE = Path(__file__).parent
 
 
 # This mirrors the layout of the pybind11-global wheel. The identical header files
 # appear in both data/include/ and headers/. The data/ copy is listed first in RECORD
 # so it is written first. The headers/ copy must not raise a FileExistsError.
-@pytest.fixture()
-def wheel_with_headers(tmp_path) -> Path:
-    """Build a minimal wheel that places headers via .data/headers/."""
-    name, version = "header_pkg", "1.0.0"
-    dist_info = f"{name}-{version}.dist-info"
-    data_dir = f"{name}-{version}.data"
-
-    header_content = b"// header_pkg public API\nvoid do_some_stuff(void);\n"
-
-    metadata = (f"Metadata-Version: 2.4\nName: header-pkg\nVersion: {version}\n").encode()
-    wheel_meta = b"Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
-    top_level = b"header_pkg\n"
-
-    files = {
-        "header_pkg/__init__.py": b"",
-        f"{data_dir}/data/include/header_pkg/header_pkg.h": header_content,
-        f"{data_dir}/headers/header_pkg/header_pkg.h": header_content,
-        f"{dist_info}/METADATA": metadata,
-        f"{dist_info}/WHEEL": wheel_meta,
-        f"{dist_info}/top_level.txt": top_level,
-    }
-
-    record_lines = [_record_row(path, content) for path, content in files.items()]
-    record_lines.append(f"{dist_info}/RECORD,,")
-    files[f"{dist_info}/RECORD"] = "\n".join(record_lines).encode()
-
-    whl_path = tmp_path / f"{name}-{version}-py3-none-any.whl"
-    with zipfile.ZipFile(whl_path, "w") as zf:
-        for path, content in files.items():
-            zf.writestr(path, content)
-
-    return whl_path
+@pytest.fixture(scope="session")
+def wheel_with_headers() -> Path:
+    return HERE / "pypi_local_index" / "header-pkg" / "header_pkg-1.0.0-py3-none-any.whl"
 
 
 @pytest.fixture(scope="session")
