@@ -35,7 +35,7 @@ HERE = Path(__file__).parent
 GLOBAL_INDEX_PATH = HERE / "index.html"
 
 directories = [d for d in HERE.iterdir() if d.is_dir()]
-list_of_directories = "<br />\n".join(
+list_of_directories = "<br />\n    ".join(
     [f"<a href='{directory.name}/'>{directory.name}</a>" for directory in directories]
 )
 GLOBAL_INDEX_PATH.write_text(GLOBAL_INDEX.replace("__LIST_OF_DIRECTORIES__", list_of_directories))
@@ -65,6 +65,6 @@ for directory in directories:
             )
     (HERE / directory / "index.html").write_text(
         PROJECT_INDEX.replace("__NAME__", directory.name).replace(
-            "__LIST_OF_ARTIFACTS__", "<br />\n".join(artifacts)
+            "__LIST_OF_ARTIFACTS__", "<br />\n    ".join(artifacts)
         )
     )
