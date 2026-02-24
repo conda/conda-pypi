@@ -43,7 +43,6 @@ def test_package_wheel_path(tmp_path_factory):
     )
 
 
-@pytest.mark.skip(reason="Test has CI-only failures that need investigation")
 def test_install_installer_data_files_present(
     tmp_env: TmpEnvFixture,
     test_package_wheel_path: Path,
@@ -54,7 +53,7 @@ def test_install_installer_data_files_present(
     build_path.mkdir()
 
     with tmp_env("python=3.12", "pip") as prefix:
-        python_executable = Path(prefix, get_python_short_path()) / "python"
+        python_executable = Path(prefix, get_python_short_path())
 
         installer.install_installer(
             str(python_executable),
