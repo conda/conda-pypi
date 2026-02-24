@@ -24,10 +24,12 @@ log = logging.getLogger(__name__)
 # We've seen some wheels placing identical files in multiple .data/ schemes
 # (e.g., pybind11-global duplicates headers in both data/include/ and
 # headers/). SchemeDictionaryDestination raises FileExistsError on the
-# second copy. Here, we record the already-written file instead. TODO
-# should we verify that the file contents are identical? We could also
-# add a warning if they differ since that would be a wheel authoring error
-# by the builder. TODO find a better way to handle this, if there is one.
+# second copy. Here, we record the already-written file instead.
+#
+# TODO: https://github.com/pypa/installer/pull/216 adds an overwrite_existing
+# flag to SchemeDictionaryDestination that would let us avoid this subclass
+# entirely. However, it has not been released yet, see https://github.com/pypa/installer/issues/218.
+# So we'll have carry this workaround for now.
 class _CondaWheelDestination(SchemeDictionaryDestination):
     """Skip files that already exist at the target path."""
 
