@@ -1,7 +1,7 @@
 # Releasing conda-pypi
 
-Here are the steps for creating a new conda-pypi release. Before 
-you start, make sure that you have access to create tags and 
+Here are the steps for creating a new conda-pypi release. Before
+you start, make sure that you have access to create tags and
 releases on the conda/conda-pypi repo. If you have the ability
 to merge pull requests, then you are probably good to go.
 
@@ -21,13 +21,13 @@ Click the green `Publish release` button.
 
 ### 1.b Ensure the build completed successfully
 
-Navigate to the [actions tab](https://github.com/conda/conda-pypi/actions). 
+Navigate to the [actions tab](https://github.com/conda/conda-pypi/actions).
 You should be able to see the `Publish to PyPI` workflow with title matching
 the release number from earlier. Ensure that this workflow completes successfully.
 
 ### 1.c Ensure the package is available on PyPI
 
-Check that the PyPI package has been updated at https://pypi.org/project/conda-pypi/. 
+Check that the PyPI package has been updated at https://pypi.org/project/conda-pypi/.
 You should see that version matches the release version and that the wheel is available
 in the [download files](https://pypi.org/project/conda-pypi/#files) section.
 
@@ -50,7 +50,7 @@ $ python -c "import conda_pypi; print(conda_pypi._version.version)"
 
 ## 2. Update the conda-forge/conda-pypi-feedstock
 
-Next we'll need to make sure the newest version is available on 
+Next we'll need to make sure the newest version is available on
 conda-forge. This happens on the conda forge repo [conda-pypi-feedstock](https://github.com/conda-forge/conda-pypi-feedstock).
 
 There are 2 options here:
