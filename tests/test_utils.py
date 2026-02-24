@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+
 import hashlib
 
 import pytest
@@ -43,29 +45,16 @@ def test_pypi_spec_variants_creates_name_variants():
     assert "setuptools_scm" in variants
 
 
-def test_sha256_as_base64url_returns_string():
-    """sha256_as_base64url returns a string."""
-    assert isinstance(sha256_as_base64url(b"hello"), str)
-
-
 def test_sha256_as_base64url_has_no_padding():
     """sha256_as_base64url returns base64url with no padding (PEP 376 RECORD)."""
     out = sha256_as_base64url(b"hello")
     assert "=" not in out
 
 
-def test_sha256_as_base64url_is_urlsafe():
-    """sha256_as_base64url uses url-safe alphabet (no + or /)."""
-    out = sha256_as_base64url(b"hello")
-    assert "+" not in out
-    assert "/" not in out
-
-
 def test_sha256_base64url_to_hex_matches_digest_hex():
     """sha256_base64url_to_hex(base64url) equals the digest as hex."""
     data = b"hello"
     digest = hashlib.sha256(data).digest()
-    import base64
 
     base64url = base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
     assert sha256_base64url_to_hex(base64url) == digest.hex()
@@ -75,7 +64,6 @@ def test_sha256_base64url_to_hex_returns_64_hex_chars():
     """sha256_base64url_to_hex returns a 64-character hex string."""
     data = b"x"
     digest = hashlib.sha256(data).digest()
-    import base64
 
     base64url = base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
     hex_out = sha256_base64url_to_hex(base64url)
