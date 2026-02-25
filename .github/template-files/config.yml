@@ -50,7 +50,7 @@ conda/infrastructure:
   #     # SemVer placeholders
   #     placeholder: MAJOR.MINOR.MINOR
   #     placeholder_x: MAJOR.MINOR.x
-  # - src: templates/releases/rever.xsh
-  #   dst: rever.xsh
-  # - src: templates/releases/TEMPLATE
-  #   dst: news/TEMPLATE
+  - src: templates/releases/rever.xsh
+    dst: rever.xsh
+  - src: templates/releases/TEMPLATE
+    dst: news/TEMPLATE
