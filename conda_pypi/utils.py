@@ -16,9 +16,16 @@ from conda.models.match_spec import MatchSpec
 logger = getLogger(f"conda.{__name__}")
 
 
+def hash_as_base64url(data: bytes, algorithm: str = "sha256") -> str:
+    """Digest as PEP 376 RECORD style base64url (no padding)."""
+    return (
+        base64.urlsafe_b64encode(hashlib.new(algorithm, data).digest()).decode("ascii").rstrip("=")
+    )
+
+
 def sha256_as_base64url(data: bytes) -> str:
     """SHA256 digest as PEP 376 RECORD style base64url (no padding)."""
-    return base64.urlsafe_b64encode(hashlib.sha256(data).digest()).decode("ascii").rstrip("=")
+    return hash_as_base64url(data)
 
 
 def sha256_base64url_to_hex(value: str | None) -> str | None:

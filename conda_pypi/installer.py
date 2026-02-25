@@ -2,8 +2,6 @@
 Install a wheel / install a conda.
 """
 
-import base64
-import hashlib
 import os
 import subprocess
 import tempfile
@@ -17,6 +15,8 @@ from installer import install
 from installer.destinations import SchemeDictionaryDestination
 from installer.records import Hash, RecordEntry
 from installer.sources import WheelFile
+
+from conda_pypi.utils import hash_as_base64url
 
 log = logging.getLogger(__name__)
 
@@ -38,11 +38,7 @@ class _CondaWheelDestination(SchemeDictionaryDestination):
         if os.path.exists(target_path):
             log.debug(f"Skipping already-installed file: {target_path}")
             data = Path(target_path).read_bytes()
-            digest = (
-                base64.urlsafe_b64encode(hashlib.new(self.hash_algorithm, data).digest())
-                .decode("ascii")
-                .rstrip("=")
-            )
+            digest = hash_as_base64url(data, self.hash_algorithm)
             return RecordEntry(path, Hash(self.hash_algorithm, digest), len(data))
         return super().write_to_fs(scheme, path, stream, is_executable)
 

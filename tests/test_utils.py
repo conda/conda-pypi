@@ -9,6 +9,7 @@ import hashlib
 import pytest
 
 from conda_pypi.utils import (
+    hash_as_base64url,
     pypi_spec_variants,
     sha256_as_base64url,
     sha256_base64url_to_hex,
@@ -43,6 +44,15 @@ def test_pypi_spec_variants_creates_name_variants():
     variants = list(pypi_spec_variants("setuptools-scm"))
     assert "setuptools-scm" in variants
     assert "setuptools_scm" in variants
+
+
+def test_hash_as_base64url_uses_specified_algorithm():
+    """hash_as_base64url uses the given algorithm, not SHA-256."""
+    data = b"hello"
+    result = hash_as_base64url(data, "md5")
+    expected = base64.urlsafe_b64encode(hashlib.md5(data).digest()).decode("ascii").rstrip("=")
+    assert result == expected
+    assert result != hash_as_base64url(data, "sha256")
 
 
 def test_sha256_as_base64url_has_no_padding():
