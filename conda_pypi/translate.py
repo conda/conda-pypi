@@ -101,7 +101,9 @@ class CondaMetadata:
         }
 
     @classmethod
-    def from_distribution(cls, distribution: Distribution):
+    def from_distribution(
+        cls, distribution: Distribution, pypi_to_conda_name_mapping: dict | None = None
+    ):
         metadata = distribution.metadata
 
         python_version = metadata.get("requires-python")
@@ -146,7 +148,8 @@ class CondaMetadata:
                     about[conda_name] = urls[py_name]
 
         name = pypi_to_conda_name(
-            getattr(distribution, "name", None) or distribution.metadata.get("name")
+            getattr(distribution, "name", None) or distribution.metadata.get("name"),
+            pypi_to_conda_name_mapping,
         )
         version = getattr(distribution, "version", None) or distribution.metadata.get("version")
 
@@ -252,9 +255,13 @@ def remap_match_spec_name(match_spec: MatchSpec, name_map: Callable[[str], str])
     return MatchSpec(match_spec, name=mapped_name)
 
 
-def pypi_to_conda_name(pypi_name: str):
+def pypi_to_conda_name(pypi_name: str, pypi_to_conda_name_mapping: dict | None = None):
     pypi_name = canonicalize_name(pypi_name)
-    return grayskull_pypi_mapping.get(
+    return (
+        pypi_to_conda_name_mapping
+        if pypi_to_conda_name_mapping is not None
+        else grayskull_pypi_mapping
+    ).get(
         pypi_name,
         {
             "pypi_name": pypi_name,

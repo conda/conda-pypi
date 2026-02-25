@@ -1,12 +1,14 @@
 from tempfile import TemporaryDirectory
 from argparse import Namespace, _SubParsersAction
 from pathlib import Path
+import json
 
 from conda.auxlib.ish import dals
 from conda.base.context import context
 from conda.exceptions import ArgumentError
 
 from conda_pypi import build, paths
+from conda_pypi.translate import validate_name_mapping_format
 
 
 def configure_parser(parser: _SubParsersAction) -> None:
@@ -82,6 +84,13 @@ def configure_parser(parser: _SubParsersAction) -> None:
         help="Directory containing test files to inject into the conda package. "
         "Must be structured as a conda test directory for the tests to work.",
     )
+    convert.add_argument(
+        "--name-mapping",
+        help="Path to json file containing pypi to conda name mapping",
+        type=Path,
+        required=False,
+        default=None,
+    )
 
 
 def execute(args: Namespace) -> int:
@@ -108,6 +117,17 @@ def execute(args: Namespace) -> int:
     output_folder = Path(args.output_folder).expanduser()
     output_folder.mkdir(parents=True, exist_ok=True)
 
+    # Load name mapping if overriden
+    # Use built-in by default
+    pypi_to_conda_name_mapping = None
+    if args.name_mapping is not None:
+        if not args.name_mapping.exists():
+            raise ArgumentError(f"Could not open {args.name_mapping}")
+        with open(args.name_mapping, "r") as f:
+            pypi_to_conda_name_mapping = json.load(f)
+        # Check the dict has correct format
+        validate_name_mapping_format(pypi_to_conda_name_mapping)
+
     # Handle wheel files directly without building
     if project_path.suffix == ".whl":
         if args.editable:
@@ -121,6 +141,7 @@ def execute(args: Namespace) -> int:
                 output_folder,
                 python_executable,
                 test_dir=test_dir,
+                pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
             )
     else:
         # Build from source (project directory or sdist)
@@ -131,6 +152,7 @@ def execute(args: Namespace) -> int:
             output_path=output_folder,
             prefix=prefix_path,
             test_dir=test_dir,
+            pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
         )
 
     print(f"Conda package at {package_path} built successfully. Output folder: {output_folder}.")
