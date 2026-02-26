@@ -257,6 +257,41 @@ def remap_match_spec_name(match_spec: MatchSpec, name_map: Callable[[str], str])
     return MatchSpec(match_spec, name=mapped_name)
 
 
+def validate_name_mapping_format(mapping: dict) -> None:
+    """
+    Validate that the name mapping dict has the correct format.
+
+    Expected format:
+    - A dict where keys are PyPI package names (strings)
+    - Values are dicts with at least "conda_name" key (string)
+    - Optionally can have "pypi_name", "import_name", "mapping_source" keys
+
+    Raises ArgumentError if format is invalid.
+    """
+    from conda.exceptions import ArgumentError
+
+    for pypi_name, value in mapping.items():
+        if not isinstance(pypi_name, str):
+            raise ArgumentError(
+                f"Name mapping keys must be strings, got {type(pypi_name).__name__} for key: {pypi_name!r}"
+            )
+
+        if not isinstance(value, dict):
+            raise ArgumentError(
+                f"Name mapping values must be dictionaries, got {type(value).__name__} for key {pypi_name!r}"
+            )
+
+        if "conda_name" not in value:
+            raise ArgumentError(
+                f"Name mapping entry for {pypi_name!r} is missing required key 'conda_name'"
+            )
+
+        if not isinstance(value["conda_name"], str):
+            raise ArgumentError(
+                f"Name mapping entry for {pypi_name!r} has invalid 'conda_name' type: expected str, got {type(value['conda_name']).__name__}"
+            )
+
+
 def pypi_to_conda_name(pypi_name: str, pypi_to_conda_name_mapping: dict | None = None):
     pypi_name = canonicalize_name(pypi_name)
     return (
