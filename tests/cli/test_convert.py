@@ -1,6 +1,5 @@
 import json
 import os
-from pathlib import Path
 
 import pytest
 from conda.cli.main import main_subshell
