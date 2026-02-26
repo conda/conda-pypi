@@ -111,7 +111,7 @@ class CondaMetadata:
         if python_version:
             requires_python = f"python {python_version}"
 
-        requirements, extras = requires_to_conda(distribution.requires)
+        requirements, extras = requires_to_conda(distribution.requires, pypi_to_conda_name_mapping)
 
         # conda does support ~=3.0.0 "compatibility release" matches
         depends = [requires_python] + requirements
@@ -187,7 +187,9 @@ grayskull_pypi_mapping = json.loads(
 )
 
 
-def requires_to_conda(requires: Optional[List[str]]):
+def requires_to_conda(
+    requires: Optional[List[str]], pypi_to_conda_name_mapping: dict | None = None
+):
     from collections import defaultdict
 
     extras: Dict[str, List[str]] = defaultdict(list)
@@ -201,7 +203,7 @@ def requires_to_conda(requires: Optional[List[str]]):
         #     continue
 
         name = canonicalize_name(requirement.name)
-        requirement.name = pypi_to_conda_name(name)
+        requirement.name = pypi_to_conda_name(name, pypi_to_conda_name_mapping)
         as_conda = f"{requirement.name} {requirement.specifier}"
 
         if (marker := requirement.marker) is not None:
