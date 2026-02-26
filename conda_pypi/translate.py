@@ -270,7 +270,19 @@ def validate_name_mapping_format(mapping: dict) -> None:
 
     Raises ArgumentError if format is invalid.
     """
-    for pypi_name, value in mapping.items():
+
+    # Check that mapping is a dict and has .items() method
+    if not isinstance(mapping, dict):
+        raise ArgumentError(f"Name mapping must be a dictionary, got {type(mapping).__name__}")
+
+    try:
+        items = mapping.items()
+    except AttributeError:
+        raise ArgumentError(
+            f"Name mapping must be a dictionary with .items() method, got {type(mapping).__name__}"
+        )
+
+    for pypi_name, value in items:
         if not isinstance(pypi_name, str):
             raise ArgumentError(
                 f"Name mapping keys must be strings, got {type(pypi_name).__name__} for key: {pypi_name!r}"

@@ -192,6 +192,30 @@ def test_convert_with_name_mapping_empty(tmp_path):
     assert files[0].is_file()
 
 
+def test_convert_with_name_mapping_not_dict(tmp_path):
+    """Test that non-dict JSON raises ArgumentError."""
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+
+    # Create invalid mapping file (list instead of dict)
+    mapping_file = tmp_path / "mapping.json"
+    mapping_file.write_text('["not", "a", "dict"]')
+
+    wheel_path = "tests/pypi_local_index/demo-package/demo_package-0.1.0-py3-none-any.whl"
+    args = [
+        "pypi",
+        "convert",
+        "--output-folder",
+        str(out_dir),
+        "--name-mapping",
+        str(mapping_file),
+        wheel_path,
+    ]
+
+    with pytest.raises(ArgumentError, match="must be a dictionary"):
+        main_subshell(*args)
+
+
 def test_convert_with_name_mapping_invalid_format_missing_conda_name(tmp_path):
     """Test that mapping missing conda_name raises ArgumentError."""
     out_dir = tmp_path / "out"

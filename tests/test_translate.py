@@ -29,6 +29,25 @@ def test_validate_name_mapping_format_empty():
     validate_name_mapping_format({})
 
 
+def test_validate_name_mapping_format_not_dict():
+    """Test that non-dict raises ArgumentError."""
+    with pytest.raises(ArgumentError, match="must be a dictionary"):
+        validate_name_mapping_format([])
+
+    with pytest.raises(ArgumentError, match="must be a dictionary"):
+        validate_name_mapping_format("not a dict")
+
+    with pytest.raises(ArgumentError, match="must be a dictionary"):
+        validate_name_mapping_format(None)
+
+    # Test that objects without .items() method raise ArgumentError
+    class NoItems:
+        pass
+
+    with pytest.raises(ArgumentError, match="must be a dictionary"):
+        validate_name_mapping_format(NoItems())
+
+
 def test_validate_name_mapping_format_non_string_key():
     """Test that non-string keys raise ArgumentError."""
     with pytest.raises(ArgumentError, match="keys must be strings"):
