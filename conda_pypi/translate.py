@@ -12,6 +12,7 @@ from importlib.metadata import Distribution, PackageMetadata, PathDistribution
 from pathlib import Path
 from typing import Any, Optional, List, Dict, Callable
 
+from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
@@ -269,8 +270,6 @@ def validate_name_mapping_format(mapping: dict) -> None:
 
     Raises ArgumentError if format is invalid.
     """
-    from conda.exceptions import ArgumentError
-
     for pypi_name, value in mapping.items():
         if not isinstance(pypi_name, str):
             raise ArgumentError(
