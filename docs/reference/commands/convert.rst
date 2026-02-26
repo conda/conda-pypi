@@ -14,8 +14,10 @@ Custom Name Mapping
 
 The ``--name-mapping`` option allows you to provide a custom JSON file that maps
 PyPI package names to conda package names. This is useful when you need to
-override the default mapping or provide mappings for packages not in the
-built-in grayskull mapping.
+replace the built-in grayskull mapping with your own mapping file.
+
+When ``--name-mapping`` is provided, the built-in mapping is not used for that
+conversion. The JSON file is treated as the complete mapping source.
 
 The mapping file should be a JSON object where:
 
