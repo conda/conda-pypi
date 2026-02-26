@@ -50,6 +50,9 @@ conda pypi convert -d ./my_packages httpx cowsay
 
 # Convert without checking conda channels first
 conda pypi convert --ignore-channels some-pypi-only-package
+
+# Convert with custom name mapping
+conda pypi convert --name-mapping ./mapping.json ./my-package-1.0.0-py3-none-any.whl
 ```
 
 ## PyPI-to-Conda Conversion Engine
