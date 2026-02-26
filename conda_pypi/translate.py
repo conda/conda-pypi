@@ -265,6 +265,7 @@ def validate_name_mapping_format(mapping: dict) -> None:
     - A dict where keys are PyPI package names (strings)
     - Values are dicts with at least "conda_name" key (string)
     - Optionally can have "pypi_name", "import_name", "mapping_source" keys
+    - Empty dict is allowed
 
     Raises ArgumentError if format is invalid.
     """
