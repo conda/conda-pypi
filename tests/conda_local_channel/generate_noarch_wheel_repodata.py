@@ -6,7 +6,7 @@ import json
 import re
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from packaging.requirements import InvalidRequirement, Requirement
+from packaging.requirements import Requirement
 from typing import Any
 
 
