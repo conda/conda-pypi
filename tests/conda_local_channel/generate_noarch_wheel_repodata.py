@@ -62,6 +62,9 @@ def pypi_to_repodata_whl_entry(
     python_requires = pypi_info.get("requires_python")
     if python_requires:
         depends_list.append(f"python {python_requires}")
+    else:
+        # Noarch python packages should still depend on python when PyPI omits requires_python
+        depends_list.append("python")
 
     # Build the repodata entry
     entry = {

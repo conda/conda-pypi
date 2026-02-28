@@ -76,7 +76,9 @@
             "version": "1.4.1",
             "build": "py3_none_any_0",
             "build_number": 0,
-            "depends": [],
+            "depends": [
+                "python"
+            ],
             "extras": {},
             "fn": "auto-all-1.4.1-py3-none-any.whl",
             "sha256": "48dae02a670e94c87e2da2985e20e33ec231dffd3ae29078777002680f9eee13",
