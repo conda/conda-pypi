@@ -2,54 +2,77 @@
 # only. It is not appropriate to use this to generate production level
 # repodata.
 
-import requests
 import json
-from typing import Dict, Any, Optional
+import re
+import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from packaging.requirements import InvalidRequirement, Requirement
+from typing import Any
+
+
+def normalize_name(name: str) -> str:
+    """Normalize a package name to conda conventions (lowercase, _ -> -)."""
+    return name.lower().replace("_", "-")
 
 
 def pypi_to_repodata_whl_entry(
-    pypi_data: Dict[str, Any], url_index: int = 0
-) -> Optional[Dict[str, Any]]:
+    pypi_data: dict[str, Any], url_index: int = 0
+) -> dict[str, Any] | None:
     """
     Convert PyPI JSON endpoint data to a repodata.json packages.whl entry.
 
     Args:
-        pypi_info: Dictionary containing the complete info section from PyPI JSON endpoint
+        pypi_data: Dictionary containing the complete info from PyPI JSON endpoint
         url_index: Index of the wheel URL to use (typically the first one is the wheel)
 
     Returns:
         Dictionary representing the entry for packages.whl, or None if wheel not found
     """
-    # Find the wheel URL (bdist_wheel package type)
+    # Find a pure Python wheel (platform tag "none-any")
     wheel_url = None
-
-    # import pdb; pdb.set_trace()
     for url_entry in pypi_data.get("urls", []):
-        if url_entry.get("packagetype") == "bdist_wheel":
-            wheel_url = url_entry
-            break
+        if url_entry.get("packagetype") != "bdist_wheel":
+            continue
+        filename = url_entry.get("filename", "")
+        if not filename.endswith("-none-any.whl"):
+            continue
+        wheel_url = url_entry
+        break
 
     if not wheel_url:
         return None
 
     pypi_info = pypi_data.get("info")
 
-    depends_list = []
+    depends_list: list[str] = []
+    extras_dict: dict[str, list[str]] = {}
     for dep in pypi_info.get("requires_dist") or []:
-        if "extra" not in dep:
-            depends_list.append(dep.split(";")[0])
-    depends_list.append(f"python {pypi_info.get('requires_python')}")
+        req = Requirement(dep)
+        conda_dep = normalize_name(req.name) + str(req.specifier)
+
+        if req.marker:
+            extra_match = re.search(r'extra\s*==\s*["\']([^"\']+)["\']', str(req.marker))
+            if extra_match:
+                extras_dict.setdefault(extra_match.group(1), []).append(conda_dep)
+            else:
+                depends_list.append(conda_dep)
+        else:
+            depends_list.append(conda_dep)
+
+    python_requires = pypi_info.get("requires_python")
+    if python_requires:
+        depends_list.append(f"python {python_requires}")
 
     # Build the repodata entry
     entry = {
         "url": wheel_url.get("url", ""),
         "record_version": 3,
-        "name": pypi_info.get("name"),
+        "name": normalize_name(pypi_info.get("name", "")),
         "version": pypi_info.get("version"),
         "build": "py3_none_any_0",
         "build_number": 0,
         "depends": depends_list,
+        "extras": extras_dict,
         "fn": f"{pypi_info.get('name')}-{pypi_info.get('version')}-py3-none-any.whl",
         "sha256": wheel_url.get("digests", {}).get("sha256", ""),
         "size": wheel_url.get("size", 0),
@@ -61,7 +84,7 @@ def pypi_to_repodata_whl_entry(
     return entry
 
 
-def get_repodata_entry(name: str, version: str):
+def get_repodata_entry(name: str, version: str) -> dict[str, Any] | None:
     pypi_endpoint = f"https://pypi.org/pypi/{name}/{version}/json"
     pypi_data = requests.get(pypi_endpoint)
     if pypi_data.json() is None:
@@ -76,7 +99,6 @@ if __name__ == "__main__":
     wheel_repodata = HERE / "noarch/repodata.json"
 
     pkg_whls = {}
-
     repodata_packages = []
     requested_wheel_packages_file = HERE / "wheel_packages.txt"
     with open(requested_wheel_packages_file) as f:
@@ -99,7 +121,7 @@ if __name__ == "__main__":
             try:
                 result = future.result()
                 if result:
-                    pkg_whls[f"{name}-{version}-py3_none_any_0"] = result
+                    pkg_whls[f"{result['name']}-{version}-py3_none_any_0"] = result
             except Exception as e:
                 print(f"Error processing {name} {version}: {e}")
 

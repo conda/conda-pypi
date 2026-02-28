@@ -6,6 +6,9 @@ import json
 import urllib.request
 from pathlib import Path
 
+from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
+
 from conda.exceptions import DryRunExit
 
 HERE = Path(__file__).parent
@@ -27,7 +30,11 @@ def test_conda_channel_extras_in_repodata():
 
     record = repodata["packages.whl"]["requests-2.32.5-py3_none_any_0"]
     assert "extras" in record
-    assert record["extras"]["socks"] == ["pysocks >=1.5.6,!=1.5.7"]
+    socks_deps = record["extras"]["socks"]
+    assert len(socks_deps) == 1
+    req = Requirement(socks_deps[0])
+    assert req.name == "pysocks"
+    assert req.specifier == SpecifierSet(">=1.5.6,!=1.5.7")
 
 
 def test_conda_install_with_extras_resolves_extra_deps(
