@@ -2,6 +2,39 @@
 
 [//]: # (current developments)
 
+## 0.5.0 (2026-03-02)
+
+### Enhancements
+
+* Add support for injecting tests for `conda pypi convert` (#242)
+* Add `--name-mapping` option to supply a custom PyPI-to-conda name mapping file, overriding the built-in mapping (#253)
+* Add tests for extra dependency specifiers in repodata (#259)
+
+### Bug fixes
+
+* Fix installing wheels that use the `headers` data scheme (#246)
+* Fix wheel hashes stored in conda metadata being base64-encoded instead of hex, which caused errors with conda-rattler-solver (#250)
+* Fix installing wheels that include `data` and `scripts` schemes (#256)
+
+### Docs
+
+* Add release process at RELEASE.md (#239)
+* Add docs for `conda install` with a channel containing wheels (#259)
+
+### Contributors
+
+* @agriyakhetarpal
+* @danyeaw
+* @jezdez
+* @soapy1
+* @tombenes
+* @conda-bot
+* @danpetry
+* @dependabot[bot]
+* @pre-commit-ci[bot]
+
+
+
 ## [0.4.0] - 2026-02-04
 
 ### Added
