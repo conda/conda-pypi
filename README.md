@@ -22,6 +22,7 @@ Includes:
 - `conda pypi install`: Converts PyPI packages to `.conda` format for safer installation.
 - `conda pypi install -e .`: Converts a path to an editable `.conda` format package.
 - `conda pypi convert`: Convert PyPI packages to `.conda` format without installing them.
+- `conda install` from wheel channels (experimental): channels can serve pure Python wheels directly in `repodata.json`.
 - Adds `EXTERNALLY-MANAGED` to your environments.
 
 ## Why?

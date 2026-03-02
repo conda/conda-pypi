@@ -19,6 +19,7 @@
                 "typing-extensions>=4.0.0",
                 "python >=3.8"
             ],
+            "extras": {},
             "fn": "annotated-types-0.7.0-py3-none-any.whl",
             "sha256": "1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53",
             "size": 13643,
@@ -36,9 +37,32 @@
                 "exceptiongroup>=1.0.2",
                 "idna>=2.8",
                 "sniffio>=1.1",
-                "typing_extensions>=4.5",
+                "typing-extensions>=4.5",
                 "python >=3.9"
             ],
+            "extras": {
+                "trio": [
+                    "trio>=0.26.1"
+                ],
+                "test": [
+                    "anyio",
+                    "blockbuster>=1.5.23",
+                    "coverage>=7",
+                    "exceptiongroup>=1.2.0",
+                    "hypothesis>=4.0",
+                    "psutil>=5.9",
+                    "pytest>=7.0",
+                    "trustme",
+                    "truststore>=0.9.1",
+                    "uvloop>=0.21"
+                ],
+                "doc": [
+                    "packaging",
+                    "sphinx~=8.2",
+                    "sphinx-rtd-theme",
+                    "sphinx-autodoc-typehints>=1.2.0"
+                ]
+            },
             "fn": "anyio-4.9.0-py3-none-any.whl",
             "sha256": "9f76d541cad6e36af7beb62e978876f3b41e3e04f2c1fbf0884604c0a9c4d93c",
             "size": 100916,
@@ -53,8 +77,9 @@
             "build": "py3_none_any_0",
             "build_number": 0,
             "depends": [
-                "python "
+                "python"
             ],
+            "extras": {},
             "fn": "auto-all-1.4.1-py3-none-any.whl",
             "sha256": "48dae02a670e94c87e2da2985e20e33ec231dffd3ae29078777002680f9eee13",
             "size": 5562,
@@ -71,14 +96,15 @@
             "depends": [
                 "python >=3.6"
             ],
+            "extras": {},
             "fn": "certifi-2024.12.14-py3-none-any.whl",
             "sha256": "1275f7a45be9464efc1173084eaa30f866fe2e47d389406136d332ed4967ec56",
             "size": 164927,
             "subdir": "noarch",
             "noarch": "python"
         },
-        "charset_normalizer-3.3.2-py3_none_any_0": {
-            "url": "https://files.pythonhosted.org/packages/2b/61/095a0aa1a84d1481998b534177c8566fdc50bb1233ea9a0478cd3cc075bd/charset_normalizer-3.3.2-cp310-cp310-macosx_10_9_universal2.whl",
+        "charset-normalizer-3.3.2-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/28/76/e6222113b83e3622caa4bb41032d0b1bf785250607392e1b778aca0b8a7d/charset_normalizer-3.3.2-py3-none-any.whl",
             "record_version": 3,
             "name": "charset-normalizer",
             "version": "3.3.2",
@@ -87,9 +113,10 @@
             "depends": [
                 "python >=3.7.0"
             ],
+            "extras": {},
             "fn": "charset-normalizer-3.3.2-py3-none-any.whl",
-            "sha256": "25baf083bf6f6b341f4121c2f3c548875ee6f5339300e08be3f2b2ba1721cdd3",
-            "size": 194219,
+            "sha256": "3e4d1f6587322d2788836a99c69062fbb091331ec940e02d12d179c1d53e25fc",
+            "size": 48543,
             "subdir": "noarch",
             "noarch": "python"
         },
@@ -103,6 +130,11 @@
             "depends": [
                 "python >=3.7"
             ],
+            "extras": {
+                "test": [
+                    "pytest>=6"
+                ]
+            },
             "fn": "exceptiongroup-1.2.2-py3-none-any.whl",
             "sha256": "3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b",
             "size": 16453,
@@ -122,6 +154,38 @@
                 "typing-extensions>=4.8.0",
                 "python >=3.8"
             ],
+            "extras": {
+                "standard": [
+                    "fastapi-cli>=0.0.8",
+                    "httpx>=0.23.0",
+                    "jinja2>=3.1.5",
+                    "python-multipart>=0.0.18",
+                    "email-validator>=2.0.0",
+                    "uvicorn>=0.12.0"
+                ],
+                "standard-no-fastapi-cloud-cli": [
+                    "fastapi-cli>=0.0.8",
+                    "httpx>=0.23.0",
+                    "jinja2>=3.1.5",
+                    "python-multipart>=0.0.18",
+                    "email-validator>=2.0.0",
+                    "uvicorn>=0.12.0"
+                ],
+                "all": [
+                    "fastapi-cli>=0.0.8",
+                    "httpx>=0.23.0",
+                    "jinja2>=3.1.5",
+                    "python-multipart>=0.0.18",
+                    "itsdangerous>=1.1.0",
+                    "pyyaml>=5.3.1",
+                    "ujson!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0,>=4.0.1",
+                    "orjson>=3.2.1",
+                    "email-validator>=2.0.0",
+                    "uvicorn>=0.12.0",
+                    "pydantic-settings>=2.0.0",
+                    "pydantic-extra-types>=2.0.0"
+                ]
+            },
             "fn": "fastapi-0.116.1-py3-none-any.whl",
             "sha256": "c46ac7c312df840f0c9e220f7964bada936781bc4e2e6eb71f1c4d7553786565",
             "size": 95631,
@@ -139,6 +203,19 @@
                 "termcolor",
                 "python >=3.7"
             ],
+            "extras": {
+                "test": [
+                    "setuptools<=80.9.0",
+                    "pip",
+                    "pylint<3.3.8",
+                    "pytest<=8.4.1",
+                    "pytest-pylint<=1.1.2",
+                    "pytest-runner<7.0.0",
+                    "termcolor<3.2.0",
+                    "hypothesis<6.136.0",
+                    "levenshtein<=0.27.1"
+                ]
+            },
             "fn": "fire-0.7.1-py3-none-any.whl",
             "sha256": "e43fd8a5033a9001e7e2973bab96070694b9f12f2e0ecf96d4683971b5ab1882",
             "size": 115945,
@@ -155,6 +232,14 @@
             "depends": [
                 "python >=3.6"
             ],
+            "extras": {
+                "all": [
+                    "ruff>=0.6.2",
+                    "mypy>=1.11.2",
+                    "pytest>=8.3.2",
+                    "flake8>=7.1.1"
+                ]
+            },
             "fn": "idna-3.10-py3-none-any.whl",
             "sha256": "946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3",
             "size": 70442,
@@ -169,12 +254,20 @@
             "build": "py3_none_any_0",
             "build_number": 0,
             "depends": [
-                "charset_normalizer<4,>=2",
+                "charset-normalizer<4,>=2",
                 "idna<4,>=2.5",
                 "urllib3<3,>=1.21.1",
                 "certifi>=2017.4.17",
                 "python >=3.9"
             ],
+            "extras": {
+                "socks": [
+                    "pysocks!=1.5.7,>=1.5.6"
+                ],
+                "use-chardet-on-py3": [
+                    "chardet<6,>=3.0.2"
+                ]
+            },
             "fn": "requests-2.32.5-py3-none-any.whl",
             "sha256": "2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6",
             "size": 64738,
@@ -191,6 +284,73 @@
             "depends": [
                 "python >=3.9"
             ],
+            "extras": {
+                "test": [
+                    "pytest!=8.1.*,>=6",
+                    "virtualenv>=13.0.0",
+                    "wheel>=0.44.0",
+                    "pip>=19.1",
+                    "packaging>=24.2",
+                    "jaraco.envs>=2.2",
+                    "pytest-xdist>=3",
+                    "jaraco.path>=3.7.2",
+                    "build>=1.0.3",
+                    "filelock>=3.4.0",
+                    "ini2toml>=0.14",
+                    "tomli-w>=1.0.0",
+                    "pytest-timeout",
+                    "pytest-perf",
+                    "jaraco.develop>=7.21",
+                    "pytest-home>=0.5",
+                    "pytest-subprocess",
+                    "pyproject-hooks!=1.1",
+                    "jaraco.test>=5.5"
+                ],
+                "doc": [
+                    "sphinx>=3.5",
+                    "jaraco.packaging>=9.3",
+                    "rst.linker>=1.9",
+                    "furo",
+                    "sphinx-lint",
+                    "jaraco.tidelift>=1.4",
+                    "pygments-github-lexers==0.0.5",
+                    "sphinx-favicon",
+                    "sphinx-inline-tabs",
+                    "sphinx-reredirects",
+                    "sphinxcontrib-towncrier",
+                    "sphinx-notfound-page<2,>=1",
+                    "pyproject-hooks!=1.1",
+                    "towncrier<24.7"
+                ],
+                "core": [
+                    "packaging>=24.2",
+                    "more-itertools>=8.8",
+                    "jaraco.text>=3.7",
+                    "importlib-metadata>=6",
+                    "tomli>=2.0.1",
+                    "wheel>=0.43.0",
+                    "platformdirs>=4.2.2",
+                    "jaraco.functools>=4",
+                    "more-itertools"
+                ],
+                "check": [
+                    "pytest-checkdocs>=2.4",
+                    "pytest-ruff>=0.2.1",
+                    "ruff>=0.8.0"
+                ],
+                "cover": [
+                    "pytest-cov"
+                ],
+                "enabler": [
+                    "pytest-enabler>=2.2"
+                ],
+                "type": [
+                    "pytest-mypy",
+                    "mypy==1.14.*",
+                    "importlib-metadata>=7.0.2",
+                    "jaraco.develop>=7.21"
+                ]
+            },
             "fn": "setuptools-78.1.1-py3-none-any.whl",
             "sha256": "c3a9c4211ff4c309edb8b8c4f1cbfa7ae324c4ba9f91ff254e3d305b9fd54561",
             "size": 1256462,
@@ -207,6 +367,7 @@
             "depends": [
                 "python >=3.7"
             ],
+            "extras": {},
             "fn": "sniffio-1.3.1-py3-none-any.whl",
             "sha256": "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2",
             "size": 10235,
@@ -225,6 +386,15 @@
                 "typing-extensions>=4.10.0",
                 "python >=3.9"
             ],
+            "extras": {
+                "full": [
+                    "httpx<0.29.0,>=0.27.0",
+                    "itsdangerous",
+                    "jinja2",
+                    "python-multipart>=0.0.18",
+                    "pyyaml"
+                ]
+            },
             "fn": "starlette-0.47.2-py3-none-any.whl",
             "sha256": "c5847e96134e5c5371ee9fac6fdf1a67336d5815e09eb2a01fdb57a351ef915b",
             "size": 72984,
@@ -241,6 +411,12 @@
             "depends": [
                 "python >=3.9"
             ],
+            "extras": {
+                "tests": [
+                    "pytest",
+                    "pytest-cov"
+                ]
+            },
             "fn": "termcolor-2.5.0-py3-none-any.whl",
             "sha256": "37b17b5fc1e604945c2642c872a3764b5d547a48009871aea3edd3afa180afb8",
             "size": 7755,
@@ -259,9 +435,39 @@
                 "importlib-metadata>=3.6",
                 "python >=3.9"
             ],
+            "extras": {
+                "doc": [
+                    "packaging",
+                    "sphinx>=7",
+                    "sphinx-autodoc-typehints>=1.2.0",
+                    "sphinx-rtd-theme>=1.3.0"
+                ],
+                "test": [
+                    "coverage>=7",
+                    "pytest>=7",
+                    "mypy>=1.2.0"
+                ]
+            },
             "fn": "typeguard-4.4.1-py3-none-any.whl",
             "sha256": "9324ec07a27ec67fc54a9c063020ca4c0ae6abad5e9f0f9804ca59aee68c6e21",
             "size": 35635,
+            "subdir": "noarch",
+            "noarch": "python"
+        },
+        "typing-extensions-4.14.1-py3_none_any_0": {
+            "url": "https://files.pythonhosted.org/packages/b5/00/d631e67a838026495268c2f6884f3711a15a9a2a96cd244fdaea53b823fb/typing_extensions-4.14.1-py3-none-any.whl",
+            "record_version": 3,
+            "name": "typing-extensions",
+            "version": "4.14.1",
+            "build": "py3_none_any_0",
+            "build_number": 0,
+            "depends": [
+                "python >=3.9"
+            ],
+            "extras": {},
+            "fn": "typing-extensions-4.14.1-py3-none-any.whl",
+            "sha256": "d1e1e3b58374dc93031d6eda2420a48ea44a36c2b4766a4fdeb3710755731d76",
+            "size": 43906,
             "subdir": "noarch",
             "noarch": "python"
         },
@@ -276,25 +482,10 @@
                 "typing-extensions>=4.12.0",
                 "python >=3.9"
             ],
+            "extras": {},
             "fn": "typing-inspection-0.4.1-py3-none-any.whl",
             "sha256": "389055682238f53b04f7badcb49b989835495a96700ced5dab2d8feae4b26f51",
             "size": 14552,
-            "subdir": "noarch",
-            "noarch": "python"
-        },
-        "typing_extensions-4.14.1-py3_none_any_0": {
-            "url": "https://files.pythonhosted.org/packages/b5/00/d631e67a838026495268c2f6884f3711a15a9a2a96cd244fdaea53b823fb/typing_extensions-4.14.1-py3-none-any.whl",
-            "record_version": 3,
-            "name": "typing-extensions",
-            "version": "4.14.1",
-            "build": "py3_none_any_0",
-            "build_number": 0,
-            "depends": [
-                "python >=3.9"
-            ],
-            "fn": "typing-extensions-4.14.1-py3-none-any.whl",
-            "sha256": "d1e1e3b58374dc93031d6eda2420a48ea44a36c2b4766a4fdeb3710755731d76",
-            "size": 43906,
             "subdir": "noarch",
             "noarch": "python"
         },
@@ -308,6 +499,21 @@
             "depends": [
                 "python >=3.8"
             ],
+            "extras": {
+                "brotli": [
+                    "brotli>=1.0.9",
+                    "brotlicffi>=0.8.0"
+                ],
+                "h2": [
+                    "h2<5,>=4"
+                ],
+                "socks": [
+                    "pysocks!=1.5.7,<2.0,>=1.5.6"
+                ],
+                "zstd": [
+                    "zstandard>=0.18.0"
+                ]
+            },
             "fn": "urllib3-2.2.3-py3-none-any.whl",
             "sha256": "ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac",
             "size": 126338,
@@ -324,6 +530,12 @@
             "depends": [
                 "python >=3.8"
             ],
+            "extras": {
+                "test": [
+                    "pytest>=6.0.0",
+                    "setuptools>=65"
+                ]
+            },
             "fn": "wheel-0.45.1-py3-none-any.whl",
             "sha256": "708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248",
             "size": 72494,

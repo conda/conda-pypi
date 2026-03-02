@@ -67,13 +67,40 @@ across different operating systems and architectures.
 (pypi-lines)=
 
 
-## `conda install` integrations
+## Wheel channels
 
-The system provides clear error messages if PyPI package installation fails
-and uses the same conversion logic as `conda pypi install` for
-dependency resolution. This enables full environment reproducibility that
-includes both conda and converted PyPI packages, ensuring that environments
-can be recreated exactly as they were originally configured.
+:::{admonition} Experimental
+:class: warning
+
+This feature is experimental. It is based on a [draft CEP for Repodata Wheel
+Support](https://github.com/conda/ceps/pull/145) that is still under active
+discussion and subject to change.
+:::
+
+If you maintain a conda channel, you can now serve Python wheels directly
+alongside regular conda packages. Add your wheels to a `packages.whl` section
+in `repodata.json` and point each entry at the wheel URL — `conda install`
+will pick them up, resolve their dependencies, and extract them correctly,
+with no pre-conversion step required.
+
+```bash
+conda install -c https://my-wheel-channel requests
+```
+
+Wheels served this way behave like any other conda package.
+
+### Extras
+
+Wheels in a channel can declare [dependency specifier extras](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras)
+via an `extras` field in the repodata entry. Users can request them with the
+standard bracket syntax:
+
+```bash
+conda install "requests[security]"
+```
+
+The solver will include the extra's dependencies — `cryptography` and
+`pyopenssl` in this case — alongside `requests` in the environment.
 
 ## Editable Package Support
 
