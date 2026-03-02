@@ -9,6 +9,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from packaging.requirements import Requirement
 from typing import Any
 
+EXTRA_MARKER_RE = re.compile(r'extra\s*==\s*["\']([^"\']+)["\']')
+
 
 def normalize_name(name: str) -> str:
     """Normalize a package name to conda conventions (lowercase, _ -> -)."""
@@ -51,7 +53,7 @@ def pypi_to_repodata_whl_entry(
         conda_dep = normalize_name(req.name) + str(req.specifier)
 
         if req.marker:
-            extra_match = re.search(r'extra\s*==\s*["\']([^"\']+)["\']', str(req.marker))
+            extra_match = EXTRA_MARKER_RE.search(str(req.marker))
             if extra_match:
                 extras_dict.setdefault(extra_match.group(1), []).append(conda_dep)
             else:
@@ -124,6 +126,7 @@ if __name__ == "__main__":
             try:
                 result = future.result()
                 if result:
+                    # Use the normalized name for the key
                     pkg_whls[f"{result['name']}-{version}-py3_none_any_0"] = result
             except Exception as e:
                 print(f"Error processing {name} {version}: {e}")
