@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* Fix wheel hashes stored in conda metadata being base64-encoded instead of hex, which caused errors with conda-rattler-solver (#250)
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

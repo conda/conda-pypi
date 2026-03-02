@@ -1,0 +1,19 @@
+### Enhancements
+
+* Add tests for extra dependency specifiers in repodata (#259)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Add docs for `conda install` with a channel containing wheels (#259)
+
+### Other
+
+* <news item>
