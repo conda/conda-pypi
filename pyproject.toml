@@ -136,7 +136,11 @@ channels = ["conda-forge", {channel = "conda-canary/label/dev", priority = -1}]
 [tool.pixi.feature.canary.dependencies]
 conda = { version = ">=26.1", channel = "conda-canary/label/dev" }
 
+[tool.pixi.feature.release.dependencies]
+rever = "*"
+
 [tool.pixi.environments]
+release = ["release"]
 build-py310 = ["build", "py310"]
 build-py311 = ["build", "py311"]
 build-py312 = ["build", "py312"]
