@@ -17,18 +17,19 @@ def normalize_name(name: str) -> str:
     return name.lower().replace("_", "-")
 
 
-def pypi_to_repodata_whl_entry(
-    pypi_data: dict[str, Any], url_index: int = 0
+def pypi_to_repodata_noarch_whl_entry(
+    pypi_data: dict[str, Any],
 ) -> dict[str, Any] | None:
     """
-    Convert PyPI JSON endpoint data to a repodata.json packages.whl entry.
+    Convert PyPI JSON endpoint data to a repodata.json packages.whl entry for a
+    pure Python (noarch) wheel.
 
     Args:
         pypi_data: Dictionary containing the complete info from PyPI JSON endpoint
-        url_index: Index of the wheel URL to use (typically the first one is the wheel)
 
     Returns:
-        Dictionary representing the entry for packages.whl, or None if wheel not found
+        Dictionary representing the entry for packages.whl, or None if no pure
+        Python wheel (platform tag "none-any") is found
     """
     # Find a pure Python wheel (platform tag "none-any")
     wheel_url = None
@@ -94,7 +95,7 @@ def get_repodata_entry(name: str, version: str) -> dict[str, Any] | None:
     pypi_data = requests.get(pypi_endpoint)
     if pypi_data.json() is None:
         raise Exception(f"unable to process {name} {version}")
-    return pypi_to_repodata_whl_entry(pypi_data.json())
+    return pypi_to_repodata_noarch_whl_entry(pypi_data.json())
 
 
 if __name__ == "__main__":
