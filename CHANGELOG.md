@@ -23,13 +23,13 @@
 
 ### Contributors
 
-* @agriyakhetarpal
+* @agriyakhetarpal made their first contribution in <https://github.com/conda/conda-pypi/pull/246>
 * @danyeaw
 * @jezdez
 * @soapy1
-* @tombenes
+* @tombenes made their first contribution in <https://github.com/conda/conda-pypi/pull/253>
 * @conda-bot
-* @danpetry
+* @danpetry made their first contribution in <https://github.com/conda/conda-pypi/pull/242>
 * @dependabot[bot]
 * @pre-commit-ci[bot]
 
