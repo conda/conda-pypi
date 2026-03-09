@@ -1,9 +1,39 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+[//]: # (current developments)
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## 0.5.0 (2026-03-02)
+
+### Enhancements
+
+* Add support for injecting tests for `conda pypi convert` (#242)
+* Add `--name-mapping` option to supply a custom PyPI-to-conda name mapping file, overriding the built-in mapping (#253)
+* Add tests for extra dependency specifiers in repodata (#259)
+
+### Bug fixes
+
+* Fix installing wheels that use the `headers` data scheme (#246)
+* Fix wheel hashes stored in conda metadata being base64-encoded instead of hex, which caused errors with conda-rattler-solver (#250)
+* Fix installing wheels that include `data` and `scripts` schemes (#256)
+
+### Docs
+
+* Add release process at RELEASE.md (#239)
+* Add docs for `conda install` with a channel containing wheels (#259)
+
+### Contributors
+
+* @agriyakhetarpal made their first contribution in <https://github.com/conda/conda-pypi/pull/246>
+* @danyeaw
+* @jezdez
+* @soapy1
+* @tombenes made their first contribution in <https://github.com/conda/conda-pypi/pull/253>
+* @conda-bot
+* @danpetry made their first contribution in <https://github.com/conda/conda-pypi/pull/242>
+* @dependabot[bot]
+* @pre-commit-ci[bot]
+
+
 
 ## [0.4.0] - 2026-02-04
 
