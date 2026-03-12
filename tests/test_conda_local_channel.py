@@ -1,5 +1,9 @@
 """
 Tests for making sure the conda_local_channel fixture functions as we expect
+
+This module intentionally validates marker-conversion edge cases using
+selected pure-Python wheels in `wheel_packages.txt` (for example `ipython`,
+`uvicorn`, `0x-web3`, `adup`, and `advancedselector`).
 """
 
 import json

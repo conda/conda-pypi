@@ -1,6 +1,19 @@
-# This is a utility for generating test specific data in conda-pypi
-# only. It is not appropriate to use this to generate production level
-# repodata.
+"""
+Utility for generating test-specific local channel repodata.
+
+This is test data generation logic for conda-pypi only; it is not intended for
+production repodata generation.
+
+Marker conversion policy for this test channel:
+- Convert Python markers to `python...` matchspec fragments, including
+  `python_version not in "x, y"` -> `(python!=x and python!=y)`.
+- Convert platform/os markers to virtual packages when feasible
+  (`__win`, `__linux`, `__osx`, `__unix`).
+- Keep extras in `extra_depends`, with remaining non-extra marker logic
+  encoded via `[when="..."]`.
+- Drop unsupported marker dimensions (for example interpreter/machine-specific
+  variants) for these noarch channel tests.
+"""
 
 import json
 import requests
