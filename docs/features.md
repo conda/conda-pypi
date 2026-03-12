@@ -78,7 +78,7 @@ discussion and subject to change.
 :::
 
 If you maintain a conda channel, you can now serve Python wheels directly
-alongside regular conda packages. Add your wheels to a `packages.whl` section
+alongside regular conda packages. Add your wheels to a `v3.whl` section
 in `repodata.json` and point each entry at the wheel URL — `conda install`
 will pick them up, resolve their dependencies, and extract them correctly,
 with no pre-conversion step required.

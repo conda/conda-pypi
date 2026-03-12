@@ -9,7 +9,45 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from packaging.requirements import Requirement
 from typing import Any
 
-EXTRA_MARKER_RE = re.compile(r'extra\s*==\s*["\']([^"\']+)["\']')
+EXTRA_MATCH_RE = re.compile(r"""extra\s*==\s*(['"])([^'"]+)\1""")
+PYTHON_VERSION_MARKER_RE = re.compile(r"""\bpython_version\s*([<>=!~]{1,2})\s*(['"])([^'"]+)\2""")
+PYTHON_FULL_VERSION_MARKER_RE = re.compile(
+    r"""\bpython_full_version\s*([<>=!~]{1,2})\s*(['"])([^'"]+)\2"""
+)
+PYTHON_VERSION_NOT_IN_RE = re.compile(r"""\bpython_version\s+not\s+in\s+(['"])[^'"]+\1""")
+PLATFORM_SYSTEM_MARKER_RE = re.compile(r"""\bplatform_system\s*(==|!=)\s*(['"])([^'"]+)\2""")
+SYS_PLATFORM_MARKER_RE = re.compile(r"""\bsys_platform\s*(==|!=)\s*(['"])([^'"]+)\2""")
+CPYTHON_MARKER_RE = re.compile(r"""\bplatform_python_implementation\s*==\s*(['"])CPython\1""")
+CPYTHON_NEGATION_MARKER_RE = re.compile(
+    r"""\bplatform_python_implementation\s*!=\s*(['"])CPython\1"""
+)
+PYPY_NEGATION_MARKER_RE = re.compile(r"""\bplatform_python_implementation\s*!=\s*(['"])PyPy\1""")
+CYGWIN_NEGATION_MARKER_RE = re.compile(r"""\bsys_platform\s*!=\s*(['"])cygwin\1""")
+OS_NAME_MARKER_RE = re.compile(r"""\bos_name\s*(==|!=)\s*(['"])([^'"]+)\2""")
+IMPL_NAME_MARKER_RE = re.compile(r"""\bimplementation_name\s*(==|!=)\s*(['"])([^'"]+)\2""")
+PLATFORM_PY_IMPL_MARKER_RE = re.compile(
+    r"""\bplatform_python_implementation\s*(==|!=)\s*(['"])([^'"]+)\2"""
+)
+PLATFORM_MACHINE_MARKER_RE = re.compile(r"""\bplatform_machine\s*(==|!=)\s*(['"])([^'"]+)\2""")
+
+PLATFORM_SYSTEM_TO_VIRTUAL_PACKAGE = {
+    "windows": "__win",
+    "linux": "__linux",
+    "darwin": "__osx",
+}
+
+SYS_PLATFORM_TO_VIRTUAL_PACKAGE = {
+    "win32": "__win",
+    "linux": "__linux",
+    "darwin": "__osx",
+    "cygwin": "__unix",
+}
+
+OS_NAME_TO_VIRTUAL_PACKAGE = {
+    "nt": "__win",
+    "windows": "__win",
+    "posix": "__unix",
+}
 
 
 def normalize_name(name: str) -> str:
@@ -17,18 +55,136 @@ def normalize_name(name: str) -> str:
     return name.lower().replace("_", "-")
 
 
+def split_marker_extras(marker: str) -> tuple[list[str], str | None]:
+    """Split a PEP 508 marker into extra names and remaining non-extra condition."""
+    extras = [match.group(2) for match in EXTRA_MATCH_RE.finditer(marker)]
+    if not extras:
+        return [], marker
+
+    non_extra = marker
+    non_extra = re.sub(r"""\(\s*extra\s*==\s*(['"]).*?\1\s*\)""", "", non_extra)
+    non_extra = re.sub(r"""extra\s*==\s*(['"]).*?\1""", "", non_extra)
+    non_extra = re.sub(r"""\s+(and|or)\s+\)""", ")", non_extra)
+    non_extra = re.sub(r"""\(\s+(and|or)\s+""", "(", non_extra)
+    non_extra = re.sub(r"""^\s*(and|or)\s+""", "", non_extra)
+    non_extra = re.sub(r"""\s+(and|or)\s*$""", "", non_extra)
+    non_extra = re.sub(r"""\(\s*\)""", "", non_extra)
+    non_extra = re.sub(r"""\s+""", " ", non_extra).strip()
+
+    if not non_extra:
+        return extras, None
+    return extras, non_extra
+
+
+def normalize_when_condition(marker: str) -> str:
+    """Normalize selected PEP 508 marker variables to MatchSpec-like terms."""
+    marker = PYTHON_VERSION_MARKER_RE.sub(r"python\1\3", marker)
+    marker = PYTHON_FULL_VERSION_MARKER_RE.sub(r"python\1\3", marker)
+    marker = PYTHON_VERSION_NOT_IN_RE.sub("", marker)
+
+    def replace_platform_system(match: re.Match[str]) -> str:
+        op = match.group(1)
+        value = match.group(3).lower()
+
+        if op == "==":
+            return PLATFORM_SYSTEM_TO_VIRTUAL_PACKAGE.get(value, match.group(0))
+        if op == "!=" and value == "windows":
+            # Broadly matches Linux/macOS for channel test cases.
+            return "__unix"
+        return match.group(0)
+
+    marker = PLATFORM_SYSTEM_MARKER_RE.sub(replace_platform_system, marker)
+
+    def replace_sys_platform(match: re.Match[str]) -> str:
+        op = match.group(1)
+        value = match.group(3).lower()
+
+        if op == "==" and value in SYS_PLATFORM_TO_VIRTUAL_PACKAGE:
+            return SYS_PLATFORM_TO_VIRTUAL_PACKAGE[value]
+        if op == "!=" and value in {"win32", "cygwin"}:
+            return "__unix"
+        if op == "!=" and value == "emscripten":
+            # Emscripten is not a target platform in these channel tests.
+            return ""
+        return match.group(0)
+
+    marker = SYS_PLATFORM_MARKER_RE.sub(replace_sys_platform, marker)
+
+    def replace_os_name(match: re.Match[str]) -> str:
+        op = match.group(1)
+        value = match.group(3).lower()
+        mapped = OS_NAME_TO_VIRTUAL_PACKAGE.get(value)
+        if not mapped:
+            return match.group(0)
+        if op == "==":
+            return mapped
+        if op == "!=":
+            if mapped == "__win":
+                return "__unix"
+            return "__win"
+        return match.group(0)
+
+    marker = OS_NAME_MARKER_RE.sub(replace_os_name, marker)
+
+    def replace_impl_name(match: re.Match[str]) -> str:
+        op = match.group(1)
+        value = match.group(3).lower()
+        if op == "==" and value in {"cpython", "pypy"}:
+            return ""
+        if op == "!=" and value in {"cpython", "pypy", "jython"}:
+            return ""
+        return match.group(0)
+
+    marker = IMPL_NAME_MARKER_RE.sub(replace_impl_name, marker)
+    marker = PLATFORM_PY_IMPL_MARKER_RE.sub(replace_impl_name, marker)
+    marker = PLATFORM_MACHINE_MARKER_RE.sub("", marker)
+    marker = CPYTHON_MARKER_RE.sub("", marker)
+    marker = CPYTHON_NEGATION_MARKER_RE.sub("", marker)
+    marker = PYPY_NEGATION_MARKER_RE.sub("", marker)
+    marker = CYGWIN_NEGATION_MARKER_RE.sub("", marker)
+
+    # Clean up dangling operators and parentheses produced by marker rewriting.
+    previous = None
+    while previous != marker:
+        previous = marker
+        marker = re.sub(r"""\band\s+and\b""", "and", marker)
+        marker = re.sub(r"""\bor\s+or\b""", "or", marker)
+        marker = re.sub(
+            r"""\(\s*(__[a-z0-9_]+)\s+and\s+\(\s*\1\s*\)\s*\)""",
+            r"\1",
+            marker,
+        )
+        marker = re.sub(
+            r"""\(\s*(__[a-z0-9_]+)\s+or\s+\(\s*\1\s*\)\s*\)""",
+            r"\1",
+            marker,
+        )
+        marker = re.sub(r"""\b(__[a-z0-9_]+)\s+and\s+\1\b""", r"\1", marker)
+        marker = re.sub(r"""\b(__[a-z0-9_]+)\s+or\s+\1\b""", r"\1", marker)
+        marker = re.sub(r"""\(\s*(and|or)\s+""", "(", marker)
+        marker = re.sub(r"""\s+(and|or)\s*\)""", ")", marker)
+        marker = re.sub(r"""^\s*(and|or)\s+""", "", marker)
+        marker = re.sub(r"""^\s*(and|or)\s*$""", "", marker)
+        marker = re.sub(r"""\s+(and|or)\s*$""", "", marker)
+        marker = re.sub(r"""\(\s*\)""", "", marker)
+        marker = re.sub(r"""\(\s*(__[a-z0-9_]+)\s*\)""", r"\1", marker)
+        marker = re.sub(r"""\s+""", " ", marker).strip()
+
+    return marker
+
+
 def pypi_to_repodata_noarch_whl_entry(
     pypi_data: dict[str, Any],
 ) -> dict[str, Any] | None:
     """
-    Convert PyPI JSON endpoint data to a repodata.json packages.whl entry for a
+    Convert PyPI JSON endpoint data to a repodata.json v3.whl entry for a
     pure Python (noarch) wheel.
 
     Args:
         pypi_data: Dictionary containing the complete info from PyPI JSON endpoint
 
     Returns:
-        Dictionary representing the entry for packages.whl, or None if no pure
+        Dictionary representing the entry for v3.whl, or None if no pure
         Python wheel (platform tag "none-any") is found
     """
     # Find a pure Python wheel (platform tag "none-any")
@@ -48,17 +204,30 @@ def pypi_to_repodata_noarch_whl_entry(
     pypi_info = pypi_data.get("info")
 
     depends_list: list[str] = []
-    extras_dict: dict[str, list[str]] = {}
+    extra_depends_dict: dict[str, list[str]] = {}
     for dep in pypi_info.get("requires_dist") or []:
         req = Requirement(dep)
         conda_dep = normalize_name(req.name) + str(req.specifier)
 
         if req.marker:
-            extra_match = EXTRA_MARKER_RE.search(str(req.marker))
-            if extra_match:
-                extras_dict.setdefault(extra_match.group(1), []).append(conda_dep)
+            marker = str(req.marker)
+            extra_names, non_extra_condition = split_marker_extras(marker)
+            if extra_names:
+                for extra_name in extra_names:
+                    extra_dep = conda_dep
+                    if non_extra_condition:
+                        normalized_condition = normalize_when_condition(non_extra_condition)
+                        if normalized_condition:
+                            marker_condition = json.dumps(normalized_condition)
+                            extra_dep = f"{extra_dep}[when={marker_condition}]"
+                    extra_depends_dict.setdefault(extra_name, []).append(extra_dep)
             else:
-                depends_list.append(conda_dep)
+                normalized_condition = normalize_when_condition(marker)
+                if normalized_condition:
+                    marker_condition = json.dumps(normalized_condition)
+                    depends_list.append(f"{conda_dep}[when={marker_condition}]")
+                else:
+                    depends_list.append(conda_dep)
         else:
             depends_list.append(conda_dep)
 
@@ -78,7 +247,7 @@ def pypi_to_repodata_noarch_whl_entry(
         "build": "py3_none_any_0",
         "build_number": 0,
         "depends": depends_list,
-        "extras": extras_dict,
+        "extra_depends": extra_depends_dict,
         "fn": f"{pypi_info.get('name')}-{pypi_info.get('version')}-py3-none-any.whl",
         "sha256": wheel_url.get("digests", {}).get("sha256", ""),
         "size": wheel_url.get("size", 0),
@@ -137,9 +306,9 @@ if __name__ == "__main__":
         "packages": {},
         "packages.conda": {},
         "removed": [],
-        "repodata_version": 1,
+        "repodata_version": 3,
         "signatures": {},
-        "packages.whl": {key: value for key, value in sorted(pkg_whls.items())},
+        "v3": {"whl": {key: value for key, value in sorted(pkg_whls.items())}},
     }
 
     with open(wheel_repodata, "w") as f:
