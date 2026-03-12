@@ -92,7 +92,10 @@ def test_extended_marker_families_are_normalized_in_examples():
     charset_dep = next(
         dep for dep in aba_record["depends"] if dep.startswith("charset-normalizer==3.3.2")
     )
-    assert '[when="python>=2.7"]' in nodeenv_dep
+    assert '[when="' in nodeenv_dep
+    assert "python>=2.7" in nodeenv_dep
+    assert "python!=3.0" in nodeenv_dep
+    assert "python!=3.6" in nodeenv_dep
     assert "python_version" not in nodeenv_dep
     assert '[when="python>=3.7.0"]' in charset_dep
     assert "python_full_version" not in charset_dep

@@ -3,40 +3,34 @@
 # repodata.
 
 import json
-import re
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from enum import StrEnum
+from packaging.markers import Marker
 from packaging.requirements import Requirement
 from typing import Any
 
-EXTRA_MATCH_RE = re.compile(r"""extra\s*==\s*(['"])([^'"]+)\1""")
-PYTHON_VERSION_MARKER_RE = re.compile(r"""\bpython_version\s*([<>=!~]{1,2})\s*(['"])([^'"]+)\2""")
-PYTHON_FULL_VERSION_MARKER_RE = re.compile(
-    r"""\bpython_full_version\s*([<>=!~]{1,2})\s*(['"])([^'"]+)\2"""
-)
-PYTHON_VERSION_NOT_IN_RE = re.compile(r"""\bpython_version\s+not\s+in\s+(['"])[^'"]+\1""")
-PLATFORM_SYSTEM_MARKER_RE = re.compile(r"""\bplatform_system\s*(==|!=)\s*(['"])([^'"]+)\2""")
-SYS_PLATFORM_MARKER_RE = re.compile(r"""\bsys_platform\s*(==|!=)\s*(['"])([^'"]+)\2""")
-CPYTHON_MARKER_RE = re.compile(r"""\bplatform_python_implementation\s*==\s*(['"])CPython\1""")
-CPYTHON_NEGATION_MARKER_RE = re.compile(
-    r"""\bplatform_python_implementation\s*!=\s*(['"])CPython\1"""
-)
-PYPY_NEGATION_MARKER_RE = re.compile(r"""\bplatform_python_implementation\s*!=\s*(['"])PyPy\1""")
-CYGWIN_NEGATION_MARKER_RE = re.compile(r"""\bsys_platform\s*!=\s*(['"])cygwin\1""")
-OS_NAME_MARKER_RE = re.compile(r"""\bos_name\s*(==|!=)\s*(['"])([^'"]+)\2""")
-IMPL_NAME_MARKER_RE = re.compile(r"""\bimplementation_name\s*(==|!=)\s*(['"])([^'"]+)\2""")
-PLATFORM_PY_IMPL_MARKER_RE = re.compile(
-    r"""\bplatform_python_implementation\s*(==|!=)\s*(['"])([^'"]+)\2"""
-)
-PLATFORM_MACHINE_MARKER_RE = re.compile(r"""\bplatform_machine\s*(==|!=)\s*(['"])([^'"]+)\2""")
 
-PLATFORM_SYSTEM_TO_VIRTUAL_PACKAGE = {
+class MarkerVar(StrEnum):
+    PYTHON_VERSION = "python_version"
+    PYTHON_FULL_VERSION = "python_full_version"
+    EXTRA = "extra"
+    SYS_PLATFORM = "sys_platform"
+    PLATFORM_SYSTEM = "platform_system"
+    OS_NAME = "os_name"
+    IMPLEMENTATION_NAME = "implementation_name"
+    PLATFORM_PYTHON_IMPLEMENTATION = "platform_python_implementation"
+    PLATFORM_MACHINE = "platform_machine"
+
+
+class MarkerOp(StrEnum):
+    EQ = "=="
+    NE = "!="
+    NOT_IN = "not in"
+
+
+SYSTEM_TO_VIRTUAL_PACKAGE = {
     "windows": "__win",
-    "linux": "__linux",
-    "darwin": "__osx",
-}
-
-SYS_PLATFORM_TO_VIRTUAL_PACKAGE = {
     "win32": "__win",
     "linux": "__linux",
     "darwin": "__osx",
@@ -55,122 +49,110 @@ def normalize_name(name: str) -> str:
     return name.lower().replace("_", "-")
 
 
-def split_marker_extras(marker: str) -> tuple[list[str], str | None]:
-    """Split a PEP 508 marker into extra names and remaining non-extra condition."""
-    extras = [match.group(2) for match in EXTRA_MATCH_RE.finditer(marker)]
-    if not extras:
-        return [], marker
-
-    non_extra = marker
-    non_extra = re.sub(r"""\(\s*extra\s*==\s*(['"]).*?\1\s*\)""", "", non_extra)
-    non_extra = re.sub(r"""extra\s*==\s*(['"]).*?\1""", "", non_extra)
-    non_extra = re.sub(r"""\s+(and|or)\s+\)""", ")", non_extra)
-    non_extra = re.sub(r"""\(\s+(and|or)\s+""", "(", non_extra)
-    non_extra = re.sub(r"""^\s*(and|or)\s+""", "", non_extra)
-    non_extra = re.sub(r"""\s+(and|or)\s*$""", "", non_extra)
-    non_extra = re.sub(r"""\(\s*\)""", "", non_extra)
-    non_extra = re.sub(r"""\s+""", " ", non_extra).strip()
-
-    if not non_extra:
-        return extras, None
-    return extras, non_extra
+def _marker_value(token: Any) -> str:
+    """Extract the textual value from packaging marker tokens."""
+    return getattr(token, "value", str(token))
 
 
-def normalize_when_condition(marker: str) -> str:
-    """Normalize selected PEP 508 marker variables to MatchSpec-like terms."""
-    marker = PYTHON_VERSION_MARKER_RE.sub(r"python\1\3", marker)
-    marker = PYTHON_FULL_VERSION_MARKER_RE.sub(r"python\1\3", marker)
-    marker = PYTHON_VERSION_NOT_IN_RE.sub("", marker)
+def _normalize_marker_atom(lhs: str, op: str, rhs: str) -> str | None:
+    """Map a single PEP 508 marker atom to a MatchSpec-like fragment."""
+    lhs_l = lhs.lower()
+    rhs_l = rhs.lower()
 
-    def replace_platform_system(match: re.Match[str]) -> str:
-        op = match.group(1)
-        value = match.group(3).lower()
+    if lhs_l in {MarkerVar.PYTHON_VERSION, MarkerVar.PYTHON_FULL_VERSION}:
+        if op == MarkerOp.NOT_IN:
+            excluded_versions = [version.strip() for version in rhs.split(",") if version.strip()]
+            if not excluded_versions:
+                return None
+            clauses = [f"python!={version}" for version in excluded_versions]
+            if len(clauses) == 1:
+                return clauses[0]
+            return f"({' and '.join(clauses)})"
+        return f"python{op}{rhs}"
 
-        if op == "==":
-            return PLATFORM_SYSTEM_TO_VIRTUAL_PACKAGE.get(value, match.group(0))
-        if op == "!=" and value == "windows":
-            # Broadly matches Linux/macOS for channel test cases.
-            return "__unix"
-        return match.group(0)
+    if lhs_l == MarkerVar.EXTRA and op == MarkerOp.EQ:
+        return None
 
-    marker = PLATFORM_SYSTEM_MARKER_RE.sub(replace_platform_system, marker)
-
-    def replace_sys_platform(match: re.Match[str]) -> str:
-        op = match.group(1)
-        value = match.group(3).lower()
-
-        if op == "==" and value in SYS_PLATFORM_TO_VIRTUAL_PACKAGE:
-            return SYS_PLATFORM_TO_VIRTUAL_PACKAGE[value]
-        if op == "!=" and value in {"win32", "cygwin"}:
-            return "__unix"
-        if op == "!=" and value == "emscripten":
-            # Emscripten is not a target platform in these channel tests.
-            return ""
-        return match.group(0)
-
-    marker = SYS_PLATFORM_MARKER_RE.sub(replace_sys_platform, marker)
-
-    def replace_os_name(match: re.Match[str]) -> str:
-        op = match.group(1)
-        value = match.group(3).lower()
-        mapped = OS_NAME_TO_VIRTUAL_PACKAGE.get(value)
-        if not mapped:
-            return match.group(0)
-        if op == "==":
+    if lhs_l in {MarkerVar.SYS_PLATFORM, MarkerVar.PLATFORM_SYSTEM}:
+        mapped = SYSTEM_TO_VIRTUAL_PACKAGE.get(rhs_l)
+        if op == MarkerOp.EQ and mapped:
             return mapped
-        if op == "!=":
-            if mapped == "__win":
-                return "__unix"
-            return "__win"
-        return match.group(0)
+        if op == MarkerOp.NE and rhs_l in {"win32", "windows", "cygwin"}:
+            return "__unix"
+        if op == MarkerOp.NE and rhs_l == "emscripten":
+            return None
+        return None
 
-    marker = OS_NAME_MARKER_RE.sub(replace_os_name, marker)
+    if lhs_l == MarkerVar.OS_NAME:
+        mapped = OS_NAME_TO_VIRTUAL_PACKAGE.get(rhs_l)
+        if not mapped:
+            return None
+        if op == MarkerOp.EQ:
+            return mapped
+        if op == MarkerOp.NE:
+            return "__unix" if mapped == "__win" else "__win"
+        return None
 
-    def replace_impl_name(match: re.Match[str]) -> str:
-        op = match.group(1)
-        value = match.group(3).lower()
-        if op == "==" and value in {"cpython", "pypy"}:
-            return ""
-        if op == "!=" and value in {"cpython", "pypy", "jython"}:
-            return ""
-        return match.group(0)
+    if lhs_l in {MarkerVar.IMPLEMENTATION_NAME, MarkerVar.PLATFORM_PYTHON_IMPLEMENTATION}:
+        if rhs_l in {"cpython", "pypy", "jython"}:
+            return None
+        return None
 
-    marker = IMPL_NAME_MARKER_RE.sub(replace_impl_name, marker)
-    marker = PLATFORM_PY_IMPL_MARKER_RE.sub(replace_impl_name, marker)
-    marker = PLATFORM_MACHINE_MARKER_RE.sub("", marker)
-    marker = CPYTHON_MARKER_RE.sub("", marker)
-    marker = CPYTHON_NEGATION_MARKER_RE.sub("", marker)
-    marker = PYPY_NEGATION_MARKER_RE.sub("", marker)
-    marker = CYGWIN_NEGATION_MARKER_RE.sub("", marker)
+    if lhs_l == MarkerVar.PLATFORM_MACHINE:
+        return None
 
-    # Clean up dangling operators and parentheses produced by marker rewriting.
-    previous = None
-    while previous != marker:
-        previous = marker
-        marker = re.sub(r"""\band\s+and\b""", "and", marker)
-        marker = re.sub(r"""\bor\s+or\b""", "or", marker)
-        marker = re.sub(
-            r"""\(\s*(__[a-z0-9_]+)\s+and\s+\(\s*\1\s*\)\s*\)""",
-            r"\1",
-            marker,
-        )
-        marker = re.sub(
-            r"""\(\s*(__[a-z0-9_]+)\s+or\s+\(\s*\1\s*\)\s*\)""",
-            r"\1",
-            marker,
-        )
-        marker = re.sub(r"""\b(__[a-z0-9_]+)\s+and\s+\1\b""", r"\1", marker)
-        marker = re.sub(r"""\b(__[a-z0-9_]+)\s+or\s+\1\b""", r"\1", marker)
-        marker = re.sub(r"""\(\s*(and|or)\s+""", "(", marker)
-        marker = re.sub(r"""\s+(and|or)\s*\)""", ")", marker)
-        marker = re.sub(r"""^\s*(and|or)\s+""", "", marker)
-        marker = re.sub(r"""^\s*(and|or)\s*$""", "", marker)
-        marker = re.sub(r"""\s+(and|or)\s*$""", "", marker)
-        marker = re.sub(r"""\(\s*\)""", "", marker)
-        marker = re.sub(r"""\(\s*(__[a-z0-9_]+)\s*\)""", r"\1", marker)
-        marker = re.sub(r"""\s+""", " ", marker).strip()
+    return None
 
-    return marker
+
+def _combine_expr(left: str | None, op: str, right: str | None) -> str | None:
+    """Combine optional left/right expressions with a boolean operator."""
+    if left is None:
+        return right
+    if right is None:
+        return left
+    if left == right:
+        return left
+    return f"({left} {op} {right})"
+
+
+def extract_marker_condition_and_extras(marker: Marker) -> tuple[str | None, list[str]]:
+    """Split a Marker into optional non-extra condition and extra group names."""
+    extras: list[str] = []
+    seen_extras: set[str] = set()
+
+    def visit(node: Any) -> str | None:
+        if isinstance(node, tuple) and len(node) == 3:
+            lhs = _marker_value(node[0])
+            op = _marker_value(node[1])
+            rhs = _marker_value(node[2])
+
+            if lhs.lower() == MarkerVar.EXTRA and op == MarkerOp.EQ:
+                extra_name = rhs.lower()
+                if extra_name not in seen_extras:
+                    seen_extras.add(extra_name)
+                    extras.append(extra_name)
+                return None
+
+            return _normalize_marker_atom(lhs, op, rhs)
+
+        if isinstance(node, list):
+            if not node:
+                return None
+
+            expr = visit(node[0])
+            i = 1
+            while i + 1 < len(node):
+                op = str(node[i]).lower()
+                rhs_expr = visit(node[i + 1])
+                expr = _combine_expr(expr, op, rhs_expr)
+                i += 2
+            return expr
+
+        return None
+
+    # Marker._markers is a private packaging attribute; keep access isolated here.
+    condition = visit(getattr(marker, "_markers", []))
+    return condition, extras
 
 
 def pypi_to_repodata_noarch_whl_entry(
@@ -210,21 +192,17 @@ def pypi_to_repodata_noarch_whl_entry(
         conda_dep = normalize_name(req.name) + str(req.specifier)
 
         if req.marker:
-            marker = str(req.marker)
-            extra_names, non_extra_condition = split_marker_extras(marker)
+            non_extra_condition, extra_names = extract_marker_condition_and_extras(req.marker)
             if extra_names:
                 for extra_name in extra_names:
                     extra_dep = conda_dep
                     if non_extra_condition:
-                        normalized_condition = normalize_when_condition(non_extra_condition)
-                        if normalized_condition:
-                            marker_condition = json.dumps(normalized_condition)
-                            extra_dep = f"{extra_dep}[when={marker_condition}]"
+                        marker_condition = json.dumps(non_extra_condition)
+                        extra_dep = f"{extra_dep}[when={marker_condition}]"
                     extra_depends_dict.setdefault(extra_name, []).append(extra_dep)
             else:
-                normalized_condition = normalize_when_condition(marker)
-                if normalized_condition:
-                    marker_condition = json.dumps(normalized_condition)
+                if non_extra_condition:
+                    marker_condition = json.dumps(non_extra_condition)
                     depends_list.append(f"{conda_dep}[when={marker_condition}]")
                 else:
                     depends_list.append(conda_dep)
