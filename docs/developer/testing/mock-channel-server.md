@@ -152,7 +152,9 @@ The mock channel currently includes:
 
 ### Wheel Support in Repodata
 
-`conda-pypi` extends conda's repodata format to support wheel files. The repodata includes a `packages.whl` section alongside the standard `packages` and `packages.conda` sections:
+`conda-pypi` extends conda's repodata format to support wheel files. The
+repodata includes a nested `v3.whl` section alongside the standard `packages`
+and `packages.conda` sections:
 
 ```json
 {
@@ -161,8 +163,11 @@ The mock channel currently includes:
   },
   "packages": {},
   "packages.conda": {},
-  "packages.whl": {
-    "package-name.whl": { ... }
+  "repodata_version": 3,
+  "v3": {
+    "whl": {
+      "package-name-py3_none_any_0": { ... }
+    }
   }
 }
 ```

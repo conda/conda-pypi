@@ -92,15 +92,7 @@ Wheels served this way behave like any other conda package.
 ### Extras
 
 Wheels in a channel can declare [dependency specifier extras](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras)
-via an `extras` field in the repodata entry. Users can request them with the
-standard bracket syntax:
-
-```bash
-conda install "requests[security]"
-```
-
-The solver will include the extra's dependencies — `cryptography` and
-`pyopenssl` in this case — alongside `requests` in the environment.
+via an `extra_depends` field in the repodata entry.
 
 ## Editable Package Support
 
