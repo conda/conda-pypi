@@ -1,0 +1,19 @@
+### Enhancements
+
+* Update local wheel-channel test repodata to `v3.whl`, `extra_depends`, and normalized `when` conditions (#273)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>
