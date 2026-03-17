@@ -153,12 +153,8 @@ def extract_marker_condition_and_extras(marker: Marker) -> tuple[str | None, lis
                 return None
 
             expr = visit(node[0])
-            i = 1
-            while i + 1 < len(node):
-                op = str(node[i]).lower()
-                rhs_expr = visit(node[i + 1])
-                expr = _combine_expr(expr, op, rhs_expr)
-                i += 2
+            for op, rhs in zip(node[1::2], node[2::2]):
+                expr = _combine_expr(expr, str(op).lower(), visit(rhs))
             return expr
 
         return None
