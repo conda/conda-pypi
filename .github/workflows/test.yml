@@ -19,8 +19,6 @@ concurrency:
 jobs:
   # detect whether any code changes are included in this PR
   changes:
-    if: github.event_name == 'pull_request'
-
     runs-on: ubuntu-slim
     permissions:
       # necessary to detect changes
@@ -43,9 +41,7 @@ jobs:
 
   tests:
     needs: changes
-    if: >-
-      github.event_name != 'pull_request'
-      || needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true'
     name: ${{ matrix.os }}, ${{ matrix.pixi-env }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -86,9 +82,7 @@ jobs:
 
   linux-benchmarks:
     needs: changes
-    if: >-
-      github.event_name != 'pull_request'
-      || needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true'
     name: benchmarks py${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
