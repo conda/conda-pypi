@@ -33,7 +33,7 @@ jobs:
         # https://github.com/dorny/paths-filter#supported-workflows
         if: github.event_name != 'pull_request'
       - name: Filter Changes
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: filter
         with:
           filters: |
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+      - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
         with:
           environments: ${{ env.PIXI_ENV_NAME }}
       - name: Fix Ubuntu configuration
@@ -100,7 +100,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+      - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
         with:
           environments: ${{ env.PIXI_ENV_NAME }}
       - name: Fix Ubuntu configuration
@@ -115,7 +115,7 @@ jobs:
           echo "channels: [conda-forge]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@2ac572851726409c88c02a307f1ea2632a9ea59b # v4.11.0
+        uses: CodSpeedHQ/action@d872884a306dd4853acf0f584f4b706cf0cc72a2 # v4.13.0
         with:
           mode: instrumentation
           token: ${{ secrets.CODSPEED_TOKEN }}
