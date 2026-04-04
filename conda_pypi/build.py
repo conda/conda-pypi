@@ -107,22 +107,25 @@ def build_pypa(
     python_executable = str(paths.get_python_executable(prefix))
 
     builder = ProjectBuilder(path, python_executable=python_executable)
+    
+    def install_missing(requirements):
+        """
+        Check if requirements are missing. If so, invoke conda to install into target prefix.
+        """
+        for _retry in range(2):
+            try:
+                missing = dependencies.check_dependencies(requirements, prefix=prefix)
+                break
+            except dependencies.MissingDependencyError as e:
+                dependencies.ensure_requirements(e.dependencies, prefix=prefix)
 
     build_system_requires = builder.build_system_requires
-    for _retry in range(2):
-        try:
-            missing = dependencies.check_dependencies(build_system_requires, prefix=prefix)
-            break
-        except dependencies.MissingDependencyError as e:
-            dependencies.ensure_requirements(e.dependencies, prefix=prefix)
-
-    log.debug(f"Installing requirements for build system: {missing}")
-    # does flatten() work for a deeper dependency chain?
-    dependencies.ensure_requirements(flatten(missing), prefix=prefix)
-
-    requirements = builder.check_dependencies(distribution)
+    log.debug(f"Ensure requirements for build system: {build_system_requires}")    
+    install_missing(flatten(build_system_requires))
+    
+    requirements = builder.get_requires_for_build(distribution)
     log.debug(f"Additional requirements for {distribution}: {requirements}")
-    dependencies.ensure_requirements(flatten(requirements), prefix=prefix)
+    install_missing(flatten(requirements))
 
     editable_file = builder.build(distribution, output_path)
     log.debug(f"The wheel is at {editable_file}")
