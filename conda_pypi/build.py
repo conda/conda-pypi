@@ -112,7 +112,10 @@ def build_pypa(
         """
         for _retry in range(2):
             try:
-                dependencies.check_dependencies(requirements, prefix=prefix)
+                missing = dependencies.check_dependencies(requirements, prefix=prefix)
+                if missing:
+                    dependencies.ensure_requirements(missing, prefix=prefix)
+                    continue
                 break
             except dependencies.MissingDependencyError as e:
                 dependencies.ensure_requirements(e.dependencies, prefix=prefix)

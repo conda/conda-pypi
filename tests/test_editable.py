@@ -11,7 +11,7 @@ from packaging.requirements import InvalidRequirement
 import build
 import conda_pypi.dependencies_subprocess
 from conda_pypi.build import filter, pypa_to_conda
-from conda_pypi.dependencies.pypi import ensure_requirements
+from conda_pypi.dependencies.pypi import check_dependencies, ensure_requirements
 
 
 def test_editable(tmp_path):
@@ -80,6 +80,18 @@ def test_ensure_requirements(mocker):
     ensure_requirements(["flit_core"], prefix=Path())
     # normalizes/converts the underscore flit_core->flit-core
     assert mock.call_args.args == ("install", "--prefix", ".", "-y", "flit-core")
+
+
+def test_check_dependencies_flattens_missing_dependencies(mocker):
+    mocker.patch("conda_pypi.dependencies.pypi.paths.get_python_executable", return_value=Path())
+    subprocess_run = mocker.patch("conda_pypi.dependencies.pypi.subprocess.run")
+    subprocess_run.return_value.stdout = json.dumps(
+        [["hatchling>=1.26"], ["setuptools>=65", "packaging>=23"]]
+    )
+
+    missing = check_dependencies(["hatchling>=1.26", "setuptools>=65"], prefix=Path())
+
+    assert missing == ["hatchling>=1.26", "packaging>=23"]
 
 
 def test_filter_coverage():
