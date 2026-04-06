@@ -7,26 +7,24 @@ Create wheels from pypa projects.
 import csv
 import itertools
 import json
+import logging
 import os
+import shutil
 import sys
 import tempfile
-import shutil
 from importlib.metadata import PathDistribution
 from pathlib import Path
 from typing import Union
-import logging
-
-from conda_package_streaming.create import conda_builder
-from conda.common.path.windows import win_path_to_unix
-from conda.common.compat import on_win
 
 from build import ProjectBuilder
+from conda.common.compat import on_win
+from conda.common.path.windows import win_path_to_unix
+from conda_package_streaming.create import conda_builder
 
 from conda_pypi import dependencies, installer, paths
 from conda_pypi.conda_build_utils import PathType, sha256_checksum
 from conda_pypi.translate import CondaMetadata
 from conda_pypi.utils import sha256_as_base64url
-
 
 log = logging.getLogger(__name__)
 
@@ -107,7 +105,7 @@ def build_pypa(
     python_executable = str(paths.get_python_executable(prefix))
 
     builder = ProjectBuilder(path, python_executable=python_executable)
-    
+
     def install_missing(requirements):
         """
         Check if requirements are missing. If so, invoke conda to install into target prefix.
@@ -120,12 +118,12 @@ def build_pypa(
                 dependencies.ensure_requirements(e.dependencies, prefix=prefix)
 
     build_system_requires = builder.build_system_requires
-    log.debug(f"Ensure requirements for build system: {build_system_requires}")    
-    install_missing(flatten(build_system_requires))
-    
+    log.debug(f"Ensure requirements for build system: {build_system_requires}")
+    install_missing(build_system_requires)
+
     requirements = builder.get_requires_for_build(distribution)
     log.debug(f"Additional requirements for {distribution}: {requirements}")
-    install_missing(flatten(requirements))
+    install_missing(requirements)
 
     editable_file = builder.build(distribution, output_path)
     log.debug(f"The wheel is at {editable_file}")
