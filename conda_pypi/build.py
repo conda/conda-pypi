@@ -5,7 +5,6 @@ Create wheels from pypa projects.
 """
 
 import csv
-import itertools
 import json
 import logging
 import os
@@ -86,10 +85,6 @@ def json_dumps(object):
     Consistent json formatting.
     """
     return json.dumps(object, indent=2, sort_keys=True)
-
-
-def flatten(iterable):
-    return [*itertools.chain(*iterable)]
 
 
 def build_pypa(
