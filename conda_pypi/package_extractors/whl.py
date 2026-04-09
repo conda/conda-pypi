@@ -13,7 +13,7 @@ from typing import Literal, BinaryIO, Iterable, Tuple
 
 from importlib.metadata import PathDistribution
 
-from conda_pypi.license_files import copy_licenses_into_info
+from conda_pypi.license_files import copy_into_info_licenses
 from conda_pypi.utils import sha256_base64url_to_hex
 
 # Maps wheel scheme names to their conda package directory prefix.
@@ -141,7 +141,7 @@ class MyWheelDestination(WheelDestination):
 
         dist_infos = sorted(self.sp_dir.glob("*.dist-info"))
         if dist_infos:
-            copy_licenses_into_info(
+            copy_into_info_licenses(
                 dist_infos[0],
                 info_dir,
                 PathDistribution(dist_infos[0]).metadata,

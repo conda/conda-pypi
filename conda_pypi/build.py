@@ -22,7 +22,7 @@ from conda_package_streaming.create import conda_builder
 
 from conda_pypi import dependencies, installer, paths
 from conda_pypi.conda_build_utils import PathType, sha256_checksum
-from conda_pypi.license_files import copy_licenses_into_info
+from conda_pypi.license_files import copy_into_info_licenses
 from conda_pypi.translate import CondaMetadata
 from conda_pypi.utils import sha256_as_base64url
 
@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 def filter(tarinfo):
     """
-    Anonymize uid/gid; exclude .git directories.
+    Anonymize uid/gid and exclude .git directories.
     """
     if tarinfo.name.endswith(".git"):
         return None
@@ -158,7 +158,7 @@ def build_conda(
 
     (build_path / "info").mkdir()
     (build_path / "info" / "index.json").write_text(json_dumps(record))
-    copy_licenses_into_info(dist_info, build_path / "info", metadata.metadata, metadata.about)
+    copy_into_info_licenses(dist_info, build_path / "info", metadata.metadata, metadata.about)
     (build_path / "info" / "about.json").write_text(json_dumps(metadata.about))
 
     # used especially for console_scripts

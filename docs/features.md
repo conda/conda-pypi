@@ -75,7 +75,7 @@ current wheels, e.g. PyPI `packaging`), then the parent of `.dist-info`.
 
 ### Dependency environment markers (PEP 508)
 
-PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) are translated for the solver where possible. When building installable .conda packages from wheels, `[when="…"]` is not attached to dependency strings — the `extra == "…"` marker is split into per-extra tables, and other marker conditions are omitted from depends. See {doc}`developer/marker-conversion`.
+PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) are translated for the solver where possible. When building installable .conda packages from wheels, `[when="…"]` is not attached to dependency strings. The `extra == "…"` marker is split into per-extra tables, and other marker conditions are omitted from depends. See {doc}`developer/marker-conversion`.
 
 ## Wheel channels
 
@@ -89,7 +89,7 @@ discussion and subject to change.
 
 If you maintain a conda channel, you can now serve Python wheels directly
 alongside regular conda packages. Add your wheels to a `v3.whl` section
-in `repodata.json` and point each entry at the wheel URL — `conda install`
+in `repodata.json` and point each entry at the wheel URL. `conda install`
 will pick them up, resolve their dependencies, and extract them correctly,
 with no pre-conversion step required.
 

@@ -1,7 +1,7 @@
 """
 Copy wheel license files into conda package info/licenses/ (CEP 34).
 
-Only ``License-File`` entries from METADATA (PEP 639) are used; wheels without
+Only ``License-File`` entries from METADATA (PEP 639) are used. Wheels without
 those lines get no ``info/licenses/`` content from this module.
 """
 
@@ -13,77 +13,75 @@ from pathlib import Path
 from typing import Any
 
 
-def _candidate_license_paths(dist_info: Path, rel: Path) -> list[Path]:
+def _license_file_lookup_paths(dist_info_dir: Path, listed_path: Path) -> list[Path]:
     """
-    Map a ``License-File`` path from METADATA to possible on-disk locations.
-
-    Wheels may ship payloads as ``.dist-info/<name>``, ``.dist-info/licenses/<name>``,
-    or next to ``site-packages``.
+    Paths to try for one ``License-File`` value: ``.dist-info/<path>``, then (if
+    ``listed_path`` is a single segment) ``.dist-info/licenses/<name>``, then
+    ``site-packages/<path>`` via the parent of ``.dist-info``.
     """
-    dist_info = dist_info.resolve()
-    out: list[Path] = [dist_info / rel]
-    if len(rel.parts) == 1:
-        out.append(dist_info / "licenses" / rel)
-    out.append(dist_info.parent / rel)
-    return out
+    dist_info_dir = dist_info_dir.resolve()
+    candidates: list[Path] = [dist_info_dir / listed_path]
+    if len(listed_path.parts) == 1:
+        candidates.append(dist_info_dir / "licenses" / listed_path)
+    candidates.append(dist_info_dir.parent / listed_path)
+    return candidates
 
 
-def copy_licenses_into_info(
-    dist_info: Path,
+def copy_into_info_licenses(
+    dist_info_dir: Path,
     info_dir: Path,
     metadata: PackageMetadata,
     about: dict[str, Any] | None = None,
 ) -> list[str]:
     """
-    Copy files listed in ``License-File`` from the installed wheel's layout into
-    ``info/licenses``. Optionally set ``about['license_file']`` to paths relative
-    to the package root (``info/licenses/...``).
+    Copy ``License-File`` payloads from an installed wheel into
+    ``<info_dir>/licenses/`` (conda package ``info/``). Optionally set
+    ``about['license_file']`` to ``info/licenses/...`` paths.
 
-    Returns those relative paths; empty if no ``License-File`` entries resolve
-    to existing files.
+    Returns those relative paths, or an empty list if nothing resolved.
     """
-    sources: list[Path] = []
+    resolved: list[Path] = []
     seen: set[Path] = set()
-    for raw in metadata.get_all("License-File") or []:
-        line = raw.strip()
-        if not line:
+    for raw_line in metadata.get_all("License-File") or []:
+        entry = raw_line.strip()
+        if not entry:
             continue
-        rel = Path(line)
-        for cand in _candidate_license_paths(dist_info, rel):
-            resolved = cand.resolve()
-            if resolved.is_file() and resolved not in seen:
-                seen.add(resolved)
-                sources.append(resolved)
+        listed_path = Path(entry)
+        for candidate in _license_file_lookup_paths(dist_info_dir, listed_path):
+            path = candidate.resolve()
+            if path.is_file() and path not in seen:
+                seen.add(path)
+                resolved.append(path)
                 break
 
-    if not sources:
+    if not resolved:
         return []
 
-    dest_root = info_dir / "licenses"
-    dest_root.mkdir(parents=True, exist_ok=True)
+    dest_dir = info_dir / "licenses"
+    dest_dir.mkdir(parents=True, exist_ok=True)
 
-    def dest_name(src: Path) -> str:
+    def flatten_name(src: Path) -> str:
         try:
-            rel = src.resolve().relative_to(dist_info.resolve())
+            rel = src.resolve().relative_to(dist_info_dir.resolve())
             return str(rel).replace("\\", "/").replace("/", "__")
         except ValueError:
             return src.name
 
-    raw_names = [dest_name(s) for s in sources]
+    flat_names = [flatten_name(f) for f in resolved]
     counts: dict[str, int] = {}
-    names: list[str] = []
-    for r in raw_names:
-        n = counts.get(r, 0)
-        counts[r] = n + 1
+    dest_names: list[str] = []
+    for flat in flat_names:
+        n = counts.get(flat, 0)
+        counts[flat] = n + 1
         if n == 0:
-            names.append(r)
+            dest_names.append(flat)
         else:
-            p = Path(r)
-            names.append(f"{p.stem}__{n}{p.suffix}")
+            p = Path(flat)
+            dest_names.append(f"{p.stem}__{n}{p.suffix}")
 
     rel_paths: list[str] = []
-    for src, name in zip(sources, names, strict=True):
-        dest = dest_root / name
+    for src, name in zip(resolved, dest_names, strict=True):
+        dest = dest_dir / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
         rel_paths.append(f"info/licenses/{name}")

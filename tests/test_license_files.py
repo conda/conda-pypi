@@ -1,10 +1,10 @@
 from importlib.metadata import PathDistribution
 from pathlib import Path
 
-from conda_pypi.license_files import copy_licenses_into_info
+from conda_pypi.license_files import copy_into_info_licenses
 
 
-def _write_metadata(dist_info: Path, *license_file_lines: str) -> None:
+def _write_dist_info_metadata(dist_info_dir: Path, *license_file_lines: str) -> None:
     lines = [
         "Metadata-Version: 2.4",
         "Name: pkg",
@@ -13,57 +13,58 @@ def _write_metadata(dist_info: Path, *license_file_lines: str) -> None:
         "",
         "",
     ]
-    (dist_info / "METADATA").write_text("\n".join(lines), encoding="utf-8")
+    (dist_info_dir / "METADATA").write_text("\n".join(lines), encoding="utf-8")
 
 
-def test_license_file_short_name_under_dist_info_licenses(tmp_path: Path):
-    """Like PyPI ``packaging``: ``License-File: LICENSE`` under ``.dist-info/licenses/``."""
-    dist_info = tmp_path / "pkg-1.0.dist-info"
-    dist_info.mkdir()
-    lic_dir = dist_info / "licenses"
-    lic_dir.mkdir()
-    (lic_dir / "LICENSE").write_text("Apache-2.0 OR BSD-2-Clause text\n", encoding="utf-8")
-    _write_metadata(dist_info, "License-File: LICENSE")
+def test_license_file_basename_in_dist_info_licenses(tmp_path: Path):
+    """e.g. PyPI ``packaging``: ``License-File: LICENSE`` with file at ``…/licenses/LICENSE``."""
+    dist_info_dir = tmp_path / "pkg-1.0.dist-info"
+    dist_info_dir.mkdir()
+    lic = dist_info_dir / "licenses"
+    lic.mkdir()
+    (lic / "LICENSE").write_text("Apache-2.0 OR BSD-2-Clause text\n", encoding="utf-8")
+    _write_dist_info_metadata(dist_info_dir, "License-File: LICENSE")
 
     info_dir = tmp_path / "info"
     info_dir.mkdir()
-    meta = PathDistribution(dist_info).metadata
-    rel_paths = copy_licenses_into_info(dist_info, info_dir, meta, about=None)
+    meta = PathDistribution(dist_info_dir).metadata
+    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta, about=None)
 
     assert rel_paths == ["info/licenses/licenses__LICENSE"]
-    copied = (info_dir / "licenses" / "licenses__LICENSE").read_text(encoding="utf-8")
-    assert "Apache-2.0" in copied
+    assert "Apache-2.0" in (info_dir / "licenses" / "licenses__LICENSE").read_text(
+        encoding="utf-8"
+    )
 
 
-def test_license_file_relative_path_licenses_subdir(tmp_path: Path):
-    """``License-File: licenses/LICENSE`` with file at ``.dist-info/licenses/LICENSE``."""
-    dist_info = tmp_path / "pkg-1.0.dist-info"
-    dist_info.mkdir()
-    lic_dir = dist_info / "licenses"
-    lic_dir.mkdir()
-    (lic_dir / "LICENSE").write_text("MIT\n", encoding="utf-8")
-    _write_metadata(dist_info, "License-File: licenses/LICENSE")
+def test_license_file_path_with_licenses_prefix(tmp_path: Path):
+    """``License-File: licenses/LICENSE`` at ``…/licenses/LICENSE``."""
+    dist_info_dir = tmp_path / "pkg-1.0.dist-info"
+    dist_info_dir.mkdir()
+    lic = dist_info_dir / "licenses"
+    lic.mkdir()
+    (lic / "LICENSE").write_text("MIT\n", encoding="utf-8")
+    _write_dist_info_metadata(dist_info_dir, "License-File: licenses/LICENSE")
 
     info_dir = tmp_path / "info"
     info_dir.mkdir()
-    meta = PathDistribution(dist_info).metadata
-    rel_paths = copy_licenses_into_info(dist_info, info_dir, meta, about=None)
+    meta = PathDistribution(dist_info_dir).metadata
+    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta, about=None)
 
     assert rel_paths == ["info/licenses/licenses__LICENSE"]
     assert (info_dir / "licenses" / "licenses__LICENSE").read_text() == "MIT\n"
 
 
-def test_license_file_flat_in_dist_info(tmp_path: Path):
-    """``License-File: LICENSE`` next to ``METADATA`` (no ``licenses/`` subdir)."""
-    dist_info = tmp_path / "pkg-1.0.dist-info"
-    dist_info.mkdir()
-    (dist_info / "LICENSE").write_text("BSD\n", encoding="utf-8")
-    _write_metadata(dist_info, "License-File: LICENSE")
+def test_license_file_beside_metadata(tmp_path: Path):
+    """``License-File: LICENSE`` as ``…dist-info/LICENSE`` (no ``licenses/`` subdir)."""
+    dist_info_dir = tmp_path / "pkg-1.0.dist-info"
+    dist_info_dir.mkdir()
+    (dist_info_dir / "LICENSE").write_text("BSD\n", encoding="utf-8")
+    _write_dist_info_metadata(dist_info_dir, "License-File: LICENSE")
 
     info_dir = tmp_path / "info"
     info_dir.mkdir()
-    meta = PathDistribution(dist_info).metadata
-    rel_paths = copy_licenses_into_info(dist_info, info_dir, meta, about=None)
+    meta = PathDistribution(dist_info_dir).metadata
+    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta, about=None)
 
     assert rel_paths == ["info/licenses/LICENSE"]
     assert (info_dir / "licenses" / "LICENSE").read_text() == "BSD\n"

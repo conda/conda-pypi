@@ -15,7 +15,7 @@ def _build_demo_conda_and_paths(
     pypi_demo_package_wheel_path: Path,
     tmp_path: Path,
 ):
-    """Build demo package from wheel; return (target_package_path, paths_json)."""
+    """Build demo package from wheel and return (target_package_path, paths_json)."""
     build_path = tmp_path / "build"
     build_path.mkdir()
     repo_path = tmp_path / "repo"
@@ -54,7 +54,7 @@ def test_build_conda_package_paths_and_sha256_format(
         mm.name for _, mm in package_streaming.stream_conda_component(target_package_path)
     }
 
-    # Paths in paths.json match package; no __pycache__ or .pyc
+    # Paths in paths.json match package. No __pycache__ or .pyc.
     missing = [p for p in paths_json_paths if p not in included_package_paths]
     assert not missing, f"paths.json paths not in package: {missing}"
     with_pycache = [p for p in paths_json_paths if "__pycache__" in p]
