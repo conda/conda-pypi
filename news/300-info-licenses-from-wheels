@@ -1,0 +1,19 @@
+### Enhancements
+
+* Copy wheel files listed in PEP 639 ``License-File`` metadata into ``info/licenses/`` when building conda packages. (#300)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

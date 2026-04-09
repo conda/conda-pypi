@@ -65,6 +65,12 @@ mapping of PyPI dependencies to conda equivalents and provides cross-platform
 support for package conversion, ensuring that converted packages work
 across different operating systems and architectures.
 
+The wheel’s SPDX-style `License-Expression` (or legacy `License` field) is
+copied into conda metadata (`license` in `info/index.json` and `about.json`).
+When the wheel lists files under PEP 639 `License-File`, those files are also
+copied into `info/licenses/` in the `.conda` package, and `about.json` records
+their paths in `license_file`.
+
 ### Dependency environment markers (PEP 508)
 
 PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) are translated for the solver where possible. When building installable .conda packages from wheels, `[when="…"]` is not attached to dependency strings — the `extra == "…"` marker is split into per-extra tables, and other marker conditions are omitted from depends. See {doc}`developer/marker-conversion`.
