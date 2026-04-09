@@ -13,6 +13,21 @@ from pathlib import Path
 from typing import Any
 
 
+def _candidate_license_paths(dist_info: Path, rel: Path) -> list[Path]:
+    """
+    Map a ``License-File`` path from METADATA to possible on-disk locations.
+
+    Wheels may ship payloads as ``.dist-info/<name>``, ``.dist-info/licenses/<name>``,
+    or next to ``site-packages``.
+    """
+    dist_info = dist_info.resolve()
+    out: list[Path] = [dist_info / rel]
+    if len(rel.parts) == 1:
+        out.append(dist_info / "licenses" / rel)
+    out.append(dist_info.parent / rel)
+    return out
+
+
 def copy_licenses_into_info(
     dist_info: Path,
     info_dir: Path,
@@ -34,11 +49,11 @@ def copy_licenses_into_info(
         if not line:
             continue
         rel = Path(line)
-        for base in (dist_info, dist_info.parent):
-            cand = (base / rel).resolve()
-            if cand.is_file() and cand not in seen:
-                seen.add(cand)
-                sources.append(cand)
+        for cand in _candidate_license_paths(dist_info, rel):
+            resolved = cand.resolve()
+            if resolved.is_file() and resolved not in seen:
+                seen.add(resolved)
+                sources.append(resolved)
                 break
 
     if not sources:

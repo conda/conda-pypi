@@ -69,7 +69,9 @@ The wheel’s SPDX-style `License-Expression` (or legacy `License` field) is
 copied into conda metadata (`license` in `info/index.json` and `about.json`).
 When the wheel lists files under PEP 639 `License-File`, those files are also
 copied into `info/licenses/` in the `.conda` package, and `about.json` records
-their paths in `license_file`.
+their paths in `license_file`. Resolution checks `.dist-info/<path>`,
+`.dist-info/licenses/<basename>` for single-segment entries (as used by many
+current wheels, e.g. PyPI `packaging`), then the parent of `.dist-info`.
 
 ### Dependency environment markers (PEP 508)
 
