@@ -11,6 +11,9 @@ import installer.utils
 from os import PathLike
 from typing import Literal, BinaryIO, Iterable, Tuple
 
+from importlib.metadata import PathDistribution
+
+from conda_pypi.license_files import copy_licenses_into_info
 from conda_pypi.utils import sha256_base64url_to_hex
 
 # Maps wheel scheme names to their conda package directory prefix.
@@ -135,6 +138,15 @@ class MyWheelDestination(WheelDestination):
             "fn": fn,
         }
         write_as_json_to_file(info_dir / "index.json", index_json_data)
+
+        dist_infos = sorted(self.sp_dir.glob("*.dist-info"))
+        if dist_infos:
+            copy_licenses_into_info(
+                dist_infos[0],
+                info_dir,
+                PathDistribution(dist_infos[0]).metadata,
+                about=None,
+            )
 
     def finalize_installation(
         self,

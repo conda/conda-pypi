@@ -1,5 +1,5 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 from conda_package_streaming import package_streaming
 
@@ -7,6 +7,7 @@ from conda.testing.fixtures import TmpEnvFixture
 from conda.common.path import get_python_short_path
 
 from conda_pypi.build import build_conda
+from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
 
 
 def _build_demo_conda_and_paths(
@@ -71,3 +72,54 @@ def test_build_conda_package_paths_and_sha256_format(
         if p.get("sha256") and not is_hex_64(p["sha256"])
     ]
     assert not bad, f"path sha256 must be 64-char hex: {bad}"
+
+
+def test_build_conda_copies_licenses_to_info_licenses(
+    tmp_env: TmpEnvFixture,
+    pypi_license_file_wheel_path: Path,
+    tmp_path: Path,
+):
+    """License files from .dist-info are copied to info/licenses and listed in about.json."""
+    build_path = tmp_path / "build"
+    build_path.mkdir()
+    repo_path = tmp_path / "repo"
+    repo_path.mkdir()
+    out_conda = repo_path / "lwt-0.0.1-pypi_0.conda"
+
+    with tmp_env("python=3.12", "pip") as prefix:
+        build_conda(
+            pypi_license_file_wheel_path,
+            build_path,
+            repo_path,
+            Path(prefix, get_python_short_path()),
+            is_editable=False,
+        )
+
+    assert out_conda.is_file()
+
+    info_names = {mm.name for _, mm in package_streaming.stream_conda_info(out_conda)}
+    assert "info/licenses/LICENSE" in info_names
+
+    about = None
+    lic_payload = None
+    for tar, member in package_streaming.stream_conda_info(out_conda):
+        if member.name == "info/about.json":
+            about = json.load(tar.extractfile(member))
+        elif member.name == "info/licenses/LICENSE":
+            lic_payload = tar.extractfile(member).read()
+    assert about is not None
+    assert about.get("license_file") == "info/licenses/LICENSE"
+    assert lic_payload == b"BSD-3-Clause placeholder license text\n"
+
+
+def test_extract_whl_copies_licenses_to_info_licenses(
+    pypi_license_file_wheel_path: Path,
+    tmp_path: Path,
+):
+    """Wheel extractor also populates info/licenses (no about.json in this layout)."""
+    dest = tmp_path / "pkg"
+    dest.mkdir()
+    extract_whl_as_conda_pkg(pypi_license_file_wheel_path, dest)
+    lic = dest / "info" / "licenses" / "LICENSE"
+    assert lic.is_file()
+    assert lic.read_bytes() == b"BSD-3-Clause placeholder license text\n"

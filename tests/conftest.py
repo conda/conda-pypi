@@ -56,6 +56,12 @@ def pypi_demo_package_wheel_path() -> Path:
 
 
 @pytest.fixture(scope="session")
+def pypi_license_file_wheel_path() -> Path:
+    """Wheel with PEP 639 License-File + LICENSE in .dist-info (see tests/pypi_local_index/license-file-pkg/)."""
+    return HERE / "pypi_local_index" / "license-file-pkg" / "lwt-0.0.1-py3-none-any.whl"
+
+
+@pytest.fixture(scope="session")
 def pypi_local_index():
     """
     Runs a local PyPI index by serving the folder "tests/pypi_local_index"
