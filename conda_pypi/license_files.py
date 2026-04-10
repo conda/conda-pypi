@@ -7,23 +7,54 @@ those lines get no ``info/licenses/`` content from this module.
 
 from __future__ import annotations
 
+import logging
 import shutil
-from importlib.metadata import PackageMetadata
+from importlib.metadata import Distribution, PackageMetadata
 from pathlib import Path
 from typing import Any
+
+log = logging.getLogger(__name__)
+
+
+class _MetadataBodyDistribution(Distribution):
+    """Minimal :class:`~importlib.metadata.Distribution` backed by METADATA text only (no disk)."""
+
+    __slots__ = ("_text",)
+
+    def __init__(self, text: str) -> None:
+        self._text = text
+
+    def read_text(self, filename: str) -> str | None:
+        if filename == "METADATA":
+            return self._text
+        return None
+
+    def locate_file(self, path):  # noqa: ARG002
+        return None
+
+
+def package_metadata_from_metadata_body(body: str) -> PackageMetadata:
+    """
+    Parse core metadata from the body of a ``METADATA`` file without reading
+    from the filesystem (e.g. ``WheelFile.read_dist_info('METADATA')``).
+    """
+    return _MetadataBodyDistribution(body).metadata
 
 
 def _license_file_lookup_paths(dist_info_dir: Path, listed_path: Path) -> list[Path]:
     """
     Candidate paths for one ``License-File`` value.
 
-    Checks ``.dist-info/<path>`` (pre-PEP 639 / legacy wheels), then
-    ``.dist-info/licenses/<path>`` (PEP 639, Metadata-Version 2.4+).
+    Order: ``.dist-info/<path>``, then (single segment only)
+    ``.dist-info/licenses/<name>`` (many PEP 639 wheels, e.g. PyPI ``packaging``),
+    then ``site-packages/<path>`` via the parent of ``.dist-info``.
     """
-    return [
-        dist_info_dir / listed_path,
-        dist_info_dir / "licenses" / listed_path,
-    ]
+    dist_info_dir = dist_info_dir.resolve()
+    candidates: list[Path] = [dist_info_dir / listed_path]
+    if len(listed_path.parts) == 1:
+        candidates.append(dist_info_dir / "licenses" / listed_path)
+    candidates.append(dist_info_dir.parent / listed_path)
+    return candidates
 
 
 def copy_into_info_licenses(
@@ -53,7 +84,11 @@ def copy_into_info_licenses(
                 resolved.append(path)
                 break
         else:
-            log.warning("License-File '%s' declared in metadata but not found in %s", entry, dist_info_dir)
+            log.warning(
+                "License-File %r declared in metadata but not found under %s",
+                entry,
+                dist_info_dir,
+            )
 
     if not resolved:
         return []
@@ -61,14 +96,14 @@ def copy_into_info_licenses(
     dest_dir = info_dir / "licenses"
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    def dest_name(src: Path) -> str:
-        licenses_dir = dist_info_dir / "licenses"
+    def flatten_under_dist_info(src: Path) -> str:
         try:
-            return str(src.resolve().relative_to(licenses_dir.resolve()))
+            rel = src.resolve().relative_to(dist_info_dir.resolve())
+            return str(rel).replace("\\", "/").replace("/", "__")
         except ValueError:
             return src.name
 
-    flat_names = [flatten_name(f) for f in resolved]
+    flat_names = [flatten_under_dist_info(f) for f in resolved]
     counts: dict[str, int] = {}
     dest_names: list[str] = []
     for flat in flat_names:
