@@ -49,8 +49,8 @@ def test_license_file_basename_in_dist_info_licenses(tmp_path: Path):
     meta = PathDistribution(dist_info_dir).metadata
     rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
-    assert rel_paths == ["info/licenses/licenses__LICENSE"]
-    assert "Apache-2.0" in (info_dir / "licenses" / "licenses__LICENSE").read_text(
+    assert rel_paths == ["info/licenses/licenses/LICENSE"]
+    assert "Apache-2.0" in (info_dir / "licenses" / "licenses" / "LICENSE").read_text(
         encoding="utf-8"
     )
 
@@ -69,8 +69,8 @@ def test_license_file_path_with_licenses_prefix(tmp_path: Path):
     meta = PathDistribution(dist_info_dir).metadata
     rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
-    assert rel_paths == ["info/licenses/licenses__LICENSE"]
-    assert (info_dir / "licenses" / "licenses__LICENSE").read_text() == "MIT\n"
+    assert rel_paths == ["info/licenses/licenses/LICENSE"]
+    assert (info_dir / "licenses" / "licenses" / "LICENSE").read_text() == "MIT\n"
 
 
 def test_license_file_beside_metadata(tmp_path: Path):
@@ -87,3 +87,21 @@ def test_license_file_beside_metadata(tmp_path: Path):
 
     assert rel_paths == ["info/licenses/LICENSE"]
     assert (info_dir / "licenses" / "LICENSE").read_text() == "BSD\n"
+
+
+def test_license_file_multi_segment_under_licenses_subdir(tmp_path: Path):
+    """``License-File: docs/NOTICE`` with file only under ``…/licenses/docs/NOTICE``."""
+    dist_info_dir = tmp_path / "pkg-1.0.dist-info"
+    dist_info_dir.mkdir()
+    doc = dist_info_dir / "licenses" / "docs"
+    doc.mkdir(parents=True)
+    (doc / "NOTICE").write_text("Legal\n", encoding="utf-8")
+    _write_dist_info_metadata(dist_info_dir, "License-File: docs/NOTICE")
+
+    info_dir = tmp_path / "info"
+    info_dir.mkdir()
+    meta = PathDistribution(dist_info_dir).metadata
+    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
+
+    assert rel_paths == ["info/licenses/licenses/docs/NOTICE"]
+    assert (info_dir / "licenses" / "licenses" / "docs" / "NOTICE").read_text() == "Legal\n"

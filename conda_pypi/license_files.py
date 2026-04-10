@@ -40,20 +40,19 @@ def package_metadata_from_metadata_body(body: str) -> PackageMetadata:
     return _MetadataBodyDistribution(body).metadata
 
 
-def _license_file_lookup_paths(dist_info_dir: Path, listed_path: Path) -> list[Path]:
+def _license_file_lookup_paths(dist_info_resolved: Path, listed_path: Path) -> list[Path]:
     """
-    Candidate paths for one ``License-File`` value.
+    Candidate paths for one ``License-File`` value (under this ``.dist-info`` only).
 
-    Order: ``.dist-info/<path>``, then (single segment only)
-    ``.dist-info/licenses/<name>`` (many PEP 639 wheels, e.g. PyPI ``packaging``),
-    then ``site-packages/<path>`` via the parent of ``.dist-info``.
+    Tries ``.dist-info/<path>`` then ``.dist-info/licenses/<path>`` so both flat
+    layouts and PEP 639 ``licenses/`` trees work, including multi-segment paths
+    like ``docs/NOTICE``. Does not look under ``site-packages`` (avoids picking
+    another distribution's files).
     """
-    dist_info_dir = dist_info_dir.resolve()
-    candidates: list[Path] = [dist_info_dir / listed_path]
-    if len(listed_path.parts) == 1:
-        candidates.append(dist_info_dir / "licenses" / listed_path)
-    candidates.append(dist_info_dir.parent / listed_path)
-    return candidates
+    return [
+        dist_info_resolved / listed_path,
+        dist_info_resolved / "licenses" / listed_path,
+    ]
 
 
 def copy_into_info_licenses(
@@ -65,9 +64,10 @@ def copy_into_info_licenses(
     Copy ``License-File`` payloads from an installed wheel into
     ``<info_dir>/licenses/`` (conda package ``info/``).
 
-    Returns ``info/licenses/...`` paths relative to the package root, or an
-    empty list if nothing resolved.
+    Returns ``info/licenses/...`` paths relative to the package root (using
+    ``/``), or an empty list if nothing resolved.
     """
+    dist_resolved = dist_info_dir.resolve()
     resolved: list[Path] = []
     seen: set[Path] = set()
     for raw_line in metadata.get_all("License-File") or []:
@@ -75,11 +75,13 @@ def copy_into_info_licenses(
         if not entry:
             continue
         listed_path = Path(entry)
-        for candidate in _license_file_lookup_paths(dist_info_dir, listed_path):
-            path = candidate.resolve()
-            if path.is_file() and path not in seen:
-                seen.add(path)
-                resolved.append(path)
+        for candidate in _license_file_lookup_paths(dist_resolved, listed_path):
+            if not candidate.is_file():
+                continue
+            canonical = candidate.resolve()
+            if canonical not in seen:
+                seen.add(canonical)
+                resolved.append(canonical)
                 break
         else:
             log.warning(
@@ -94,30 +96,13 @@ def copy_into_info_licenses(
     dest_dir = info_dir / "licenses"
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    def flatten_under_dist_info(src: Path) -> str:
-        try:
-            rel = src.resolve().relative_to(dist_info_dir.resolve())
-            return str(rel).replace("\\", "/").replace("/", "__")
-        except ValueError:
-            return src.name
-
-    flat_names = [flatten_under_dist_info(f) for f in resolved]
-    counts: dict[str, int] = {}
-    dest_names: list[str] = []
-    for flat in flat_names:
-        n = counts.get(flat, 0)
-        counts[flat] = n + 1
-        if n == 0:
-            dest_names.append(flat)
-        else:
-            p = Path(flat)
-            dest_names.append(f"{p.stem}__{n}{p.suffix}")
-
     rel_paths: list[str] = []
-    for src, name in zip(resolved, dest_names, strict=True):
-        dest = dest_dir / name
+    for src in resolved:
+        rel = src.relative_to(dist_resolved)
+        dest = dest_dir / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
-        rel_paths.append(f"info/licenses/{name}")
+        # conda package paths use forward slashes on all platforms
+        rel_paths.append(f"info/licenses/{rel.as_posix()}")
 
     return rel_paths
