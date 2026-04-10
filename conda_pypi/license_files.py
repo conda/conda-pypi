@@ -11,7 +11,6 @@ import logging
 import shutil
 from importlib.metadata import Distribution, PackageMetadata
 from pathlib import Path
-from typing import Any
 
 log = logging.getLogger(__name__)
 
@@ -61,14 +60,13 @@ def copy_into_info_licenses(
     dist_info_dir: Path,
     info_dir: Path,
     metadata: PackageMetadata,
-    about: dict[str, Any] | None = None,
 ) -> list[str]:
     """
     Copy ``License-File`` payloads from an installed wheel into
-    ``<info_dir>/licenses/`` (conda package ``info/``). Optionally set
-    ``about['license_file']`` to ``info/licenses/...`` paths.
+    ``<info_dir>/licenses/`` (conda package ``info/``).
 
-    Returns those relative paths, or an empty list if nothing resolved.
+    Returns ``info/licenses/...`` paths relative to the package root, or an
+    empty list if nothing resolved.
     """
     resolved: list[Path] = []
     seen: set[Path] = set()
@@ -122,6 +120,4 @@ def copy_into_info_licenses(
         shutil.copy2(src, dest)
         rel_paths.append(f"info/licenses/{name}")
 
-    if about is not None:
-        about["license_file"] = rel_paths[0] if len(rel_paths) == 1 else rel_paths
     return rel_paths

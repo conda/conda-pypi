@@ -79,7 +79,7 @@ def test_build_conda_copies_licenses_to_info_licenses(
     pypi_license_file_wheel_path: Path,
     tmp_path: Path,
 ):
-    """License files from .dist-info are copied to info/licenses and listed in about.json."""
+    """License files from .dist-info are copied to info/licenses."""
     build_path = tmp_path / "build"
     build_path.mkdir()
     repo_path = tmp_path / "repo"
@@ -108,7 +108,7 @@ def test_build_conda_copies_licenses_to_info_licenses(
         elif member.name == "info/licenses/LICENSE":
             lic_payload = tar.extractfile(member).read()
     assert about is not None
-    assert about.get("license_file") == "info/licenses/LICENSE"
+    assert "license_file" not in about
     assert lic_payload == b"BSD-3-Clause placeholder license text\n"
 
 

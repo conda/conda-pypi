@@ -140,12 +140,7 @@ class MyWheelDestination(WheelDestination):
         dist_infos = sorted(self.sp_dir.glob("*.dist-info"))
         if dist_infos:
             wheel_metadata = package_metadata_from_metadata_body(source.read_dist_info("METADATA"))
-            copy_into_info_licenses(
-                dist_infos[0],
-                info_dir,
-                wheel_metadata,
-                about=None,
-            )
+            copy_into_info_licenses(dist_infos[0], info_dir, wheel_metadata)
 
     def finalize_installation(
         self,

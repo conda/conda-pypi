@@ -47,7 +47,7 @@ def test_license_file_basename_in_dist_info_licenses(tmp_path: Path):
     info_dir = tmp_path / "info"
     info_dir.mkdir()
     meta = PathDistribution(dist_info_dir).metadata
-    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta, about=None)
+    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
     assert rel_paths == ["info/licenses/licenses__LICENSE"]
     assert "Apache-2.0" in (info_dir / "licenses" / "licenses__LICENSE").read_text(
@@ -67,7 +67,7 @@ def test_license_file_path_with_licenses_prefix(tmp_path: Path):
     info_dir = tmp_path / "info"
     info_dir.mkdir()
     meta = PathDistribution(dist_info_dir).metadata
-    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta, about=None)
+    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
     assert rel_paths == ["info/licenses/licenses__LICENSE"]
     assert (info_dir / "licenses" / "licenses__LICENSE").read_text() == "MIT\n"
@@ -83,7 +83,7 @@ def test_license_file_beside_metadata(tmp_path: Path):
     info_dir = tmp_path / "info"
     info_dir.mkdir()
     meta = PathDistribution(dist_info_dir).metadata
-    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta, about=None)
+    rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
     assert rel_paths == ["info/licenses/LICENSE"]
     assert (info_dir / "licenses" / "LICENSE").read_text() == "BSD\n"

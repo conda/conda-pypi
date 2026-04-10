@@ -158,7 +158,7 @@ def build_conda(
 
     (build_path / "info").mkdir()
     (build_path / "info" / "index.json").write_text(json_dumps(record))
-    copy_into_info_licenses(dist_info, build_path / "info", metadata.metadata, metadata.about)
+    copy_into_info_licenses(dist_info, build_path / "info", metadata.metadata)
     (build_path / "info" / "about.json").write_text(json_dumps(metadata.about))
 
     # used especially for console_scripts
