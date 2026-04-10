@@ -15,16 +15,15 @@ from typing import Any
 
 def _license_file_lookup_paths(dist_info_dir: Path, listed_path: Path) -> list[Path]:
     """
-    Paths to try for one ``License-File`` value: ``.dist-info/<path>``, then (if
-    ``listed_path`` is a single segment) ``.dist-info/licenses/<name>``, then
-    ``site-packages/<path>`` via the parent of ``.dist-info``.
+    Candidate paths for one ``License-File`` value.
+
+    Checks ``.dist-info/<path>`` (pre-PEP 639 / legacy wheels), then
+    ``.dist-info/licenses/<path>`` (PEP 639, Metadata-Version 2.4+).
     """
-    dist_info_dir = dist_info_dir.resolve()
-    candidates: list[Path] = [dist_info_dir / listed_path]
-    if len(listed_path.parts) == 1:
-        candidates.append(dist_info_dir / "licenses" / listed_path)
-    candidates.append(dist_info_dir.parent / listed_path)
-    return candidates
+    return [
+        dist_info_dir / listed_path,
+        dist_info_dir / "licenses" / listed_path,
+    ]
 
 
 def copy_into_info_licenses(
@@ -53,6 +52,8 @@ def copy_into_info_licenses(
                 seen.add(path)
                 resolved.append(path)
                 break
+        else:
+            log.warning("License-File '%s' declared in metadata but not found in %s", entry, dist_info_dir)
 
     if not resolved:
         return []
@@ -60,10 +61,10 @@ def copy_into_info_licenses(
     dest_dir = info_dir / "licenses"
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    def flatten_name(src: Path) -> str:
+    def dest_name(src: Path) -> str:
+        licenses_dir = dist_info_dir / "licenses"
         try:
-            rel = src.resolve().relative_to(dist_info_dir.resolve())
-            return str(rel).replace("\\", "/").replace("/", "__")
+            return str(src.resolve().relative_to(licenses_dir.resolve()))
         except ValueError:
             return src.name
 
