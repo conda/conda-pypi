@@ -2,6 +2,36 @@
 
 [//]: # (current developments)
 
+## 0.7.0 (2026-04-10)
+
+### Enhancements
+
+* Copy wheel files listed in PEP 639 ``License-File`` metadata into ``info/licenses/`` when building conda packages. (#300)
+
+### Bug fixes
+
+* Improve missing dependency `builder.get_requires_for_build(distribution)`
+  detection, installation when building Python packages. (#281)
+* Drop redundant per-wheel `record_version` from repodata package records. (#289)
+
+### Docs
+
+* Clarify that `conda pypi install -e` is for local project paths only, not pip-style VCS requirement URLs. (#295)
+
+### Other
+
+* Fix test workflow change detection on push and tag events by checking out the repo for paths-filter. (#287)
+* Drop skipped tests that targeted `git+https` editable installs. (#295)
+
+### Contributors
+
+* @danyeaw
+* @dholth
+* @dependabot[bot]
+* @pre-commit-ci[bot]
+
+
+
 ## 0.6.0 (2026-03-30)
 
 ### Enhancements
