@@ -13,34 +13,9 @@ from conda.cli.main import main_subshell
 from conda.core.package_cache_data import PackageCacheData
 from installer import install
 from installer.destinations import SchemeDictionaryDestination
-from installer.records import Hash, RecordEntry
 from installer.sources import WheelFile
 
-from conda_pypi.utils import hash_as_base64url
-
 log = logging.getLogger(__name__)
-
-
-# We've seen some wheels placing identical files in multiple .data/ schemes
-# (e.g., pybind11-global duplicates headers in both data/include/ and
-# headers/). SchemeDictionaryDestination raises FileExistsError on the
-# second copy. Here, we record the already-written file instead.
-#
-# TODO: https://github.com/pypa/installer/pull/216 adds an overwrite_existing
-# flag to SchemeDictionaryDestination that would let us avoid this subclass
-# entirely. However, it has not been released yet, see https://github.com/pypa/installer/issues/218.
-# So we'll have carry this workaround for now.
-class _CondaWheelDestination(SchemeDictionaryDestination):
-    """Skip files that already exist at the target path."""
-
-    def write_to_fs(self, scheme, path, stream, is_executable):
-        target_path = self._path_with_destdir(scheme, path)
-        if os.path.exists(target_path):
-            log.debug(f"Skipping already-installed file: {target_path}")
-            data = Path(target_path).read_bytes()
-            digest = hash_as_base64url(data, self.hash_algorithm)
-            return RecordEntry(path, Hash(self.hash_algorithm, digest), len(data))
-        return super().write_to_fs(scheme, path, stream, is_executable)
 
 
 def install_installer(python_executable: str, whl: Path, build_path: Path):
@@ -60,10 +35,11 @@ def install_installer(python_executable: str, whl: Path, build_path: Path):
         "headers": str(build_path / "include"),  # C/C++ headers (PEP 427 .data/headers/)
     }
 
-    destination = _CondaWheelDestination(
-        scheme,
+    destination = SchemeDictionaryDestination(
+        scheme_dict=scheme,
         interpreter=str(python_executable),
         script_kind="posix",
+        overwrite_existing=True,
     )
 
     with WheelFile.open(whl) as source:
