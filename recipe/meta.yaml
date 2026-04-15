@@ -34,7 +34,7 @@ requirements:
     - packaging
     - unearth
     - python-build
-    - python-installer
+    - python-installer >=1.0
     - platformdirs
     - conda-index
     - conda-package-streaming

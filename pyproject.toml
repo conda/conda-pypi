@@ -31,7 +31,7 @@ dependencies = [
   "build",
   "conda-index >=0.7.0",
   "conda-package-streaming >=0.11",
-  "installer",
+  "installer >=1.0",
   "packaging",
   "pip",
   "platformdirs",
@@ -108,7 +108,7 @@ pytest-codspeed = ">=3.0.0,<5"
 # Build system dependencies
 unearth = ">=0.17.2"
 python-build = "*"
-python-installer = ">=0.7"
+python-installer = ">=1.0"
 packaging = ">=24"
 # Dependencies for corpus tests
 sqlalchemy = "*"
