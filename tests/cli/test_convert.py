@@ -9,6 +9,7 @@ import conda_package_streaming.package_streaming as cps
 
 # Test input paths
 DEMO_WHEEL = "tests/pypi_local_index/demo-package/demo_package-0.1.0-py3-none-any.whl"
+ENTRYPOINT_WHEEL = "tests/pypi_local_index/entrypoint-pkg/entrypoint_pkg-1.0.0-py3-none-any.whl"
 PKG_HAS_BUILD_DEP = "tests/packages/has-build-dep"
 PKG_TEST_DIR = "tests/packages/has-test-dir/test"
 
@@ -324,3 +325,40 @@ def test_convert_with_name_mapping_nonexistent_file(tmp_path):
 
     with pytest.raises(ArgumentError, match="Could not open"):
         main_subshell(*args)
+
+
+def test_convert_wheel_with_entrypoints_uses_link_json(tmp_path):
+    """Entry-point scripts must NOT be baked into the package.
+
+    Conda generates them at install time from info/link.json (CEP-34).
+    Embedding scripts with hardcoded shebangs breaks every environment
+    except the one used during conversion (issue #309).
+    """
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+
+    args = ["pypi", "convert", "--output-folder", str(out_dir), ENTRYPOINT_WHEEL]
+    main_subshell(*args)
+
+    files = list(out_dir.glob("*.conda"))
+    assert files, f"No .conda artifacts found in {out_dir}"
+
+    link_json = None
+    paths_json = None
+
+    for tar, member in cps.stream_conda_info(str(files[0])):
+        if member.name == "info/link.json":
+            link_json = json.load(tar.extractfile(member))
+        elif member.name == "info/paths.json":
+            paths_json = json.load(tar.extractfile(member))
+
+    assert link_json is not None, "info/link.json must be present"
+    entry_points = link_json.get("noarch", {}).get("entry_points", [])
+    assert "my-entrypoint = entrypoint_pkg:main" in entry_points
+
+    assert paths_json is not None, "info/paths.json must be present"
+    path_names = [p["_path"] for p in paths_json["paths"]]
+    assert not any(p.startswith("bin/") for p in path_names), (
+        f"bin/ scripts must not appear in paths.json; found: "
+        f"{[p for p in path_names if p.startswith('bin/')]}"
+    )

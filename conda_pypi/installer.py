@@ -13,9 +13,23 @@ from conda.cli.main import main_subshell
 from conda.core.package_cache_data import PackageCacheData
 from installer import install
 from installer.destinations import SchemeDictionaryDestination
+from installer.records import RecordEntry
 from installer.sources import WheelFile
 
 log = logging.getLogger(__name__)
+
+
+class _CondaWheelDestination(SchemeDictionaryDestination):
+    """Suppress entry-point script generation.
+
+    Conda creates entry-point scripts at install time from info/link.json
+    (CEP-34), so writing them here would only embed a hardcoded shebang
+    that breaks in other environments.
+    """
+
+    def write_script(self, name, module, attr, section):
+        log.debug(f"Skipping script generation for {name} (handled via link.json)")
+        return RecordEntry(path=name, hash_=None, size=None)
 
 
 def install_installer(python_executable: str, whl: Path, build_path: Path):
@@ -35,7 +49,7 @@ def install_installer(python_executable: str, whl: Path, build_path: Path):
         "headers": str(build_path / "include"),  # C/C++ headers (PEP 427 .data/headers/)
     }
 
-    destination = SchemeDictionaryDestination(
+    destination = _CondaWheelDestination(
         scheme_dict=scheme,
         interpreter=str(python_executable),
         script_kind="posix",
