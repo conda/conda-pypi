@@ -137,6 +137,13 @@ class CondaMetadata:
             "license": metadata.get("license_expression") or metadata.get("license") or "",
         }
 
+        import_names = metadata.get_all("import-name")
+        import_namespaces = metadata.get_all("import-namespace")
+        if import_names is not None:
+            about["import_names"] = import_names
+        if import_namespaces is not None:
+            about["import_namespaces"] = import_namespaces
+
         if project_urls := metadata.get_all("project-url"):
             urls = dict(url.split(", ", 1) for url in project_urls)
             for py_name, conda_name in (
