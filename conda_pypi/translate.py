@@ -248,6 +248,42 @@ def remap_match_spec_name(match_spec: MatchSpec, name_map: Callable[[str], str])
     return MatchSpec(match_spec, name=mapped_name)
 
 
+def check_import_name_conflicts(
+    package_import_names: Dict[str, List[str]],
+) -> List[tuple]:
+    """Check for Import-Name conflicts between packages (PEP 794).
+
+    Per PEP 794, tools SHOULD raise an error when two projects about to be
+    installed list names that overlap in each other's ``Import-Name`` entries,
+    because one project would shadow the other's code at runtime.
+
+    Args:
+        package_import_names: Mapping of ``{package_name: [import_name_entries]}``.
+            Each entry may have an optional ``; private`` suffix which is stripped
+            before comparison.
+
+    Returns:
+        List of ``(import_name, first_package, second_package)`` tuples, one per
+        detected conflict.  Empty when there are no conflicts.
+    """
+    seen: Dict[str, str] = {}
+    conflicts = []
+
+    for pkg_name, names in package_import_names.items():
+        for name_entry in names:
+            # Strip the optional "; private" modifier (e.g. "PIL ; private" -> "PIL")
+            bare = name_entry.split(";")[0].strip()
+            if not bare:
+                # Explicitly-empty Import-Name means the project has no import names.
+                continue
+            if bare in seen:
+                conflicts.append((bare, seen[bare], pkg_name))
+            else:
+                seen[bare] = pkg_name
+
+    return conflicts
+
+
 def validate_name_mapping_format(mapping: dict) -> None:
     """
     Validate that the name mapping dict has the correct format.
