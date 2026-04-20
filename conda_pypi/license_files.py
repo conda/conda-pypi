@@ -75,6 +75,8 @@ def copy_into_info_licenses(
         if not entry:
             continue
         listed_path = Path(entry)
+        if listed_path.is_absolute() or ".." in listed_path.parts:
+            raise ValueError(f"License-File {str(listed_path)!r} contains unsafe path segments")
         for candidate in _license_file_lookup_paths(dist_resolved, listed_path):
             if not candidate.is_file():
                 continue
