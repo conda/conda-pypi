@@ -134,7 +134,7 @@ class CondaMetadata:
             "summary": metadata.get("summary") or "",
             "description": metadata.get("description") or "",
             # https://packaging.python.org/en/latest/specifications/core-metadata/#license-expression
-            "license": metadata.get("license_expression") or metadata.get("license") or "",
+            "license": metadata.get("License-Expression") or metadata.get("License") or "",
         }
 
         if project_urls := metadata.get_all("project-url"):

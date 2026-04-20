@@ -1,7 +1,10 @@
 from importlib.metadata import PathDistribution
 from pathlib import Path
 
+import pytest
+
 from conda_pypi.license_files import copy_into_info_licenses, package_metadata_from_metadata_body
+from conda_pypi.translate import CondaMetadata
 
 
 def test_package_metadata_from_body_matches_path_distribution(tmp_path: Path):
@@ -103,3 +106,21 @@ def test_license_file_multi_segment_under_licenses_subdir(tmp_path: Path):
 
     assert rel_paths == ["info/licenses/docs/NOTICE"]
     assert (info_dir / "licenses" / "docs" / "NOTICE").read_text() == "Legal\n"
+
+
+@pytest.mark.parametrize(
+    "license_header,expected",
+    [
+        pytest.param("License-Expression: MIT", "MIT", id="license-expression"),
+        pytest.param("License: MIT License", "MIT License", id="legacy-license"),
+    ],
+)
+def test_license_extracted_from_metadata(tmp_path: Path, license_header: str, expected: str):
+    """License metadata (License-Expression or legacy License) is extracted to about dict."""
+    dist_info_dir = tmp_path / "pkg-1.0.dist-info"
+    dist_info_dir.mkdir()
+    body = f"Metadata-Version: 2.4\nName: pkg\nVersion: 1.0\n{license_header}\n\n"
+    (dist_info_dir / "METADATA").write_text(body, encoding="utf-8")
+
+    conda_meta = CondaMetadata.from_distribution(PathDistribution(dist_info_dir))
+    assert conda_meta.about["license"] == expected
