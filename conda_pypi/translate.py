@@ -8,7 +8,7 @@ import sys
 import time
 from importlib.metadata import Distribution, PackageMetadata, PathDistribution
 from pathlib import Path
-from typing import Any, Optional, List, Dict, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec

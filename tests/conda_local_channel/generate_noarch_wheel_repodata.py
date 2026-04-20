@@ -6,9 +6,10 @@ from the packages listed in ``wheel_packages.txt``. Not intended for production 
 """
 
 import json
-import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
+
+import requests
 
 from conda_pypi.markers import pypi_to_repodata_noarch_whl_entry
 

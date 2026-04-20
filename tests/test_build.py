@@ -1,10 +1,9 @@
 import json
 from pathlib import Path
 
-from conda_package_streaming import package_streaming
-
-from conda.testing.fixtures import TmpEnvFixture
 from conda.common.path import get_python_short_path
+from conda.testing.fixtures import TmpEnvFixture
+from conda_package_streaming import package_streaming
 
 from conda_pypi.build import build_conda
 from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg

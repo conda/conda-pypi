@@ -167,6 +167,9 @@ version-file = "conda_pypi/_version.py"
 [tool.ruff]
 line-length = 99
 
+[tool.ruff.lint]
+extend-select = ["I"] # sort imports
+
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 

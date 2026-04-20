@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from conda.plugins import hookimpl
-from conda.plugins.types import CondaSubcommand, CondaPostCommand
+from conda.plugins.types import CondaPackageExtractor, CondaPostCommand, CondaSubcommand
 
-from conda_pypi import cli
-from conda_pypi import post_command
+from conda_pypi import cli, post_command
 from conda_pypi.main import ensure_target_env_has_externally_managed
-from conda.plugins.types import CondaPackageExtractor
 from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
 
 

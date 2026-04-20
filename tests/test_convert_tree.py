@@ -5,9 +5,9 @@ Test converting a dependency tree to conda.
 import os
 from pathlib import Path
 
+import pytest
 from conda.models.match_spec import MatchSpec
 from conda.testing.fixtures import TmpEnvFixture
-
 from pytest_mock import MockerFixture
 
 from conda_pypi.convert_tree import (
@@ -17,8 +17,6 @@ from conda_pypi.convert_tree import (
 )
 from conda_pypi.downloader import get_package_finder
 from conda_pypi.exceptions import CondaPypiError
-
-import pytest
 
 REPO = Path(__file__).parents[1] / "synthetic_repo"
 

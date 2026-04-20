@@ -1,11 +1,12 @@
-from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
-from conda.base.context import context
-from conda_pypi import plugin
-from pytest_mock import MockerFixture
-from conda_pypi.package_extractors import whl
-import pytest
 from pathlib import Path
 
+import pytest
+from conda.base.context import context
+from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
+from pytest_mock import MockerFixture
+
+from conda_pypi import plugin
+from conda_pypi.package_extractors import whl
 
 WHL_HTTP_URL = "https://files.pythonhosted.org/packages/45/7f/0e961cf3908bc4c1c3e027de2794f867c6c89fb4916fc7dba295a0e80a2d/boltons-25.0.0-py3-none-any.whl"
 CONDA_URL = "https://repo.anaconda.com/pkgs/main/osx-arm64/boltons-25.0.0-py314hca03da5_0.conda"

@@ -2,6 +2,10 @@
 Test functions for transforming repodata.
 """
 
+import tempfile
+from importlib.metadata import PathDistribution
+from pathlib import Path
+
 from conda_pypi.translate import (
     CondaMetadata,
     FileDistribution,
@@ -10,9 +14,6 @@ from conda_pypi.translate import (
     pypi_to_conda_name,
     remap_match_spec_name,
 )
-from importlib.metadata import PathDistribution
-from pathlib import Path
-import tempfile
 
 
 def test_file_distribution():

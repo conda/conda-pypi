@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conda.testing.fixtures import TmpEnvFixture, CondaCLIFixture
+from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 
 
 def test_conda_pypi_install_basic(tmp_env: TmpEnvFixture, conda_cli: CondaCLIFixture):

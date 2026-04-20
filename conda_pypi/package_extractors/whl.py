@@ -1,15 +1,13 @@
 import json
+from os import PathLike
 from pathlib import Path
-
-from installer.records import RecordEntry, Hash
-from installer.sources import WheelFile
-from installer.destinations import WheelDestination
-from installer.utils import Scheme
+from typing import BinaryIO, Iterable, Literal, Tuple
 
 import installer.utils
-
-from os import PathLike
-from typing import Literal, BinaryIO, Iterable, Tuple
+from installer.destinations import WheelDestination
+from installer.records import Hash, RecordEntry
+from installer.sources import WheelFile
+from installer.utils import Scheme
 
 from conda_pypi.license_files import copy_into_info_licenses, package_metadata_from_metadata_body
 from conda_pypi.utils import sha256_base64url_to_hex

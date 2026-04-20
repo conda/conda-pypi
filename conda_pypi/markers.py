@@ -13,10 +13,10 @@ Marker conversion includes:
 
 import json
 import sys
+from typing import Any
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
-from typing import Any
 
 from conda_pypi.name_mapping import pypi_to_conda_name
 

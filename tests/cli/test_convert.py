@@ -1,11 +1,11 @@
 import json
 import os
 
+import conda_package_streaming.package_streaming as cps
 import pytest
 from conda.cli.main import main_subshell
 from conda.common.compat import on_win
 from conda.exceptions import ArgumentError
-import conda_package_streaming.package_streaming as cps
 
 # Test input paths
 DEMO_WHEEL = "tests/pypi_local_index/demo-package/demo_package-0.1.0-py3-none-any.whl"

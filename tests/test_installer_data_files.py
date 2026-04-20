@@ -9,9 +9,9 @@ import os
 from pathlib import Path
 
 import pytest
-from conda.testing.fixtures import TmpEnvFixture
-from conda.common.path import get_python_short_path
 from conda.base.context import context
+from conda.common.path import get_python_short_path
+from conda.testing.fixtures import TmpEnvFixture
 
 from conda_pypi import installer
 from conda_pypi.build import build_pypa
