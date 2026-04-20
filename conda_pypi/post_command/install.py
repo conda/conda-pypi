@@ -4,10 +4,10 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from conda.base.context import context
+from conda.exceptions import CondaFileIOError, CondaVerificationError
 from conda.reporters import get_spinner
-from conda.exceptions import CondaVerificationError, CondaFileIOError
 
-from conda_pypi.main import run_pip_install, compute_record_sum, PyPIDistribution
+from conda_pypi.main import PyPIDistribution, compute_record_sum, run_pip_install
 from conda_pypi.python_paths import get_env_site_packages
 
 if TYPE_CHECKING:

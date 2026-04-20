@@ -4,12 +4,12 @@ Tests that use run `conda pypi install` use `conda_cli` as the primary caller
 
 from __future__ import annotations
 
-from conda.base.context import reset_context
-from conda.testing.fixtures import CondaCLIFixture
-
 import json
 import re
+
 import pytest
+from conda.base.context import reset_context
+from conda.testing.fixtures import CondaCLIFixture
 
 
 def test_cli(conda_cli):

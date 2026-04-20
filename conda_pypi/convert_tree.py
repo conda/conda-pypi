@@ -9,21 +9,19 @@ import pathlib
 import re
 import tempfile
 from pathlib import Path
-from typing import Union, Optional, List
-
-from conda_rattler_solver.solver import RattlerSolver
+from typing import List, Optional, Union
 
 import conda.exceptions
 import platformdirs
 from conda.base.context import context, fresh_context
 from conda.common.path import get_python_short_path
+from conda.core.solve import Solver
+from conda.exceptions import UnsatisfiableError
 from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PrefixRecord
 from conda.reporters import get_spinner
-from conda.core.solve import Solver
-from conda.exceptions import UnsatisfiableError
-
+from conda_rattler_solver.solver import RattlerSolver
 from unearth import PackageFinder
 
 from conda_pypi.build import build_conda

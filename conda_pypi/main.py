@@ -9,20 +9,19 @@ from csv import reader as csv_reader
 from email.parser import HeaderParser
 from logging import getLogger
 from pathlib import Path
-from subprocess import run, CompletedProcess
+from subprocess import CompletedProcess, run
 from tempfile import NamedTemporaryFile
 from typing import Any, Iterable, Literal
 
 from conda.base.context import context
 from conda.cli.main import main_subshell
-from conda.plugins.prefix_data_loaders.pypi.pkg_format import PythonDistribution
 from conda.core.prefix_data import PrefixData
-from conda.exceptions import InvalidVersionSpec
+from conda.exceptions import CondaError, InvalidVersionSpec
 from conda.gateways.disk.read import compute_sum
 from conda.models.enums import PackageType
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PackageRecord
-from conda.exceptions import CondaError
+from conda.plugins.prefix_data_loaders.pypi.pkg_format import PythonDistribution
 from packaging.requirements import Requirement
 from packaging.tags import parse_tag
 from packaging.version import Version

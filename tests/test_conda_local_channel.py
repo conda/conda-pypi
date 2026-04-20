@@ -14,7 +14,6 @@ from pathlib import Path
 from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 
-
 HERE = Path(__file__).parent
 
 

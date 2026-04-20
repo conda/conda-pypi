@@ -2,7 +2,6 @@ import sys
 from subprocess import run
 
 import pytest
-
 from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 from pytest_mock import MockerFixture
 

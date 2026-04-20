@@ -2,12 +2,12 @@
 Install a wheel / install a conda.
 """
 
+import logging
 import os
 import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-import logging
 
 from conda.cli.main import main_subshell
 from conda.core.package_cache_data import PackageCacheData

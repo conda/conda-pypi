@@ -2,13 +2,13 @@ import json
 import subprocess
 from pathlib import Path
 
+import build
 import pytest
 from conda.base.context import context
 from conda.cli.main import main_subshell
 from conda.core.prefix_data import PrefixData
 from packaging.requirements import InvalidRequirement
 
-import build
 import conda_pypi.dependencies_subprocess
 from conda_pypi.build import filter, pypa_to_conda
 from conda_pypi.dependencies.pypi import check_dependencies, ensure_requirements

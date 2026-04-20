@@ -1,7 +1,7 @@
-from tempfile import TemporaryDirectory
+import json
 from argparse import Namespace, _SubParsersAction
 from pathlib import Path
-import json
+from tempfile import TemporaryDirectory
 
 from conda.auxlib.ish import dals
 from conda.base.context import context
