@@ -6,12 +6,13 @@ Tests that data files in wheels are properly installed.
 
 import json
 import os
+import sys
+import tarfile
+import tempfile
 from pathlib import Path
 
 import pytest
 from conda.base.context import context
-from conda.common.path import get_python_short_path
-from conda.testing.fixtures import TmpEnvFixture
 
 from conda_pypi import installer
 from conda_pypi.build import build_pypa
@@ -43,51 +44,42 @@ def test_package_wheel_path(tmp_path_factory):
     )
 
 
-def test_install_installer_data_files_present(
-    tmp_env: TmpEnvFixture,
+def test_install_installer_to_tar_data_files_present(
     test_package_wheel_path: Path,
     tmp_path: Path,
 ):
-    """Test that data files from wheels are installed in build_path."""
-    build_path = tmp_path / "build"
-    build_path.mkdir()
+    """Test that data files from wheels are included in package_paths."""
+    with tempfile.NamedTemporaryFile(suffix=".tar") as tar_file:
+        with tarfile.open(tar_file.name, "w") as tar:
+            package_paths = installer.install_installer_to_tar(
+                sys.executable,
+                test_package_wheel_path,
+                tar,
+            )
 
-    with tmp_env("python=3.12", "pip") as prefix:
-        python_executable = Path(prefix, get_python_short_path())
-
-        installer.install_installer(
-            str(python_executable),
-            test_package_wheel_path,
-            build_path,
-        )
-
-        # Data files should be installed in build_path/share/ (data scheme)
-        data_file = build_path / "share" / "test-package-with-data" / "data" / "test.txt"
-
-        assert data_file.exists(), f"Data file not found at {data_file}"
+        # Data files should be recorded with data scheme path (share/)
+        paths = {p["_path"] for p in package_paths}
+        data_path = "share/test-package-with-data/data/test.txt"
+        assert data_path in paths, f"Data file not found in package_paths: {paths}"
 
 
-def test_install_installer_headers(
-    tmp_env: TmpEnvFixture,
+def test_install_installer_to_tar_headers(
     wheel_with_headers: Path,
     tmp_path: Path,
 ):
-    """Wheel .data/headers/ files are installed to build_path/include/."""
-    build_path = tmp_path / "build"
-    build_path.mkdir()
+    """Wheel .data/headers/ files are recorded with include/ path."""
+    with tempfile.NamedTemporaryFile(suffix=".tar") as tar_file:
+        with tarfile.open(tar_file.name, "w") as tar:
+            package_paths = installer.install_installer_to_tar(
+                sys.executable,
+                wheel_with_headers,
+                tar,
+            )
 
-    with tmp_env("python=3.12") as prefix:
-        python_executable = Path(prefix, get_python_short_path())
-
-        installer.install_installer(
-            str(python_executable),
-            wheel_with_headers,
-            build_path,
+        paths = {p["_path"] for p in package_paths}
+        assert any(p.startswith("include/header_pkg/") for p in paths), (
+            f"Header files not found in package_paths: {paths}"
         )
-
-        header_file = build_path / "include" / "header_pkg" / "header_pkg.h"
-        assert header_file.exists()
-        assert header_file.read_text().startswith("// header_pkg public API")
 
 
 @pytest.fixture(scope="session")

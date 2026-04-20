@@ -24,6 +24,7 @@ from build import ProjectBuilder
 from conda.common.compat import on_win
 from conda.common.path.windows import win_path_to_unix
 from conda_package_streaming.create import conda_builder
+from installer.utils import parse_wheel_filename
 
 from conda_pypi import dependencies, installer, paths
 from conda_pypi.conda_build_utils import PathType, sha256_checksum
@@ -96,20 +97,10 @@ def json_dumps(object):
     return json.dumps(object, indent=2, sort_keys=True)
 
 
-def _whl_dist_info_name(wheel_zip: zipfile.ZipFile) -> str:
-    candidates = {
-        name.split("/", 1)[0]
-        for name in wheel_zip.namelist()
-        if "/" in name and name.split("/", 1)[0].endswith(".dist-info")
-    }
-
-    if not candidates:
-        message = "No .dist-info directory found in wheel"
-        raise FileNotFoundError(message)
-    if len(candidates) > 1:
-        message = f"Multiple .dist-info directories found in wheel: {sorted(candidates)}"
-        raise ValueError(message)
-    return next(iter(candidates))
+def _whl_dist_info_name(whl: Path) -> str:
+    """Derive dist-info directory name from wheel filename per PEP 427."""
+    parsed = parse_wheel_filename(whl.name)
+    return f"{parsed.distribution}-{parsed.version}.dist-info"
 
 
 def _extract_dist_info_dir(
@@ -121,9 +112,6 @@ def _extract_dist_info_dir(
         if info.filename.startswith(prefix):
             wheel_zip.extract(info, target_dir)
     return target_dir / dist_info_name
-
-
-_wheel_dist_info_name = _whl_dist_info_name
 
 
 def _add_tar_bytes(tar: TarFile, name: str, data: bytes, mode: int = 0o664) -> None:
@@ -200,7 +188,7 @@ def build_conda(
         zipfile.ZipFile(whl) as wheel_zip,
         tempfile.TemporaryDirectory(prefix="dist-info") as dist_info_tmp,
     ):
-        dist_info_name = _whl_dist_info_name(wheel_zip)
+        dist_info_name = _whl_dist_info_name(whl)
         dist_info = _extract_dist_info_dir(wheel_zip, Path(dist_info_tmp), dist_info_name)
         wheel_zip.close()  # so installer has exclusive access below
 
@@ -316,7 +304,7 @@ def pypa_to_conda(
         build_path = tmp_path / "build"
 
         package_conda = build_conda(
-            normal_wheel,
+            Path(normal_wheel),
             build_path,
             output_path or tmp_path,
             sys.executable,

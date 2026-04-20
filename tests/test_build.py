@@ -113,7 +113,6 @@ def test_build_conda_copies_licenses_to_info_licenses(
 
 
 def test_build_conda_members_stay_in_info_component(
-    tmp_env: TmpEnvFixture,
     pypi_demo_package_wheel_path: Path,
     tmp_path: Path,
 ):
@@ -186,9 +185,7 @@ def test_conda_package_conforms_to_cep_34_35(
 
     # "pkg-* tarball MUST carry everything else"
     # No pkg entries should be info/ content
-    misplaced_info = [
-        e for e in pkg_entries if e.startswith("info/")
-    ]
+    misplaced_info = [e for e in pkg_entries if e.startswith("info/")]
     assert not misplaced_info, f"CEP 35 violation: pkg archive has info/ entries: {misplaced_info}"
 
     # "Root level MUST match target location (no intermediate subdirectories)"
@@ -220,6 +217,7 @@ def test_conda_package_conforms_to_cep_34_35(
     assert "info/repodata_record.json" not in info_entries, (
         "CEP 34 violation: info/repodata_record.json must not be in distributed artifacts"
     )
+
 
 def test_extract_whl_copies_licenses_to_info_licenses(
     pypi_license_file_wheel_path: Path,
