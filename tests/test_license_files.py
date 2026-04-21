@@ -52,6 +52,7 @@ def test_license_file_basename_in_dist_info_licenses(tmp_path: Path):
     meta = PathDistribution(dist_info_dir).metadata
     rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
+    # #300 asserted the buggy info/licenses/licenses/LICENSE here; #322 fixes it.
     assert rel_paths == ["info/licenses/LICENSE"]
     assert "Apache-2.0" in (info_dir / "licenses" / "LICENSE").read_text(encoding="utf-8")
 
@@ -113,6 +114,7 @@ def test_license_file_multi_segment_under_licenses_subdir(tmp_path: Path):
     [
         pytest.param("../LICENSE", id="parent-traversal"),
         pytest.param("foo/../../../LICENSE", id="deep-traversal"),
+        pytest.param("/etc/passwd", id="absolute-path"),
     ],
 )
 def test_license_file_unsafe_path_raises(tmp_path: Path, unsafe_path: str):
