@@ -18,7 +18,6 @@ import tempfile
 import zipfile
 from importlib.metadata import PathDistribution
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Union
 
 from build import ProjectBuilder
 from conda.common.compat import on_win
@@ -31,9 +30,6 @@ from conda_pypi.conda_build_utils import PathType, sha256_checksum
 from conda_pypi.license_files import copy_into_info_licenses
 from conda_pypi.translate import CondaMetadata
 from conda_pypi.utils import sha256_as_base64url
-
-if TYPE_CHECKING:
-    from tarfile import TarFile
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +46,7 @@ def filter(tarinfo):
 
 
 # see conda_build.build.build_info_files_json_v1
-def paths_json(base: Union[Path, str]):
+def paths_json(base: Path | str):
     """
     Build simple paths.json with only 'hardlink' or 'symlink' types.
     """
@@ -97,36 +93,10 @@ def json_dumps(object):
     return json.dumps(object, indent=2, sort_keys=True)
 
 
-def _whl_dist_info_name(whl: Path) -> str:
-    """Derive dist-info directory name from wheel filename per PEP 427."""
-    parsed = parse_wheel_filename(whl.name)
-    return f"{parsed.distribution}-{parsed.version}.dist-info"
-
-
-def _extract_dist_info_dir(
-    wheel_zip: zipfile.ZipFile, target_dir: Path, dist_info_name: str
-) -> Path:
-    target_dir.mkdir(parents=True, exist_ok=True)
-    prefix = f"{dist_info_name}/"
-    for info in wheel_zip.infolist():
-        if info.filename.startswith(prefix):
-            wheel_zip.extract(info, target_dir)
-    return target_dir / dist_info_name
-
-
-def _add_tar_bytes(tar: TarFile, name: str, data: bytes, mode: int = 0o664) -> None:
-    info = tarfile.TarInfo(name)
-    info.size = len(data)
-    info.mode = mode
-    tar.addfile(info, io.BytesIO(data))
-
-
-def _add_tar_text(tar: TarFile, name: str, text: str, mode: int = 0o664) -> None:
-    _add_tar_bytes(tar, name, text.encode("utf-8"), mode=mode)
-
-
-def _add_tar_json(tar: TarFile, name: str, payload: Any, mode: int = 0o664) -> None:
-    _add_tar_text(tar, name, json_dumps(payload), mode=mode)
+def _add_to_tar(tar, name: str, data: bytes) -> None:
+    tar_info = tarfile.TarInfo(name)
+    tar_info.size = len(data)
+    tar.addfile(tar_info, io.BytesIO(data))
 
 
 def build_pypa(
@@ -188,8 +158,15 @@ def build_conda(
         zipfile.ZipFile(whl) as wheel_zip,
         tempfile.TemporaryDirectory(prefix="dist-info") as dist_info_tmp,
     ):
-        dist_info_name = _whl_dist_info_name(whl)
-        dist_info = _extract_dist_info_dir(wheel_zip, Path(dist_info_tmp), dist_info_name)
+        parsed = parse_wheel_filename(whl.name)
+        dist_info_name = f"{parsed.distribution}-{parsed.version}.dist-info"
+
+        dist_info_tmp_path = Path(dist_info_tmp)
+        prefix = f"{dist_info_name}/"
+        for zip_info in wheel_zip.infolist():
+            if zip_info.filename.startswith(prefix):
+                wheel_zip.extract(zip_info, dist_info_tmp_path)
+        dist_info = dist_info_tmp_path / dist_info_name
         wheel_zip.close()  # so installer has exclusive access below
 
         # This is mainly for METADATA and entry_points.txt. It would be
@@ -207,53 +184,53 @@ def build_conda(
             # XXX set build string as hash of pypa metadata so that conda can re-install
             # when project gains new entry-points, dependencies?
 
-            _add_tar_json(tar, "info/index.json", record)
-            _add_tar_json(tar, "info/about.json", metadata.about)
+            _add_to_tar(tar, "info/index.json", json_dumps(record).encode("utf-8"))
+            _add_to_tar(tar, "info/about.json", json_dumps(metadata.about).encode("utf-8"))
 
             info_tmp = build_path / "info"
             copy_into_info_licenses(dist_info, info_tmp, metadata.metadata)
             licenses_dir = info_tmp / "licenses"
             if licenses_dir.exists():
-                for path in sorted(licenses_dir.rglob("*")):
-                    if not path.is_file():
+                for license_path in sorted(licenses_dir.rglob("*")):
+                    if not license_path.is_file():
                         continue
-                    rel = path.relative_to(info_tmp).as_posix()
-                    _add_tar_bytes(tar, f"info/{rel}", path.read_bytes())
+                    rel = license_path.relative_to(info_tmp).as_posix()
+                    _add_to_tar(tar, f"info/{rel}", license_path.read_bytes())
 
             # used especially for console_scripts
             if link_json := metadata.link_json():
-                _add_tar_json(tar, "info/link.json", link_json)
+                _add_to_tar(tar, "info/link.json", json_dumps(link_json).encode("utf-8"))
 
             # Allow pip to list us as editable or show the path to our project.
             # XXX leaks path
             if project_path:
                 direct_url = project_path.absolute().as_uri()
-                direct_url_payload = json.dumps(
+                direct_url_bytes = json.dumps(
                     {"dir_info": {"editable": is_editable}, "url": direct_url}
-                )
+                ).encode("utf-8")
                 direct_url_member = f"site-packages/{dist_info_name}/direct_url.json"
-                _add_tar_text(tar, direct_url_member, direct_url_payload)
+                _add_to_tar(tar, direct_url_member, direct_url_bytes)
                 package_paths.append(
                     {
                         "_path": direct_url_member,
                         "path_type": str(PathType.hardlink),
-                        "sha256": hashlib.sha256(direct_url_payload.encode("utf-8")).hexdigest(),
-                        "size_in_bytes": len(direct_url_payload.encode("utf-8")),
+                        "sha256": hashlib.sha256(direct_url_bytes).hexdigest(),
+                        "size_in_bytes": len(direct_url_bytes),
                     }
                 )
 
             if test_dir:
-                for path in sorted(test_dir.rglob("*")):
-                    if not path.is_file():
+                for test_path in sorted(test_dir.rglob("*")):
+                    if not test_path.is_file():
                         continue
-                    rel = path.relative_to(test_dir).as_posix()
-                    _add_tar_bytes(tar, f"info/test/{rel}", path.read_bytes())
+                    rel = test_path.relative_to(test_dir).as_posix()
+                    _add_to_tar(tar, f"info/test/{rel}", test_path.read_bytes())
 
-            paths = {
+            paths_data = json_dumps({
                 "paths": sorted(package_paths, key=lambda entry: entry["_path"]),
                 "paths_version": 1,
-            }
-            _add_tar_json(tar, "info/paths.json", paths)
+            }).encode("utf-8")
+            _add_to_tar(tar, "info/paths.json", paths_data)
 
     return output_path / f"{file_id}.conda"
 
