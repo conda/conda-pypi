@@ -8,7 +8,6 @@ import json
 import os
 import sys
 import tarfile
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -49,18 +48,18 @@ def test_install_installer_to_tar_data_files_present(
     tmp_path: Path,
 ):
     """Test that data files from wheels are included in package_paths."""
-    with tempfile.NamedTemporaryFile(suffix=".tar") as tar_file:
-        with tarfile.open(tar_file.name, "w") as tar:
-            package_paths = installer.install_installer_to_tar(
-                sys.executable,
-                test_package_wheel_path,
-                tar,
-            )
+    tar_path = tmp_path / "output.tar"
+    with tarfile.open(tar_path, "w") as tar:
+        package_paths = installer.install_installer_to_tar(
+            sys.executable,
+            test_package_wheel_path,
+            tar,
+        )
 
-        # Data files should be recorded with data scheme path (share/)
-        paths = {p["_path"] for p in package_paths}
-        data_path = "share/test-package-with-data/data/test.txt"
-        assert data_path in paths, f"Data file not found in package_paths: {paths}"
+    # Data files should be recorded with data scheme path (share/)
+    paths = {p["_path"] for p in package_paths}
+    data_path = "share/test-package-with-data/data/test.txt"
+    assert data_path in paths, f"Data file not found in package_paths: {paths}"
 
 
 def test_install_installer_to_tar_headers(
@@ -68,18 +67,18 @@ def test_install_installer_to_tar_headers(
     tmp_path: Path,
 ):
     """Wheel .data/headers/ files are recorded with include/ path."""
-    with tempfile.NamedTemporaryFile(suffix=".tar") as tar_file:
-        with tarfile.open(tar_file.name, "w") as tar:
-            package_paths = installer.install_installer_to_tar(
-                sys.executable,
-                wheel_with_headers,
-                tar,
-            )
-
-        paths = {p["_path"] for p in package_paths}
-        assert any(p.startswith("include/header_pkg/") for p in paths), (
-            f"Header files not found in package_paths: {paths}"
+    tar_path = tmp_path / "output.tar"
+    with tarfile.open(tar_path, "w") as tar:
+        package_paths = installer.install_installer_to_tar(
+            sys.executable,
+            wheel_with_headers,
+            tar,
         )
+
+    paths = {p["_path"] for p in package_paths}
+    assert any(p.startswith("include/header_pkg/") for p in paths), (
+        f"Header files not found in package_paths: {paths}"
+    )
 
 
 @pytest.fixture(scope="session")
