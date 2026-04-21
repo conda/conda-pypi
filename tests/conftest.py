@@ -5,6 +5,8 @@ import pytest
 from conda.base.context import context, reset_context
 from conda.testing import http_test_server
 from conda.testing.fixtures import CondaCLIFixture
+from conda_index.index import ChannelIndex
+from conda_index.utils import CONDA_PACKAGE_EXTENSIONS
 
 pytest_plugins = (
     # Add testing fixtures and internal pytest plugins here
@@ -98,3 +100,16 @@ def with_rattler_solver(monkeypatch):
     monkeypatch.setenv("CONDA_SOLVER", "rattler")
     reset_context()
     assert context.solver == "rattler"
+
+
+@pytest.fixture()
+def channel_index_with_wheels(tmp_path: Path) -> ChannelIndex:
+    return ChannelIndex(
+        tmp_path,
+        "haswheels",  # channel name if different than last segment of tmp_path
+        repodata_v3=True,
+        update_only=True,
+        save_fs_state=False,
+        write_current_repodata=False,
+        cache_kwargs={"package_extensions": CONDA_PACKAGE_EXTENSIONS + (".whl",)},
+    )

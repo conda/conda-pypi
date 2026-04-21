@@ -29,7 +29,7 @@ dependencies = [
   # "conda >=25.11.0",
   # "conda-rattler-solver >=0.0.5",
   "build",
-  "conda-index >=0.7.0",
+  "conda-index >=0.11.0",
   "conda-package-streaming >=0.11",
   "installer >=1.0",
   "packaging",
@@ -47,13 +47,13 @@ conda-pypi = "conda_pypi.plugin"
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64", "linux-aarch64"]
+platforms = ["linux-64", "osx-arm64", "win-64", "linux-aarch64"]
 
 [tool.pixi.dependencies]
 # must match project.dependencies (sans python and conda)
 python = ">=3.10"
 conda = ">=26.1"
-conda-index = ">=0.7.0"
+conda-index = ">=0.11.0"
 conda-package-streaming = ">=0.11"
 conda-rattler-solver = ">=0.0.6"
 packaging = "*"

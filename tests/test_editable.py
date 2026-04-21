@@ -130,7 +130,7 @@ def test_build_in_env(tmp_path):
     )
 
     installed = [
-        record.name for record in PrefixData(prefix, pip_interop_enabled=True).iter_records()
+        record.name for record in PrefixData(prefix, interoperability=True).iter_records()
     ]
 
     assert "packaging" in installed

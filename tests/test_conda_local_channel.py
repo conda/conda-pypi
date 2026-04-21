@@ -31,7 +31,7 @@ def test_conda_channel(conda_local_channel):
 def test_local_channel_repodata_no_per_package_record_version():
     """Wheel entries from generate_noarch_wheel_repodata use top-level repodata_version only."""
     repodata = json.loads((HERE / "conda_local_channel" / "noarch" / "repodata.json").read_text())
-    assert repodata.get("repodata_version") == 3
+    assert repodata.get("repodata_version") == 1
     for record in repodata["v3"]["whl"].values():
         assert "record_version" not in record
 
