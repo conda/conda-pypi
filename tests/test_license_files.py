@@ -121,9 +121,6 @@ def test_license_file_unsafe_path_raises(tmp_path: Path, unsafe_path: str):
     """Reject License-File entries with path traversal or absolute paths."""
     dist_info_dir = tmp_path / "pkg-1.0.dist-info"
     dist_info_dir.mkdir()
-    license_file = (dist_info_dir / unsafe_path).resolve()
-    license_file.parent.mkdir(parents=True, exist_ok=True)
-    license_file.write_text("MIT\n", encoding="utf-8")
     _write_dist_info_metadata(dist_info_dir, f"License-File: {unsafe_path}")
 
     info_dir = tmp_path / "info"
@@ -132,6 +129,8 @@ def test_license_file_unsafe_path_raises(tmp_path: Path, unsafe_path: str):
 
     with pytest.raises(ValueError, match="unsafe path segments"):
         copy_into_info_licenses(dist_info_dir, info_dir, meta)
+
+    assert not (info_dir / "licenses").exists(), "no files should be copied before error"
 
 
 @pytest.mark.parametrize(
