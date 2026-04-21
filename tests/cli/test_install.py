@@ -114,7 +114,7 @@ def test_install_editable_without_packages_succeeds(conda_cli: CondaCLIFixture):
 
 def test_json_output(tmp_env, monkeypatch, conda_cli):
     """Ensure that conda-pypi output respects conda's `--json` config"""
-    monkeypatch.setenv("CONDA_JSON", True)
+    monkeypatch.setenv("CONDA_JSON", "true")
     reset_context()
 
     with tmp_env("python=3.10") as prefix:
@@ -160,7 +160,7 @@ def test_install_package_with_hyphens(tmp_env, conda_cli):
 def test_install_from_whl_augmented_repodata(
     tmp_env, monkeypatch, conda_cli, conda_local_channel, with_rattler_solver
 ):
-    monkeypatch.setenv("CONDA_JSON", "True")
+    monkeypatch.setenv("CONDA_JSON", "true")
     reset_context()
 
     with tmp_env("python=3.12") as prefix:
