@@ -2,6 +2,37 @@
 
 [//]: # (current developments)
 
+## 0.8.0 (2026-04-21)
+
+### Enhancements
+
+* Add function to store pypi metadata in the conda-index cache. This will allow to seed the conda-index cache with PyPI packages to include in repodata. (#276 via #306)
+* Bump `conda-index` to `>=0.11.0` and regenerate the wheel test channel using `ChannelIndex.index(...)` with `repodata_v3=True`. (#306)
+* Convert wheel->conda directly without extracting the wheel to the temporary directory. Stricter separation of elements between `pkg-` and `info-` elements of the `.conda` archive. (#324)
+
+### Bug fixes
+
+* Fix license metadata extraction from wheel METADATA files. The code was using underscore keys (`license_expression`, `license`) but `email.message.Message` requires hyphen keys matching the actual METADATA headers (`License-Expression`, `License`). (#318)
+* Fix nested license directory issue where license files ended up at `info/licenses/licenses/LICENSE` instead of `info/licenses/LICENSE` when wheels use the PEP 639 layout. (#322)
+* Fix converted conda packages contain a root path. (#317 via #324)
+
+### Other
+
+* Enable "sort imports" lint. (#325)
+
+### Contributors
+
+* @agriyakhetarpal
+* @danyeaw
+* @dholth
+* @jezdez
+* @soapy1
+* @conda-bot
+* @danpetry
+* @pre-commit-ci[bot]
+
+
+
 ## 0.7.1 (2026-04-16)
 
 ### Bug fixes
