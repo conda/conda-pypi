@@ -16,14 +16,14 @@
 - name: Dan Yeaw
   email: dan@yeaw.me
   github: danyeaw
-  num_commits: 34
+  num_commits: 35
   first_commit: 2025-08-18 12:34:03
 - name: Daniel Holth
   email: dholth@fastmail.fm
   github: dholth
   alternate_emails:
   - dholth@anaconda.com
-  num_commits: 54
+  num_commits: 55
   first_commit: 2024-07-20 06:13:16
 - name: Mahe Iram Khan
   email: 65779580+ForgottenProgramme@users.noreply.github.com
@@ -40,12 +40,12 @@
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
   github: pre-commit-ci[bot]
-  num_commits: 29
+  num_commits: 30
   first_commit: 2025-08-26 05:45:12
 - name: Sophia Castellarin
   email: scastellarin@quansight.com
   github: soapy1
-  num_commits: 17
+  num_commits: 18
   first_commit: 2025-09-26 16:52:47
 - name: Jean-Christophe Morin
   email: 38703886+JeanChristopheMorinPerso@users.noreply.github.com
@@ -63,7 +63,7 @@
 - name: conda-bot
   email: 18747875+conda-bot@users.noreply.github.com
   github: conda-bot
-  num_commits: 4
+  num_commits: 5
   first_commit: 2026-02-06 13:40:53
 - name: Tomasz Beneś
   email: 44342372+tombenes@users.noreply.github.com
@@ -78,7 +78,7 @@
 - name: danpetry
   email: dpetry@anaconda.com
   github: danpetry
-  num_commits: 1
+  num_commits: 2
   first_commit: 2026-02-25 12:19:06
 - name: Jannis Leidel
   email: jannis@leidel.info

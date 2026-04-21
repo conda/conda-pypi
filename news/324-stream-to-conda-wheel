@@ -1,0 +1,21 @@
+### Enhancements
+
+* Convert wheel->conda directly without extracting wheel to temporary directory.
+  Stricter separation of elements between `pkg-` and `info-` elements of the
+  `.conda` archive. (#324)
+
+### Bug fixes
+
+* Fix converted conda package contains a root path. (#317 via #324)
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>
