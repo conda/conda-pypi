@@ -1,3 +1,4 @@
+import sys
 from importlib.metadata import PathDistribution
 from pathlib import Path
 
@@ -114,7 +115,16 @@ def test_license_file_multi_segment_under_licenses_subdir(tmp_path: Path):
     [
         pytest.param("../LICENSE", id="parent-traversal"),
         pytest.param("foo/../../../LICENSE", id="deep-traversal"),
-        pytest.param("/etc/passwd", id="absolute-path"),
+        pytest.param(
+            "/etc/passwd",
+            id="absolute-path-unix",
+            marks=pytest.mark.skipif(sys.platform == "win32", reason="Unix path"),
+        ),
+        pytest.param(
+            "C:/LICENSE",
+            id="absolute-path-win",
+            marks=pytest.mark.skipif(sys.platform != "win32", reason="Windows path"),
+        ),
     ],
 )
 def test_license_file_unsafe_path_raises(tmp_path: Path, unsafe_path: str):
