@@ -226,10 +226,12 @@ def build_conda(
                     rel = test_path.relative_to(test_dir).as_posix()
                     _add_to_tar(tar, f"info/test/{rel}", test_path.read_bytes())
 
-            paths_data = json_dumps({
-                "paths": sorted(package_paths, key=lambda entry: entry["_path"]),
-                "paths_version": 1,
-            }).encode("utf-8")
+            paths_data = json_dumps(
+                {
+                    "paths": sorted(package_paths, key=lambda entry: entry["_path"]),
+                    "paths_version": 1,
+                }
+            ).encode("utf-8")
             _add_to_tar(tar, "info/paths.json", paths_data)
 
     return output_path / f"{file_id}.conda"
