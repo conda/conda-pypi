@@ -68,20 +68,22 @@ def copy_into_info_licenses(
     ``/``), or an empty list if nothing resolved.
     """
     dist_resolved = dist_info_dir.resolve()
-    resolved: list[Path] = []
+    resolved: list[tuple[Path, Path]] = []  # (source_path, listed_path)
     seen: set[Path] = set()
     for raw_line in metadata.get_all("License-File") or []:
         entry = raw_line.strip()
         if not entry:
             continue
         listed_path = Path(entry)
+        if listed_path.is_absolute() or ".." in listed_path.parts:
+            raise ValueError(f"License-File {str(listed_path)!r} contains unsafe path segments")
         for candidate in _license_file_lookup_paths(dist_resolved, listed_path):
             if not candidate.is_file():
                 continue
             canonical = candidate.resolve()
             if canonical not in seen:
                 seen.add(canonical)
-                resolved.append(canonical)
+                resolved.append((canonical, listed_path))
                 break
         else:
             log.warning(
@@ -97,12 +99,11 @@ def copy_into_info_licenses(
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     rel_paths: list[str] = []
-    for src in resolved:
-        rel = src.relative_to(dist_resolved)
-        dest = dest_dir / rel
+    for src, listed_path in resolved:
+        dest = dest_dir / listed_path
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
         # conda package paths use forward slashes on all platforms
-        rel_paths.append(f"info/licenses/{rel.as_posix()}")
+        rel_paths.append(f"info/licenses/{listed_path.as_posix()}")
 
     return rel_paths

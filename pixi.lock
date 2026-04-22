@@ -11764,7 +11764,7 @@ packages:
   timestamp: 1751548225624
 - pypi: ./
   name: conda-pypi
-  version: 0.7.2.dev36+g15faf3963
+  version: 0.7.2.dev16+g8439bda35.d20260422
   sha256: 7ef1a76fe91fec041a84316483377312d0c8939bad08cc6c211155f54c7e076d
   requires_dist:
   - build

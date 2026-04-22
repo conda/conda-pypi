@@ -1,3 +1,4 @@
+import sys
 from importlib.metadata import PathDistribution
 from pathlib import Path
 
@@ -52,10 +53,9 @@ def test_license_file_basename_in_dist_info_licenses(tmp_path: Path):
     meta = PathDistribution(dist_info_dir).metadata
     rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
-    assert rel_paths == ["info/licenses/licenses/LICENSE"]
-    assert "Apache-2.0" in (info_dir / "licenses" / "licenses" / "LICENSE").read_text(
-        encoding="utf-8"
-    )
+    # #300 asserted the buggy info/licenses/licenses/LICENSE here; #322 fixes it.
+    assert rel_paths == ["info/licenses/LICENSE"]
+    assert "Apache-2.0" in (info_dir / "licenses" / "LICENSE").read_text(encoding="utf-8")
 
 
 def test_license_file_path_with_licenses_prefix(tmp_path: Path):
@@ -106,8 +106,41 @@ def test_license_file_multi_segment_under_licenses_subdir(tmp_path: Path):
     meta = PathDistribution(dist_info_dir).metadata
     rel_paths = copy_into_info_licenses(dist_info_dir, info_dir, meta)
 
-    assert rel_paths == ["info/licenses/licenses/docs/NOTICE"]
-    assert (info_dir / "licenses" / "licenses" / "docs" / "NOTICE").read_text() == "Legal\n"
+    assert rel_paths == ["info/licenses/docs/NOTICE"]
+    assert (info_dir / "licenses" / "docs" / "NOTICE").read_text() == "Legal\n"
+
+
+@pytest.mark.parametrize(
+    "unsafe_path",
+    [
+        pytest.param("../LICENSE", id="parent-traversal"),
+        pytest.param("foo/../../../LICENSE", id="deep-traversal"),
+        pytest.param(
+            "/etc/passwd",
+            id="absolute-path-unix",
+            marks=pytest.mark.skipif(sys.platform == "win32", reason="Unix path"),
+        ),
+        pytest.param(
+            "C:/LICENSE",
+            id="absolute-path-win",
+            marks=pytest.mark.skipif(sys.platform != "win32", reason="Windows path"),
+        ),
+    ],
+)
+def test_license_file_unsafe_path_raises(tmp_path: Path, unsafe_path: str):
+    """Reject License-File entries with path traversal or absolute paths."""
+    dist_info_dir = tmp_path / "pkg-1.0.dist-info"
+    dist_info_dir.mkdir()
+    _write_dist_info_metadata(dist_info_dir, f"License-File: {unsafe_path}")
+
+    info_dir = tmp_path / "info"
+    info_dir.mkdir()
+    meta = PathDistribution(dist_info_dir).metadata
+
+    with pytest.raises(ValueError, match="unsafe path segments"):
+        copy_into_info_licenses(dist_info_dir, info_dir, meta)
+
+    assert not (info_dir / "licenses").exists(), "no files should be copied before error"
 
 
 @pytest.mark.parametrize(
