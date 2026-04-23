@@ -105,6 +105,7 @@ def test_pypi_to_repodata_noarch_whl_entry_minimal():
                 "url": "https://files.pythonhosted.org/foo.whl",
                 "digests": {"sha256": "abc"},
                 "size": 42,
+                "upload_time": "2024-12-06T15:37:21",
             }
         ],
         "info": {
@@ -125,6 +126,7 @@ def test_pypi_to_repodata_noarch_whl_entry_minimal():
     assert entry["subdir"] == "noarch"
     assert entry["noarch"] == "python"
     assert entry["fn"] == "foo_bar-1.0-py3-none-any.whl"
+    assert entry["timestamp"] == 1733499441000
 
     assert any(d.startswith("python >=") for d in entry["depends"])
     te_dep = next(d for d in entry["depends"] if d.startswith("typing_extensions"))
@@ -135,6 +137,24 @@ def test_pypi_to_repodata_noarch_whl_entry_minimal():
     socks = entry["extra_depends"]["socks"]
     assert len(socks) == 1
     assert socks[0].startswith("pysocks")
+
+
+def test_pypi_to_repodata_timestamp_missing_upload_time():
+    pypi_data = {
+        "urls": [
+            {
+                "packagetype": "bdist_wheel",
+                "filename": "foo-1.0-py3-none-any.whl",
+                "url": "https://files.pythonhosted.org/foo.whl",
+                "digests": {"sha256": "abc"},
+                "size": 42,
+            }
+        ],
+        "info": {"name": "foo", "version": "1.0"},
+    }
+    entry = pypi_to_repodata_noarch_whl_entry(pypi_data)
+    assert entry is not None
+    assert entry["timestamp"] == 0
 
 
 def test_pypi_to_repodata_appends_python_when_requires_python_missing():

@@ -13,6 +13,7 @@ Marker conversion includes:
 
 import json
 import sys
+from datetime import datetime, timezone
 from typing import Any
 
 from packaging.markers import Marker
@@ -107,6 +108,18 @@ def _normalize_marker_clause(marker_name: str, op: str, marker_value: str) -> st
         return "__unix" if mapped == "__win" else "__win"
 
     return None
+
+
+def _upload_time_to_ms(upload_time: str | None) -> int:
+    """Convert a PyPI upload_time ISO string to Unix milliseconds."""
+    if not upload_time:
+        return 0
+    if sys.version_info >= (3, 11):
+        # TODO: simplify to one-liner when Python 3.10 support is dropped
+        dt = datetime.fromisoformat(upload_time).replace(tzinfo=timezone.utc)
+    else:
+        dt = datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+    return int(dt.timestamp() * 1000)
 
 
 def extract_marker_condition_and_extras(marker: Marker) -> tuple[str | None, list[str]]:
@@ -230,7 +243,7 @@ def pypi_to_repodata_noarch_whl_entry(
         "sha256": wheel_url.get("digests", {}).get("sha256", ""),
         "size": wheel_url.get("size", 0),
         "subdir": "noarch",
-        # "timestamp": wheel_url.get("upload_time", 0),
+        "timestamp": _upload_time_to_ms(wheel_url.get("upload_time")),
         "noarch": "python",
     }
 

@@ -57,7 +57,7 @@ def store_pypi_metadata(cache: BaseCondaIndexCache, pypi_json: dict[str, Any]):
             {
                 "path": cache.database_path(path),
                 "size": repodata_entry["size"],
-                "mtime": repodata_entry.get("timestamp", 1),
+                "mtime": repodata_entry.get("timestamp", 0),
             }
         ]
     )
