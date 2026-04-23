@@ -7,8 +7,8 @@ from typing import Any
 from conda_index.index import ChannelIndex
 from conda_index.index.cache import BaseCondaIndexCache
 
-from .exceptions import UnableToConvertToRepodataEntry
-from .pypi_metadata import pypi_to_repodata
+from conda_pypi.exceptions import UnableToConvertToRepodataEntry
+from conda_pypi.pypi_metadata import pypi_to_repodata
 
 
 def update_index(path):

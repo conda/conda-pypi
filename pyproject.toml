@@ -168,7 +168,13 @@ version-file = "conda_pypi/_version.py"
 line-length = 99
 
 [tool.ruff.lint]
-extend-select = ["I"] # sort imports
+extend-select = [
+  "I", # sort imports
+  "TID", # use absolute imports
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
