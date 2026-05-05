@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 from conda.plugins import hookimpl
-from conda.plugins.types import CondaPackageExtractor, CondaPostCommand, CondaSubcommand
+from conda.plugins.types import (
+    CondaExternalInstaller,
+    CondaPackageExtractor,
+    CondaPostCommand,
+    CondaSubcommand,
+)
 
 from conda_pypi import cli, post_command
 from conda_pypi.main import ensure_target_env_has_externally_managed
@@ -38,4 +43,15 @@ def conda_package_extractors():
         name="wheel-package",
         extensions=[".whl"],
         extract=extract_whl_as_conda_pkg,
+    )
+
+
+@hookimpl
+def conda_external_installers():
+    from conda_pypi.env_installer import install
+
+    yield CondaExternalInstaller(
+        name="pypi",
+        install=install,
+        aliases=("pip",),
     )
