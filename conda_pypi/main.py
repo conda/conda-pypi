@@ -189,6 +189,31 @@ def ensure_target_env_has_externally_managed(command: str):
         raise ValueError(f"command {command} not recognized.")
 
 
+def notify_externally_managed_future(command: str):
+    """
+    Beta-period post-command hook that prints a one-time notice about upcoming
+    EXTERNALLY-MANAGED enforcement instead of placing the marker file.
+    """
+    # Build environments are ephemeral; never show user-facing notices.
+    if os.environ.get("CONDA_BUILD_STATE") == "BUILD":
+        return
+    # Only notify in non-base environments where pip interop is relevant.
+    base_prefix = Path(context.conda_prefix)
+    target_prefix = Path(context.target_prefix)
+    if base_prefix == target_prefix or base_prefix.resolve() == target_prefix.resolve():
+        return
+    # No point warning about pip protection if pip isn't installed.
+    prefix_data = PrefixData(target_prefix)
+    if not list(prefix_data.query("pip")):
+        return
+    logger.warning(
+        "A future conda release will use PEP 668 to prevent 'pip install' "
+        "in conda environments. conda-pypi lets you install PyPI packages "
+        "natively with conda. "
+        "See: https://conda.github.io/conda-pypi/"
+    )
+
+
 def pypi_lines_for_explicit_lockfile(
     prefix: Path | str, checksums: Iterable[Literal["md5", "sha256"]] | None = None
 ) -> list[str]:

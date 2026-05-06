@@ -4,7 +4,7 @@ from conda.plugins import hookimpl
 from conda.plugins.types import CondaPackageExtractor, CondaPostCommand, CondaSubcommand
 
 from conda_pypi import cli, post_command
-from conda_pypi.main import ensure_target_env_has_externally_managed
+from conda_pypi.main import notify_externally_managed_future
 from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
 
 
@@ -21,9 +21,9 @@ def conda_subcommands():
 @hookimpl
 def conda_post_commands():
     yield CondaPostCommand(
-        name="conda-pypi-ensure-target-env-has-externally-managed",
-        action=ensure_target_env_has_externally_managed,
-        run_for={"install", "create", "update", "remove"},
+        name="conda-pypi-notify-externally-managed-future",
+        action=notify_externally_managed_future,
+        run_for={"install", "create"},
     )
     yield CondaPostCommand(
         name="conda-pypi-post-install-create",
