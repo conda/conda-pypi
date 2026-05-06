@@ -21,7 +21,6 @@ from packaging.version import Version
 from resolvelib import BaseReporter, Resolver
 from resolvelib.providers import AbstractProvider
 from unearth import PackageFinder
-from unearth.evaluator import Package
 
 from conda_pypi.downloader import DEFAULT_INDEX_URLS, get_package_finder
 
@@ -54,26 +53,25 @@ class Candidate:
 
 
 def _fetch_requires_dist(link) -> list[Requirement]:
-    """Extract Requires-Dist from PEP 658 metadata or wheel METADATA."""
-    raw = _fetch_metadata_bytes(link)
+    """Fetch PEP 658 metadata or fall back to extracting METADATA from the wheel."""
+    if link.dist_info_metadata:
+        resp = _requests.get(link.url_without_fragment + ".metadata", timeout=30)
+        resp.raise_for_status()
+        raw = resp.content
+    else:
+        resp = _requests.get(link.url_without_fragment, timeout=120, stream=True)
+        resp.raise_for_status()
+        with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
+            for entry in zf.namelist():
+                if entry.endswith(".dist-info/METADATA"):
+                    raw = zf.read(entry)
+                    break
+            else:
+                raise RuntimeError(
+                    f"No METADATA found in wheel at {link.url_without_fragment}"
+                )
     msg = BytesParser().parsebytes(raw)
     return [Requirement(r) for r in (msg.get_all("Requires-Dist") or [])]
-
-
-def _fetch_metadata_bytes(link) -> bytes:
-    if link.dist_info_metadata:
-        url = link.url_without_fragment + ".metadata"
-        resp = _requests.get(url, timeout=30)
-        resp.raise_for_status()
-        return resp.content
-
-    resp = _requests.get(link.url_without_fragment, timeout=120, stream=True)
-    resp.raise_for_status()
-    with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
-        for entry in zf.namelist():
-            if entry.endswith(".dist-info/METADATA"):
-                return zf.read(entry)
-    raise RuntimeError(f"No METADATA found in wheel at {link.url_without_fragment}")
 
 
 class PyPIProvider(AbstractProvider):
@@ -81,7 +79,7 @@ class PyPIProvider(AbstractProvider):
 
     def __init__(self, finder: PackageFinder) -> None:
         self._finder = finder
-        self._packages_cache: dict[str, list[Package]] = {}
+        self._packages_cache: dict[str, list] = {}
         self._extras: dict[str, set[str]] = {}
 
     def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
@@ -139,8 +137,8 @@ class PyPIProvider(AbstractProvider):
         return deps
 
 
-def get_index_urls() -> list[str]:
-    """Collect PyPI index URLs from environment (PIP_INDEX_URL, etc.)."""
+def make_finder(prefix: str | Path) -> PackageFinder:
+    """Build a ``PackageFinder`` for *prefix*'s Python, respecting env vars."""
     urls: list[str] = []
     index_url = os.environ.get("PIP_INDEX_URL")
     if index_url:
@@ -149,12 +147,7 @@ def get_index_urls() -> list[str]:
         urls.extend(DEFAULT_INDEX_URLS)
     extra = os.environ.get("PIP_EXTRA_INDEX_URL", "")
     urls.extend(u for u in extra.split() if u)
-    return urls
-
-
-def make_finder(prefix: str | Path) -> PackageFinder:
-    """Build a ``PackageFinder`` for *prefix*'s Python, respecting env vars."""
-    return get_package_finder(prefix, index_urls=get_index_urls())
+    return get_package_finder(prefix, index_urls=urls)
 
 
 def resolve(specs: list[str], finder: PackageFinder) -> list[dict[str, str]]:
