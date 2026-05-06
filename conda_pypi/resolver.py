@@ -13,7 +13,6 @@ import os
 import zipfile
 from email.parser import BytesParser
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import requests as _requests
 from packaging.requirements import InvalidRequirement, Requirement
@@ -21,22 +20,12 @@ from packaging.utils import canonicalize_name
 from packaging.version import Version
 from resolvelib import BaseReporter, Resolver
 from resolvelib.providers import AbstractProvider
-from unearth import PackageFinder, TargetPython
+from unearth import PackageFinder
+from unearth.evaluator import Package
 
-from conda_pypi.downloader import DEFAULT_INDEX_URLS
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
-    from typing import Any
-
-    from resolvelib.structs import RequirementInformation
+from conda_pypi.downloader import DEFAULT_INDEX_URLS, get_package_finder
 
 log = logging.getLogger(f"conda.{__name__}")
-
-
-# ---------------------------------------------------------------------------
-# Candidate — a concrete (name, version, link) triple
-# ---------------------------------------------------------------------------
 
 
 class Candidate:
@@ -44,7 +33,7 @@ class Candidate:
 
     __slots__ = ("name", "version", "link", "_deps")
 
-    def __init__(self, name: str, version: Version, link: Any) -> None:
+    def __init__(self, name: str, version: Version, link) -> None:
         self.name = name
         self.version = version
         self.link = link
@@ -64,46 +53,36 @@ class Candidate:
         return f"Candidate({self.name}=={self.version})"
 
 
-def _fetch_requires_dist(link: Any) -> list[Requirement]:
+def _fetch_requires_dist(link) -> list[Requirement]:
     """Extract Requires-Dist from PEP 658 metadata or wheel METADATA."""
     raw = _fetch_metadata_bytes(link)
     msg = BytesParser().parsebytes(raw)
     return [Requirement(r) for r in (msg.get_all("Requires-Dist") or [])]
 
 
-def _fetch_metadata_bytes(link: Any) -> bytes:
-    # PEP 658: index serves metadata alongside the wheel
+def _fetch_metadata_bytes(link) -> bytes:
     if link.dist_info_metadata:
         url = link.url_without_fragment + ".metadata"
         resp = _requests.get(url, timeout=30)
         resp.raise_for_status()
         return resp.content
 
-    # Fallback: download the wheel and extract METADATA from the zip
     resp = _requests.get(link.url_without_fragment, timeout=120, stream=True)
     resp.raise_for_status()
-    data = resp.content
-    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+    with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
         for entry in zf.namelist():
             if entry.endswith(".dist-info/METADATA"):
                 return zf.read(entry)
     raise RuntimeError(f"No METADATA found in wheel at {link.url_without_fragment}")
 
 
-# ---------------------------------------------------------------------------
-# Provider — resolvelib adapter backed by unearth
-# ---------------------------------------------------------------------------
-
-
 class PyPIProvider(AbstractProvider):
-    """resolvelib ``AbstractProvider`` backed by a ``PackageFinder``."""
+    """resolvelib provider backed by an unearth ``PackageFinder``."""
 
     def __init__(self, finder: PackageFinder) -> None:
         self._finder = finder
-        self._packages_cache: dict[str, Sequence[Any]] = {}
+        self._packages_cache: dict[str, list[Package]] = {}
         self._extras: dict[str, set[str]] = {}
-
-    # -- resolvelib interface ------------------------------------------------
 
     def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
         if isinstance(requirement_or_candidate, Candidate):
@@ -113,15 +92,7 @@ class PyPIProvider(AbstractProvider):
             self._extras.setdefault(name, set()).update(requirement_or_candidate.extras)
         return name
 
-    def get_preference(
-        self,
-        identifier: str,
-        resolutions: Mapping,
-        candidates: Mapping,
-        information: Mapping,
-        backtrack_causes: Sequence,
-    ) -> tuple[int, str]:
-        # Prefer already-pinned, then direct requirements, then fewer candidates
+    def get_preference(self, identifier, resolutions, candidates, information, backtrack_causes):
         if identifier in resolutions:
             return (-2, identifier)
         is_direct = any(
@@ -129,18 +100,13 @@ class PyPIProvider(AbstractProvider):
         )
         return (-1 if is_direct else 0, identifier)
 
-    def find_matches(
-        self,
-        identifier: str,
-        requirements: Mapping,
-        incompatibilities: Mapping,
-    ):
+    def find_matches(self, identifier, requirements, incompatibilities):
         reqs = list(requirements[identifier])
         bad = {c.version for c in incompatibilities.get(identifier, ())}
 
         if identifier not in self._packages_cache:
-            self._packages_cache[identifier] = self._finder.find_all_packages(
-                str(identifier)
+            self._packages_cache[identifier] = list(
+                self._finder.find_all_packages(str(identifier))
             )
 
         for pkg in self._packages_cache[identifier]:
@@ -173,11 +139,6 @@ class PyPIProvider(AbstractProvider):
         return deps
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
-
 def get_index_urls() -> list[str]:
     """Collect PyPI index URLs from environment (PIP_INDEX_URL, etc.)."""
     urls: list[str] = []
@@ -193,28 +154,16 @@ def get_index_urls() -> list[str]:
 
 def make_finder(prefix: str | Path) -> PackageFinder:
     """Build a ``PackageFinder`` for *prefix*'s Python, respecting env vars."""
-    from conda.core.prefix_data import PrefixData
-
-    from conda_pypi.exceptions import CondaPypiError
-
-    pd = PrefixData(str(prefix))
-    py_records = list(pd.query("python"))
-    if not py_records:
-        raise CondaPypiError(f"Python not found in {prefix}")
-    py_ver = tuple(int(x) for x in py_records[0].version.split("."))
-    return PackageFinder(
-        index_urls=get_index_urls(),
-        target_python=TargetPython(py_ver=py_ver),
-        only_binary=":all:",
-    )
+    return get_package_finder(prefix, index_urls=get_index_urls())
 
 
 def resolve(specs: list[str], finder: PackageFinder) -> list[dict[str, str]]:
     """
-    Resolve PyPI requirement strings → list of ``{name, version, url}``.
+    Resolve PyPI requirement strings into a list of ``{name, version, url}``
+    dicts suitable for passing to ``conda install``.
 
-    URL/path specs (not parseable as PEP 508 requirements) are returned
-    as-is with *name* and *version* set to empty strings.
+    Specs that cannot be parsed as PEP 508 requirements (URLs, paths) are
+    returned as-is with empty *name* and *version*.
     """
     requirements: list[Requirement] = []
     passthrough_urls: list[str] = []
