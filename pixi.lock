@@ -169,6 +169,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ripgrep-15.1.0-hdab8a38_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.30.0-py310hd8f68c5_0.conda
@@ -369,6 +370,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ripgrep-15.1.0-h1ebd7d5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/rpds-py-0.30.0-py310haddc216_0.conda
@@ -562,6 +564,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ripgrep-15.1.0-h748bcf4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-0.30.0-py310hf3301a5_0.conda
@@ -750,6 +753,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ripgrep-15.1.0-h77a83cd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.30.0-py310h034784e_0.conda
@@ -963,6 +967,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ripgrep-15.1.0-hdab8a38_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.30.0-py311h902ca64_0.conda
@@ -1163,6 +1168,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ripgrep-15.1.0-h1ebd7d5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/rpds-py-0.30.0-py311hc91c717_0.conda
@@ -1356,6 +1362,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ripgrep-15.1.0-h748bcf4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-0.30.0-py311h71babbd_0.conda
@@ -1544,6 +1551,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ripgrep-15.1.0-h77a83cd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.30.0-py311hf51aa87_0.conda
@@ -1757,6 +1765,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ripgrep-15.1.0-hdab8a38_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.30.0-py312h868fb18_0.conda
@@ -1957,6 +1966,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ripgrep-15.1.0-h1ebd7d5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/rpds-py-0.30.0-py312h75d7d99_0.conda
@@ -2150,6 +2160,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ripgrep-15.1.0-h748bcf4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-0.30.0-py312h6ef9ec0_0.conda
@@ -2338,6 +2349,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ripgrep-15.1.0-h77a83cd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.30.0-py312hdabe01f_0.conda
@@ -2550,6 +2562,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ripgrep-15.1.0-hdab8a38_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.30.0-py313h843e2db_0.conda
@@ -2748,6 +2761,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ripgrep-15.1.0-h1ebd7d5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/rpds-py-0.30.0-py313h8f1d341_0.conda
@@ -2941,6 +2955,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ripgrep-15.1.0-h748bcf4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-0.30.0-py313h2c089d5_0.conda
@@ -3129,6 +3144,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ripgrep-15.1.0-h77a83cd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.30.0-py313hfbe8231_0.conda
@@ -3340,6 +3356,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ripgrep-15.1.0-hdab8a38_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.30.0-py314h2e6c369_0.conda
@@ -3538,6 +3555,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ripgrep-15.1.0-h1ebd7d5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/rpds-py-0.30.0-py314h02b7a91_0.conda
@@ -3731,6 +3749,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ripgrep-15.1.0-h748bcf4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-0.30.0-py314haad56a0_0.conda
@@ -3919,6 +3938,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ripgrep-15.1.0-h77a83cd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.30.0-py314h9f07db2_0.conda
@@ -4062,6 +4082,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py314h0f05182_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py314h0f05182_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -4173,6 +4194,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py314h2e8dab5_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py314h2e8dab5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -4277,6 +4299,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py314ha14b1ff_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py314ha14b1ff_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -4375,6 +4398,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py314hc5dbbe4_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py314hc5dbbe4_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -4519,6 +4543,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py310h139afa4_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py310h139afa4_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -4670,6 +4695,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py310hef25091_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py310hef25091_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -4812,6 +4838,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py310haea493c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py310haea493c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -4947,6 +4974,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py310h1637853_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py310h1637853_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -5102,6 +5130,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py312h5253ce2_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -5227,6 +5256,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py312hd41f8a7_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py312hd41f8a7_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -5343,6 +5373,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py312hb3ab3e3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py312hb3ab3e3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -5453,6 +5484,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py312he5662c2_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py312he5662c2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda
@@ -5593,6 +5625,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rever-0.5.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py314h0f05182_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py314h0f05182_1.conda
@@ -5730,6 +5763,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rever-0.5.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py314h2e8dab5_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py314h2e8dab5_1.conda
@@ -5860,6 +5894,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rever-0.5.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py314ha14b1ff_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py314ha14b1ff_1.conda
@@ -5972,6 +6007,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rever-0.5.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py314hc5dbbe4_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py314hc5dbbe4_1.conda
@@ -6122,6 +6158,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py313h54dd161_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py313h54dd161_1.conda
@@ -6255,6 +6292,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py313h62ef0ea_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py313h62ef0ea_1.conda
@@ -6381,6 +6419,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py313h6688731_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py313h6688731_1.conda
@@ -6500,6 +6539,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py313h5fd188c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py313h5fd188c_1.conda
@@ -6650,6 +6690,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py310h139afa4_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py310h139afa4_1.conda
@@ -6787,6 +6828,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py310hef25091_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py310hef25091_1.conda
@@ -6915,6 +6957,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py310haea493c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py310haea493c_1.conda
@@ -7036,6 +7079,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py310h1637853_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py310h1637853_1.conda
@@ -7187,6 +7231,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py311haee01d2_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py311haee01d2_1.conda
@@ -7324,6 +7369,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py311h51cfe5d_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py311h51cfe5d_1.conda
@@ -7452,6 +7498,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py311he363849_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py311he363849_1.conda
@@ -7573,6 +7620,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py311hf893f09_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py311hf893f09_1.conda
@@ -7724,6 +7772,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py312h5253ce2_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py312h5253ce2_1.conda
@@ -7861,6 +7910,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py312hd41f8a7_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py312hd41f8a7_1.conda
@@ -7989,6 +8039,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py312hb3ab3e3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py312hb3ab3e3_1.conda
@@ -8110,6 +8161,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py312he5662c2_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py312he5662c2_1.conda
@@ -8260,6 +8312,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py313h54dd161_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py313h54dd161_1.conda
@@ -8395,6 +8448,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py313h62ef0ea_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py313h62ef0ea_1.conda
@@ -8523,6 +8577,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py313h6688731_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py313h6688731_1.conda
@@ -8644,6 +8699,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py313h5fd188c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py313h5fd188c_1.conda
@@ -8793,6 +8849,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-14.2.7.post0-hb03c661_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/reproc-cpp-14.2.7.post0-hecca717_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.17-py314h0f05182_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py314h0f05182_1.conda
@@ -8928,6 +8985,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-14.2.7.post0-he30d5cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/reproc-cpp-14.2.7.post0-hfae3067_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml-0.18.17-py314h2e8dab5_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-aarch64/ruamel.yaml.clib-0.2.15-py314h2e8dab5_1.conda
@@ -9056,6 +9114,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-14.2.7.post0-h84a0fba_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/reproc-cpp-14.2.7.post0-hf6b4638_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml-0.18.17-py314ha14b1ff_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruamel.yaml.clib-0.2.15-py314ha14b1ff_1.conda
@@ -9177,6 +9236,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-14.2.7.post0-hfd05255_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/reproc-cpp-14.2.7.post0-hac47afa_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-15.0.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml-0.18.17-py314hc5dbbe4_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ruamel.yaml.clib-0.2.15-py314hc5dbbe4_1.conda
@@ -11764,8 +11824,8 @@ packages:
   timestamp: 1751548225624
 - pypi: ./
   name: conda-pypi
-  version: 0.8.1.dev7+g967efefe7
-  sha256: 0f65643b5acd66c52f330ce5d1d452342fe7a021213243d2f26e37f1b7a62e9e
+  version: 0.4.1.dev58+g7a8983313.d20260506
+  sha256: 11615d937900af1496f7b40391176641db87b362022b057ba741f605f5e7839d
   requires_dist:
   - build
   - conda-index>=0.11.0
@@ -11774,6 +11834,7 @@ packages:
   - packaging
   - pip
   - platformdirs
+  - resolvelib>=1.0
   - unearth
   requires_python: '>=3.10'
 - conda: https://conda.anaconda.org/conda-forge/noarch/conda-rattler-solver-0.0.6-pyhcf101f3_0.conda
@@ -21127,6 +21188,16 @@ packages:
   - pkg:pypi/requests-toolbelt?source=hash-mapping
   size: 44285
   timestamp: 1733734886897
+- conda: https://conda.anaconda.org/conda-forge/noarch/resolvelib-1.2.1-pyhd8ed1ab_0.conda
+  sha256: 92027319cfb2ab3e38dc11594d7704d301d4048a1e2be531f55f7eafe744ffa5
+  md5: 1a8bcf0bb5d49ce0b1e9e31cceeb2b45
+  depends:
+  - python >=3.10
+  license: ISC
+  purls:
+  - pkg:pypi/resolvelib?source=hash-mapping
+  size: 335755
+  timestamp: 1760802465911
 - conda: https://conda.anaconda.org/conda-forge/noarch/rever-0.5.1-pyhd8ed1ab_1.conda
   sha256: b87d26be3989614971e8e12f0f2a00b81e5a17496df0982c10aa22edca8c2f93
   md5: 96a6ce51bc648ea7f293c1808e3b3633
