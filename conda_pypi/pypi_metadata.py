@@ -79,7 +79,7 @@ def pypi_to_repodata(
         "build_number": 0,
         "depends": depends_list,
         "extra_depends": extra_depends_dict,
-        "fn": f"{pypi_info.get('name')}-{pypi_info.get('version')}-py3-none-any.whl",
+        "fn": wheel_url.get("filename", ""),
         "sha256": wheel_url.get("digests", {}).get("sha256", ""),
         "size": wheel_url.get("size", 0),
         "subdir": "noarch",
