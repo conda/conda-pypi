@@ -23,7 +23,7 @@ def conda_post_commands():
     yield CondaPostCommand(
         name="conda-pypi-notify-externally-managed-future",
         action=notify_externally_managed_future,
-        run_for={"install", "create"},
+        run_for={"install", "create", "env_create"},
     )
     yield CondaPostCommand(
         name="conda-pypi-post-install-create",
