@@ -191,7 +191,7 @@ def ensure_target_env_has_externally_managed(command: str):
 
 def notify_externally_managed_future(command: str):
     """
-    Beta-period post-command hook that prints a one-time notice about upcoming
+    Beta-period post-command hook that logs a warning about upcoming
     EXTERNALLY-MANAGED enforcement instead of placing the marker file.
     """
     # Build environments are ephemeral; never show user-facing notices.
@@ -207,10 +207,14 @@ def notify_externally_managed_future(command: str):
     if not list(prefix_data.query("pip")):
         return
     logger.warning(
-        "A future conda release will use PEP 668 to prevent 'pip install' "
-        "in conda environments. conda-pypi lets you install PyPI packages "
-        "natively with conda. "
-        "See: https://conda.github.io/conda-pypi/"
+        "\n"
+        "  This environment has pip installed. A future conda release will\n"
+        "  protect conda environments from accidental 'pip install' usage.\n"
+        "  Try the beta to install PyPI packages natively with conda:\n"
+        "    conda config --set solver rattler\n"
+        "    conda config --append channels conda-pypi\n"
+        "    conda install <package>\n"
+        "  More info: https://docs.conda.io/projects/conda/en/stable/new-features.html"
     )
 
 
