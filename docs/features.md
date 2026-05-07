@@ -3,6 +3,42 @@
 `conda-pypi` uses the `conda` plugin system to implement several features
 that make `conda` integrate better with the PyPI ecosystem:
 
+## Native wheel installation
+
+:::{admonition} Beta
+:class: warning
+
+This feature is in beta. It is based on a [draft CEP for Repodata Wheel
+Support](https://github.com/conda/ceps/pull/145) that is still under active
+discussion and subject to change. We welcome your feedback. Please share your
+experience in the [conda community channels](https://conda.org/community) or
+open an issue on [GitHub](https://github.com/conda/conda-pypi/issues).
+:::
+
+Try the beta for installing wheels from PyPI using `conda install` using these steps:
+1. `conda config --set solver rattler`
+2. `conda config --append channels conda-pypi`
+3. `conda install <package>`
+
+If you maintain a conda channel, you can also now serve Python wheels directly
+alongside regular conda packages. Add your wheels to a `v3.whl` section
+in `repodata.json` and point each entry at the wheel URL. `conda install`
+will pick them up, resolve their dependencies, and extract them correctly,
+with no pre-conversion step required.
+
+```bash
+conda install -c https://my-wheel-channel requests
+```
+
+Wheels served this way behave like any other conda package.
+
+### Extras and markers
+
+Wheels in a channel can declare [dependency specifier extras](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras)
+via an `extra_depends` field in the repodata entry.
+
+In the PyPA grammar, extras are a comma-separated list of names. Multiple extras union their requirements, and there is no reserved name meaning “all extras.” Optional extras in `extra_depends` are resolved by the Rattler solver.
+
 ## The `conda pypi` subcommand
 
 This subcommand provides a safer way to install PyPI packages in conda
@@ -76,34 +112,7 @@ checks `.dist-info/<path>` (pre-PEP 639 wheels) and `.dist-info/licenses/<path>`
 
 PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) are translated for the solver where possible. When building installable .conda packages from wheels, `[when="…"]` is not attached to dependency strings. The `extra == "…"` marker is split into per-extra tables, and other marker conditions are omitted from depends. See {doc}`developer/marker-conversion`.
 
-## Wheel channels
 
-:::{admonition} Experimental
-:class: warning
-
-This feature is experimental. It is based on a [draft CEP for Repodata Wheel
-Support](https://github.com/conda/ceps/pull/145) that is still under active
-discussion and subject to change.
-:::
-
-If you maintain a conda channel, you can now serve Python wheels directly
-alongside regular conda packages. Add your wheels to a `v3.whl` section
-in `repodata.json` and point each entry at the wheel URL. `conda install`
-will pick them up, resolve their dependencies, and extract them correctly,
-with no pre-conversion step required.
-
-```bash
-conda install -c https://my-wheel-channel requests
-```
-
-Wheels served this way behave like any other conda package.
-
-### Extras and markers
-
-Wheels in a channel can declare [dependency specifier extras](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras)
-via an `extra_depends` field in the repodata entry.
-
-In the PyPA grammar, extras are a comma-separated list of names. Multiple extras union their requirements, and there is no reserved name meaning “all extras.” Optional extras in `extra_depends` are resolved by the Rattler solver.
 
 ## Editable Package Support
 

@@ -3,21 +3,44 @@
 ## Installation
 
 `conda-pypi` is a `conda` plugin that needs to be installed next to
-`conda` in the `base` environment:
+`conda` in the `base` environment. Starting with `conda` 26.5.0, it is installed
+by default. However, you can also install it manually:
 
 ```bash
 conda install -n base conda-pypi
 ```
 
-Once installed, the `conda pypi` subcommand becomes available across all your
+For the main functionality, some configuration is also required:
+
+```bash
+# Use the rattler solver for PyPI-aware dependency resolution
+conda config --set solver rattler
+# Allow packages from different channels to mix without strict priority conflicts
+conda config --set channel_priority flexible
+# Add the conda-pypi channel for native PyPI package metadata
+conda config --append channels conda-pypi
+```
+
+Once installed, the `conda pypi` subcommand also becomes available across all your
 conda environments.
 
 ## Basic usage
 
 `conda-pypi` provides several {doc}`features`. The main functionality is
-accessed through the `conda pypi` command:
+accessed through the normal `conda install` command:
 
-### Installing PyPI packages
+### Native PyPI package support
+
+```bash
+conda install django-modern-rest
+```
+
+This will natively install the wheels for `django-modern-rest` from PyPI to your current
+environment. Since it is a native installation served by metadata from the `conda-pypi`
+channel, all other features of conda should work the same as installing any other
+`.conda` package.
+
+### Installing PyPI packages through conversion
 
 Assuming you have an activated conda environment named `my-python-env` that
 includes `python` and `pip` installed, and a configured conda channel, you can
@@ -101,3 +124,26 @@ a `conda pypi` command on them.
 
 More details about this protection mechanism can be found at
 {ref}`externally-managed`.
+
+## Uninstallation
+
+To revert the configuration changes made during installation:
+
+```bash
+# Remove the conda-pypi channel
+conda config --remove channels conda-pypi
+
+# Revert the solver and channel priority to the conda defaults
+conda config --remove-key solver
+conda config --remove-key channel_priority
+```
+
+If you set `rattler` or `channel_priority` for reasons unrelated to `conda-pypi`,
+skip those `--remove-key` steps to keep your existing configuration. If you prefer
+to restore `channel_priority` to `strict` rather than the default, use:
+
+```bash
+conda config --set channel_priority strict
+```
+
+Note that `strict` channel priority may cause dependency resolution failures.

@@ -3,8 +3,8 @@
 Better PyPI interoperability for the conda ecosystem.
 
 > [!IMPORTANT]
-> This project is still in early stages of development. Don't use it in production (yet).
-> We do welcome feedback on what the expected behaviour should have been if something doesn't work!
+> This project is currently in beta. Use with caution in production environments.
+> We welcome feedback. If something doesn't work as expected, please let us know!
 
 ## Project Status
 
@@ -17,13 +17,18 @@ This is a **community-maintained** project under the [conda](https://github.com/
 
 ## What is this?
 
-Includes:
+Native support for installing wheels from PyPI using `conda install` using these steps:
+1. `conda config --set solver rattler`
+2. `conda config --set channel_priority flexible`
+3. `conda config --append channels conda-pypi`
+4. `conda install <package>`
+
+Also includes:
 
 - `conda pypi install`: Converts PyPI packages to `.conda` format for safer installation.
 - `conda pypi install -e .`: Converts a path to an editable `.conda` format package.
 - `conda pypi convert`: Convert PyPI packages to `.conda` format without installing them.
-- `conda install` from wheel channels (experimental): channels can serve pure Python wheels directly in `repodata.json`.
-- Adds `EXTERNALLY-MANAGED` to your environments.
+- A warning when running `conda create` or `conda install` with `pip` in the environment.
 
 ## Why?
 
