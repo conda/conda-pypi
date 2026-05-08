@@ -10,15 +10,12 @@ by default. However, you can also install it manually:
 conda install -n base conda-pypi
 ```
 
-For the main functionality, some configuration is also required:
+The `conda-pypi` channel is configured automatically on install. For the main
+functionality, set the solver:
 
 ```bash
-# Use the rattler solver for PyPI-aware dependency resolution
 conda config --set solver rattler
-# Allow packages from different channels to mix without strict priority conflicts
 conda config --set channel_priority flexible
-# Add the conda-pypi channel for native PyPI package metadata
-conda config --append channels conda-pypi
 ```
 
 Once installed, the `conda pypi` subcommand also becomes available across all your
@@ -127,23 +124,10 @@ More details about this protection mechanism can be found at
 
 ## Uninstallation
 
-To revert the configuration changes made during installation:
+The `conda-pypi` channel mapping is removed automatically when the package is
+uninstalled. To also revert solver settings:
 
 ```bash
-# Remove the conda-pypi channel
-conda config --remove channels conda-pypi
-
-# Revert the solver and channel priority to the conda defaults
 conda config --remove-key solver
 conda config --remove-key channel_priority
 ```
-
-If you set `rattler` or `channel_priority` for reasons unrelated to `conda-pypi`,
-skip those `--remove-key` steps to keep your existing configuration. If you prefer
-to restore `channel_priority` to `strict` rather than the default, use:
-
-```bash
-conda config --set channel_priority strict
-```
-
-Note that `strict` channel priority may cause dependency resolution failures.

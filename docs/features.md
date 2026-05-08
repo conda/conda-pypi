@@ -15,10 +15,9 @@ experience in the [conda community channels](https://conda.org/community) or
 open an issue on [GitHub](https://github.com/conda/conda-pypi/issues).
 :::
 
-Try the beta for installing wheels from PyPI using `conda install` using these steps:
+Try the beta for installing wheels from PyPI using `conda install`:
 1. `conda config --set solver rattler`
-2. `conda config --append channels conda-pypi`
-3. `conda install <package>`
+2. `conda install <package>`
 
 If you maintain a conda channel, you can also now serve Python wheels directly
 alongside regular conda packages. Add your wheels to a `v3.whl` section

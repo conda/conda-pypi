@@ -212,7 +212,6 @@ def notify_externally_managed_future(command: str):
         "  protect conda environments from accidental 'pip install' usage.\n"
         "  Try the beta to install PyPI packages natively with conda:\n"
         "    conda config --set solver rattler\n"
-        "    conda config --append channels conda-pypi\n"
         "    conda install <package>\n"
         "  More info: https://docs.conda.io/projects/conda/en/stable/new-features.html"
     )

@@ -17,11 +17,10 @@ This is a **community-maintained** project under the [conda](https://github.com/
 
 ## What is this?
 
-Native support for installing wheels from PyPI using `conda install` using these steps:
+Native support for installing wheels from PyPI using `conda install`:
 1. `conda config --set solver rattler`
 2. `conda config --set channel_priority flexible`
-3. `conda config --append channels conda-pypi`
-4. `conda install <package>`
+3. `conda install <package>`
 
 Also includes:
 
