@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Add upload timestamps to PyPI metadata conversion to repodata. (#341)
+* Add upload timestamps to PyPI metadata conversion to repodata. (#341 and #360)
 
 ### Bug fixes
 

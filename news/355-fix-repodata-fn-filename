@@ -4,7 +4,7 @@
 
 ### Bug fixes
 
-* Fix `pypi_to_repodata` using wrong source for `fn` field. The wheel filename is now taken from the URL entry instead of the package info dict. (#355)
+* Fix `pypi_to_repodata` using wrong source for `fn` field. The wheel filename is now taken from the URL entry instead of the package info dict. (#355 and #360)
 
 ### Deprecations
 
