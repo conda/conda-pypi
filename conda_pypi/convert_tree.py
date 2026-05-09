@@ -9,19 +9,20 @@ import pathlib
 import re
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
+
+if TYPE_CHECKING:
+    from conda.core.solve import Solver
 
 import conda.exceptions
 import platformdirs
 from conda.base.context import context, fresh_context
 from conda.common.path import get_python_short_path
-from conda.core.solve import Solver
 from conda.exceptions import UnsatisfiableError
 from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PrefixRecord
 from conda.reporters import get_spinner
-from conda_rattler_solver.solver import RattlerSolver
 from unearth import PackageFinder
 
 from conda_pypi.build import build_conda
@@ -102,9 +103,9 @@ class ConvertTree:
                 missing_packages = set(e._kwargs["packages"])
                 log.debug(f"Missing packages: {missing_packages}")
             except UnsatisfiableError as e:
-                # parse message
                 log.debug("Unsatisfiable: %r", e)
-                missing_packages.update(set(parse_rattler_solver_error(e.message)))
+                missing_packages.update(parse_libmamba_solver_error(e.message))
+                missing_packages.update(parse_rattler_solver_error(e.message))
 
             for package in sorted(missing_packages - fetched_packages):
                 find_and_fetch(self.finder, wheel_dir, package)
@@ -200,7 +201,8 @@ class ConvertTree:
             else:  # more wheels for us to convert
                 channels = [local_channel]
 
-            solver = RattlerSolver(
+            solver_backend = context.plugin_manager.get_cached_solver_backend()
+            solver = solver_backend(
                 prefix=str(prefix),
                 channels=channels,
                 subdirs=context.subdirs,

@@ -38,7 +38,6 @@ requirements:
     - platformdirs
     - conda-index
     - conda-package-streaming
-    - conda-rattler-solver
 
 test:
   imports:

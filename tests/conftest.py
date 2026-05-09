@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 import pytest
-from conda.base.context import context, reset_context
 from conda.testing import http_test_server
 from conda.testing.fixtures import CondaCLIFixture
 from conda_index.index import ChannelIndex
@@ -91,15 +90,6 @@ def conda_local_channel():
     yield f"http://{http_sock_name[0]}:{http_sock_name[1]}"
 
     http.shutdown()
-
-
-@pytest.fixture()
-def with_rattler_solver(monkeypatch):
-    """Clear the plugin manager's solver backend cache and set rattler as the solver."""
-    context.plugin_manager.get_cached_solver_backend.cache_clear()
-    monkeypatch.setenv("CONDA_SOLVER", "rattler")
-    reset_context()
-    assert context.solver == "rattler"
 
 
 @pytest.fixture()

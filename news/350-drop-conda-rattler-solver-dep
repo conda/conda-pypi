@@ -1,0 +1,3 @@
+### Other
+
+* Drop the direct `conda-rattler-solver` dependency; use `context.plugin_manager.get_cached_solver_backend()` to delegate to whatever solver backend is configured. (#350)
