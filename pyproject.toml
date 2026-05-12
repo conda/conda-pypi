@@ -35,6 +35,7 @@ dependencies = [
   "packaging",
   "pip",
   "platformdirs",
+  "resolvelib>=1.0",
   "unearth",
 ]
 dynamic = ["version"]
@@ -58,6 +59,7 @@ conda-package-streaming = ">=0.11"
 conda-rattler-solver = ">=0.0.6"
 packaging = "*"
 pip = "*"
+resolvelib = ">=1.0"
 unearth = "*"
 
 [tool.pixi.pypi-dependencies]

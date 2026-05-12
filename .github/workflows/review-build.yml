@@ -1,0 +1,116 @@
+name: Review Builds
+
+on:
+  pull_request:
+    types:
+      - labeled
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  remove-build-label:
+    if: >-
+      !github.event.repository.fork
+      && github.event.label.name == 'build::review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove build label
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.issue.number,
+            })
+            const buildLabel = 'build::review'
+            const labels = pullRequest.labels.map(label => label.name)
+            if (labels.includes(buildLabel)) {
+              await github.rest.issues.removeLabel({
+                ...context.repo,
+                issue_number: context.issue.number,
+                name: buildLabel,
+              })
+            }
+
+  build:
+    if: >-
+      !github.event.repository.fork
+      && github.event.label.name == 'build::review'
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+            subdir: linux-64
+          - runs-on: macos-latest
+            subdir: osx-arm64
+          - runs-on: windows-latest
+            subdir: win-64
+    defaults:
+      run:
+        shell: bash --noprofile --norc -euo pipefail {0}
+    env:
+      PIXI_ENV_NAME: build-py312
+      PYTHONUNBUFFERED: "1"
+      CONDA_BLD_PATH: ${{ github.workspace }}/pkgs
+      PACKAGE_NAME: conda-pypi
+      ANACONDA_ORG_CHANNEL: conda-canary
+      ANACONDA_ORG_LABEL: ${{ github.repository }}/pr/${{ github.event.number }}
+      BINSTAR_API_TOKEN: ${{ secrets.ANACONDA_ORG_CONDA_CANARY_TOKEN }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
+        with:
+          environments: ${{ env.PIXI_ENV_NAME }}
+      - name: Fix Ubuntu configuration
+        if: startswith(matrix.runs-on, 'ubuntu-')
+        run:
+          sudo rm -f /etc/pip.conf
+      - name: Setup project for building
+        run: |
+          pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
+          pixi run --environment ${{ env.PIXI_ENV_NAME }} conda config --add channels defaults
+          pixi run --environment ${{ env.PIXI_ENV_NAME }} conda config --add channels conda-forge
+      - name: Build recipe
+        env:
+          _CONDA_BUILD_ISOLATED_ACTIVATION: "1"
+        run: pixi run --environment ${{ env.PIXI_ENV_NAME }} build
+      - name: Upload to conda-canary
+        shell: bash
+        run: |
+          SEARCH_ROOT="$CONDA_BLD_PATH/${{ matrix.subdir }}"
+          if [[ ! -d "$SEARCH_ROOT" ]]; then
+            echo "Expected build output directory $SEARCH_ROOT not found" >&2
+            exit 1
+          fi
+
+          PACKAGES=(
+            $(
+              find "$SEARCH_ROOT" -type f \
+              \( -name "${PACKAGE_NAME}-*.conda" -o -name "${PACKAGE_NAME}-*.tar.bz2" \) \
+              -print | sort
+            )
+          )
+
+          if [[ ${#PACKAGES[@]} -eq 0 ]]; then
+            echo "No conda packages found in $SEARCH_ROOT" >&2
+            exit 1
+          fi
+
+          printf 'Uploading packages to %s/label/%s:\n' "$ANACONDA_ORG_CHANNEL" "$ANACONDA_ORG_LABEL"
+          printf '  %s\n' "${PACKAGES[@]}"
+          pixi run --environment ${{ env.PIXI_ENV_NAME }} \
+            anaconda \
+            upload \
+            --force \
+            --register \
+            --no-progress \
+            --user "$ANACONDA_ORG_CHANNEL" \
+            --label "$ANACONDA_ORG_LABEL" \
+            "${PACKAGES[@]}"

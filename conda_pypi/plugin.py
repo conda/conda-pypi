@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 from conda.plugins import hookimpl
-from conda.plugins.types import CondaPackageExtractor, CondaPostCommand, CondaSubcommand
+from conda.plugins.types import (
+    CondaPackageExtractor,
+    CondaPostCommand,
+    CondaSubcommand,
+)
 
 from conda_pypi import cli, post_command
 from conda_pypi.main import notify_externally_managed_future
 from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
+
+try:
+    from conda.plugins.types import CondaExternalInstaller
+except ImportError:
+    CondaExternalInstaller = None
 
 
 @hookimpl
@@ -39,3 +48,16 @@ def conda_package_extractors():
         extensions=[".whl"],
         extract=extract_whl_as_conda_pkg,
     )
+
+
+if CondaExternalInstaller is not None:
+
+    @hookimpl
+    def conda_external_installers():
+        from conda_pypi.env_installer import install
+
+        yield CondaExternalInstaller(
+            name="pypi",
+            install=install,
+            aliases=("pip",),
+        )
