@@ -157,7 +157,9 @@ def test_install_package_with_hyphens(tmp_env, conda_cli):
         assert "typing_extensions" in out or "typing-extensions" in out
 
 
-def test_install_from_whl_augmented_repodata(tmp_env, monkeypatch, conda_cli, conda_local_channel):
+def test_install_from_whl_augmented_repodata(
+    tmp_env, monkeypatch, conda_cli, conda_local_channel, with_rattler_solver
+):
     monkeypatch.setenv("CONDA_JSON", "true")
     reset_context()
 

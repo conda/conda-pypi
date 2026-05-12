@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from conda.base.context import context, reset_context
 from conda.testing import http_test_server
 from conda.testing.fixtures import CondaCLIFixture
 from conda_index.index import ChannelIndex
@@ -90,6 +91,19 @@ def conda_local_channel():
     yield f"http://{http_sock_name[0]}:{http_sock_name[1]}"
 
     http.shutdown()
+
+
+@pytest.fixture()
+def with_rattler_solver(monkeypatch):
+    """Set rattler as the solver for tests that need wheel-augmented repodata."""
+    try:
+        import conda_rattler_solver  # noqa: F401
+    except ImportError:
+        pytest.skip("conda-rattler-solver not installed")
+    context.plugin_manager.get_cached_solver_backend.cache_clear()
+    monkeypatch.setenv("CONDA_SOLVER", "rattler")
+    reset_context()
+    assert context.solver == "rattler"
 
 
 @pytest.fixture()
