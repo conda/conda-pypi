@@ -33,7 +33,7 @@
 * @danyeaw
 * @dholth
 * @jezdez
-* @kathatherine
+* @kathatherine made their first contribution in https://github.com/conda/conda-pypi/pull/356
 * @conda-bot
 * @dependabot[bot]
 * @pre-commit-ci[bot]
