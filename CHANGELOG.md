@@ -2,6 +2,44 @@
 
 [//]: # (current developments)
 
+## 0.9.0 (2026-05-14)
+
+### Enhancements
+
+* Add upload timestamps to PyPI metadata conversion to repodata. (#341 and #360)
+* Disable `EXTERNALLY-MANAGED` file placement during the community beta period. Instead, log an informational notice about upcoming pip protection when environments with pip are created or updated. (#353 via #352)
+
+### Bug fixes
+
+* Add trailing newline in dist-info `INSTALLER`. (#338)
+* Fix `store_pypi_metadata` causes re-extraction of all virtual wheel packages. (#340 via #341)
+* Fix `pypi_to_repodata` using wrong source for `fn` field. The wheel filename is now taken from the URL entry instead of the package info dict. (#355 and #360)
+
+### Deprecations
+
+* The `EXTERNALLY-MANAGED` file will be re-enabled in a future release once migration tooling is available. (#353 via #352)
+
+### Docs
+
+* Update documentation to include information on the `conda-pypi` channel. (#356)
+* Update documentation formatting for consistency. (#356)
+
+### Other
+
+* Drop the direct `conda-rattler-solver` dependency and use `context.plugin_manager.get_cached_solver_backend()` to delegate to whatever solver backend is configured. (#350)
+
+### Contributors
+
+* @danyeaw
+* @dholth
+* @jezdez
+* @kathatherine
+* @conda-bot
+* @dependabot[bot]
+* @pre-commit-ci[bot]
+
+
+
 ## 0.8.0 (2026-04-21)
 
 ### Enhancements

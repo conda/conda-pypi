@@ -1,3 +1,0 @@
-### Bug fixes
-
-* Add trailing newline in dist-info `INSTALLER`. (#338)

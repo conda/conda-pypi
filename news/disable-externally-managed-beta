@@ -1,7 +1,0 @@
-### Enhancements
-
-* Disable `EXTERNALLY-MANAGED` file placement during the community beta period. Instead, log an informational notice about upcoming pip protection when environments with pip are created or updated. (#353 via #352)
-
-### Deprecations
-
-* The `EXTERNALLY-MANAGED` file will be re-enabled in a future release once migration tooling is available. (#353 via #352)
