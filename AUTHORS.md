@@ -8,6 +8,7 @@ Authors are sorted alphabetically.
 * Jaime Rodríguez-Guerra
 * Jannis Leidel
 * Jean-Christophe Morin
+* Katherine Kinnaman
 * Ken Odegard
 * Mahe Iram Khan
 * Ryan Keith
