@@ -120,7 +120,7 @@ sphinx-reredirects = "*"
 sphinx-sitemap = "*"
 
 [tool.pixi.feature.test.tasks.test]
- cmd = 'python -m pytest -m "not benchmark"'
+cmd = 'python -m pytest -m "not benchmark"'
 description = "Run the test suite using pytest, excluding benchmarks. This calls task `dev` first to ensure the environment is set up correctly for testing."
 depends-on = ["dev"]
 
