@@ -1,7 +1,6 @@
 ### Enhancements
 
-* Remove the CLI entry point `conda_pypi/__main__.py`
-* A CLI doesn't make sense for this plugin
+* Remove the CLI entry point because a CLI doesn't make sense for a plugin (#327).
 
 ### Bug fixes
 
