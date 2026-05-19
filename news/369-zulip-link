@@ -1,0 +1,21 @@
+### Enhancements
+
+* Make appearance of documentation consistent with that of conda documentation
+* Use `conda_sphinx_theme` without special `icon_links` in `conf.py`
+* Results in Zulip link instead Element and Discourse links on upper right
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

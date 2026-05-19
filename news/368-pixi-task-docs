@@ -1,0 +1,22 @@
+### Enhancements
+
+* Add descriptions to all tasks
+* Rename some tasks for better user experience
+* Remove duplicated commands, using Pixi's `depends-on` feature
+* Switch from TOML inline tables to fill tables for better readability
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>
