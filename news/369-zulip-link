@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Make appearance of documentation consistent with that of conda - Zulip link instead of Element and Discourse links (#311).
+* Make appearance of documentation consistent with that of conda - Zulip link instead of Element and Discourse links (#311 via #369).
 
 ### Bug fixes
 
