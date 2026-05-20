@@ -102,6 +102,31 @@ conda pypi convert --ignore-channels some-pypi-only-package
 conda pypi convert --name-mapping ./mapping.json ./my-package-1.0.0-py3-none-any.whl
 ```
 
+#### `conda pypi migrate-env`
+
+The migrate-env command rewrites an `environment.yaml` file by replacing pip dependencies with equivalent conda packages sourced from a wheels channel. This is useful for transitioning existing conda environments away from pip dependencies without changing the rest of the environment definition.
+
+By default the result is written to stdout, but you can write to a file with `--file` or rewrite the input file in-place with `--in-place`. The wheels channel to query can be overridden with `-c` / `--channel`.
+
+Here are some common usage patterns:
+
+```bash
+# Migrate environment.yaml and print result to stdout
+conda pypi migrate-env environment.yaml
+
+# Rewrite the file in-place
+conda pypi migrate-env --in-place environment.yaml
+
+# Write to a new file
+conda pypi migrate-env --file migrated.yaml environment.yaml
+
+# Use a custom wheels channel
+conda pypi migrate-env -c https://my-org.example.com/wheels environment.yaml
+
+# Use a custom PyPI-to-conda name mapping
+conda pypi migrate-env --name-mapping ./mapping.json environment.yaml
+```
+
 ### PyPI-to-conda conversion engine
 
 `conda-pypi` includes a powerful conversion engine that enables direct

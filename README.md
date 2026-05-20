@@ -52,6 +52,7 @@ with the `conda-pypi` plugin:
 - `conda pypi install`: Converts PyPI packages to `.conda` format for safer installation.
 - `conda pypi install -e .`: Converts a path to an editable `.conda` format package.
 - `conda pypi convert`: Convert PyPI packages to `.conda` format without installing them.
+- `conda pypi migrate-env`: Rewrite an `environment.yaml` by replacing pip dependencies with conda packages from a wheels channel.
 - `conda install` from wheel channels (experimental): channels can serve pure Python wheels directly in `repodata.json`.
 - A warning when running `conda create` or `conda install` with `pip` in the environment.
 

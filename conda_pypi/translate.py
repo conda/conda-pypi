@@ -3,6 +3,7 @@ Convert Python `*.dist-info/METADATA` to conda `info/index.json`
 """
 
 import dataclasses
+import json
 import logging
 import sys
 import time
@@ -285,6 +286,24 @@ def validate_name_mapping_format(mapping: dict) -> None:
             raise ArgumentError(
                 f"Name mapping entry for {pypi_name!r} has invalid 'conda_name' type: expected str, got {type(value['conda_name']).__name__}"
             )
+
+
+def load_name_mapping(path: Path | None) -> dict | None:
+    """
+    Load and validate a PyPI-to-conda name mapping JSON file.
+
+    Returns None if path is None, otherwise returns the parsed mapping dict.
+    Raises ArgumentError if the file does not exist or has an invalid format.
+    """
+    if path is None:
+        return None
+    resolved = path.expanduser()
+    if not resolved.exists():
+        raise ArgumentError(f"Could not open name mapping file: {resolved}")
+    with open(resolved) as fh:
+        mapping = json.load(fh)
+    validate_name_mapping_format(mapping)
+    return mapping
 
 
 if __name__ == "__main__":  # pragma: no cover

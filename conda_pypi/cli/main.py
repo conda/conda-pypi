@@ -27,6 +27,12 @@ from conda_pypi.cli.install import (
 from conda_pypi.cli.install import (
     execute as execute_install,
 )
+from conda_pypi.cli.migrate_env import (
+    configure_parser as configure_parser_migrate_env,
+)
+from conda_pypi.cli.migrate_env import (
+    execute as execute_migrate_env,
+)
 
 logger = getLogger(__name__)
 
@@ -66,6 +72,7 @@ def configure_parser(parser: argparse.ArgumentParser):
 
     configure_parser_install(sub_parsers)
     configure_parser_convert(sub_parsers)
+    configure_parser_migrate_env(sub_parsers)
 
 
 def execute(args: argparse.Namespace) -> int:
@@ -73,5 +80,7 @@ def execute(args: argparse.Namespace) -> int:
         return execute_install(args)
     elif args.cmd == "convert":
         return execute_convert(args)
+    elif args.cmd == "migrate-env":
+        return execute_migrate_env(args)
     else:
         raise ArgumentError(f"Unknown subcommand: {args.cmd}")

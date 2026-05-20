@@ -1,4 +1,3 @@
-import json
 from argparse import Namespace, _SubParsersAction
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -8,7 +7,7 @@ from conda.base.context import context
 from conda.exceptions import ArgumentError
 
 from conda_pypi import build, paths
-from conda_pypi.translate import validate_name_mapping_format
+from conda_pypi.translate import load_name_mapping
 
 
 def configure_parser(parser: _SubParsersAction) -> None:
@@ -117,16 +116,7 @@ def execute(args: Namespace) -> int:
     output_folder = Path(args.output_folder).expanduser()
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    # Load name mapping if overriden
-    # Use built-in by default
-    pypi_to_conda_name_mapping = None
-    if args.name_mapping is not None:
-        if not args.name_mapping.exists():
-            raise ArgumentError(f"Could not open {args.name_mapping}")
-        with open(args.name_mapping, "r") as f:
-            pypi_to_conda_name_mapping = json.load(f)
-        # Check the dict has correct format
-        validate_name_mapping_format(pypi_to_conda_name_mapping)
+    pypi_to_conda_name_mapping = load_name_mapping(args.name_mapping)
 
     # Handle wheel files directly without building
     if project_path.suffix == ".whl":
