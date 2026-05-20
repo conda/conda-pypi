@@ -217,6 +217,8 @@ def notify_externally_managed_future(command: str):
             "    conda config --append channels conda-pypi\n"
             "    conda install <package>\n"
             "  More info: https://docs.conda.io/projects/conda/en/stable/new-features.html"
+            "  To disable this warning run:"
+            "    conda config --set plugins.conda_pypi_pip_warning false\n"
         )
 
 
