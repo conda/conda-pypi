@@ -198,7 +198,8 @@ More details about this protection mechanism can be found at
 
 By default, `conda-pypi` displays a warning when `pip` is detected in a conda
 environment. This warning reminds you that future updates will protect environments
-from using `pip` in a way that may break environments.
+from using `pip` via the `EXTERNALLY-MANAGED` file defined by
+[PEP 668](https://peps.python.org/pep-0668/).
 
 To disable this warning:
 
