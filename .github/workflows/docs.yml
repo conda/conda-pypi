@@ -35,7 +35,7 @@ jobs:
           pixi reinstall --environment docs conda-pypi
           pixi run --environment docs dev
       - name: Build docs
-        run: pixi run docs
+        run: pixi run build-docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
