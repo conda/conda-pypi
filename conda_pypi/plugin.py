@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+from conda.common.configuration import PrimitiveParameter
 from conda.plugins import hookimpl
-from conda.plugins.types import CondaPackageExtractor, CondaPostCommand, CondaSubcommand
+from conda.plugins.types import (
+    CondaPackageExtractor,
+    CondaPostCommand,
+    CondaSetting,
+    CondaSubcommand,
+)
 
 from conda_pypi import cli, post_command
 from conda_pypi.main import notify_externally_managed_future
@@ -38,4 +44,13 @@ def conda_package_extractors():
         name="wheel-package",
         extensions=[".whl"],
         extract=extract_whl_as_conda_pkg,
+    )
+
+
+@hookimpl
+def conda_settings():
+    yield CondaSetting(
+        name="conda_pypi_pip_warning",
+        description="Enable or disable warning about pip appearing in conda environents",
+        parameter=PrimitiveParameter(True),
     )

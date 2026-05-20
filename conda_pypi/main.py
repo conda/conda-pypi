@@ -206,16 +206,18 @@ def notify_externally_managed_future(command: str):
     prefix_data = PrefixData(target_prefix)
     if not list(prefix_data.query("pip")):
         return
-    logger.warning(
-        "\n"
-        "  This environment has pip installed. A future conda release will\n"
-        "  protect conda environments from accidental 'pip install' usage.\n"
-        "  Try the beta to install PyPI packages natively with conda:\n"
-        "    conda config --set solver rattler\n"
-        "    conda config --append channels conda-pypi\n"
-        "    conda install <package>\n"
-        "  More info: https://docs.conda.io/projects/conda/en/stable/new-features.html"
-    )
+
+    if context.plugins.conda_pypi_pip_warning:
+        logger.warning(
+            "\n"
+            "  This environment has pip installed. A future conda release will\n"
+            "  protect conda environments from accidental 'pip install' usage.\n"
+            "  Try the beta to install PyPI packages natively with conda:\n"
+            "    conda config --set solver rattler\n"
+            "    conda config --append channels conda-pypi\n"
+            "    conda install <package>\n"
+            "  More info: https://docs.conda.io/projects/conda/en/stable/new-features.html"
+        )
 
 
 def pypi_lines_for_explicit_lockfile(
