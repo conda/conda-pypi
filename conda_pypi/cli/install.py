@@ -115,6 +115,7 @@ def execute(args: Namespace) -> int:
                 distribution="editable",
                 output_path=Path(output_path),
                 prefix=prefix_path,
+                channels=() if args.ignore_channels else tuple(context.channels),
             )
             installer.install_ephemeral_conda(prefix_path, package)
         return 0

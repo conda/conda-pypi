@@ -153,6 +153,7 @@ def execute(args: Namespace) -> int:
             prefix=prefix_path,
             test_dir=test_dir,
             pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
+            channels=tuple(context.channels),
         )
 
     print(f"Conda package at {package_path} built successfully. Output folder: {output_folder}.")
