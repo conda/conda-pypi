@@ -3,7 +3,12 @@
 import pytest
 from conda.exceptions import ArgumentError
 
-from conda_pypi.translate import requires_to_conda, validate_name_mapping_format
+from conda_pypi.translate import (
+    CondaMetadata,
+    FileDistribution,
+    requires_to_conda,
+    validate_name_mapping_format,
+)
 
 
 def test_validate_name_mapping_format_valid():
@@ -133,3 +138,146 @@ def test_requires_to_conda_marker_extra_and_platform():
     assert "dev" in extras
     assert any(x.startswith("requests>=") for x in extras["dev"])
     assert requires == []
+
+
+# --- about.json improvements (issue #343) ---
+
+
+def _distribution(**project_urls):
+    """Build a FileDistribution with the given Project-URL labels."""
+    header = (
+        "Metadata-Version: 2.1\n"
+        "Name: demo\n"
+        "Version: 1.0.0\n"
+        "Summary: short summary\n"
+    )
+    urls = "".join(f"Project-URL: {label}, {url}\n" for label, url in project_urls.items())
+    return FileDistribution(header + urls + "\n")
+
+
+def test_about_home_from_homepage_label():
+    """`Homepage` (PEP 621) maps to about.home."""
+    dist = _distribution(Homepage="https://example.com/")
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["home"] == "https://example.com/"
+
+
+def test_about_home_from_legacy_home_label():
+    """Legacy `Home` label still maps to about.home."""
+    dist = _distribution(Home="https://example.com/")
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["home"] == "https://example.com/"
+
+
+def test_about_home_label_is_case_insensitive():
+    """Label lookup ignores case (`HOMEPAGE`, `homepage`, `Homepage` are equivalent)."""
+    dist = _distribution(HOMEPAGE="https://example.com/")
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["home"] == "https://example.com/"
+
+
+def test_about_dev_url_from_source_label():
+    """`Source` maps to about.dev_url."""
+    dist = _distribution(Source="https://github.com/example/demo")
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["dev_url"] == "https://github.com/example/demo"
+
+
+def test_about_dev_url_from_repository_label():
+    """`Repository` maps to about.dev_url."""
+    dist = _distribution(Repository="https://github.com/example/demo")
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["dev_url"] == "https://github.com/example/demo"
+
+
+def test_about_doc_url_from_documentation_label():
+    """`Documentation` maps to about.doc_url."""
+    dist = _distribution(Documentation="https://demo.readthedocs.io")
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["doc_url"] == "https://demo.readthedocs.io"
+
+
+def test_about_doc_url_from_docs_label():
+    """`Docs` (short form) maps to about.doc_url."""
+    dist = _distribution(Docs="https://demo.readthedocs.io")
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["doc_url"] == "https://demo.readthedocs.io"
+
+
+def test_about_description_truncates_at_first_blank_line():
+    """A multi-paragraph description is truncated to the first paragraph."""
+    description = (
+        "Demo project.\n"
+        "\n"
+        "## Changelog\n"
+        "\n"
+        "- 1.0.0: initial release\n"
+    )
+    dist = FileDistribution(
+        "Metadata-Version: 2.1\n"
+        "Name: demo\n"
+        "Version: 1.0.0\n"
+        "Description: " + description.replace("\n", "\n        ") + "\n"
+    )
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["description"] == "Demo project."
+
+
+def test_about_description_truncates_at_markdown_heading():
+    """A description with an inline Markdown heading stops at the heading."""
+    description = "Demo project.\n# Heading\nMore text.\n"
+    dist = FileDistribution(
+        "Metadata-Version: 2.1\n"
+        "Name: demo\n"
+        "Version: 1.0.0\n"
+        "Description: " + description.replace("\n", "\n        ") + "\n"
+    )
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["description"] == "Demo project."
+
+
+def test_about_description_single_paragraph_unchanged():
+    """A single-paragraph description survives truncation unchanged."""
+    dist = FileDistribution(
+        "Metadata-Version: 2.1\n"
+        "Name: demo\n"
+        "Version: 1.0.0\n"
+        "Description: One line of prose.\n"
+    )
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["description"] == "One line of prose."
+
+
+def test_about_channels_recorded_when_passed():
+    """Channels passed to from_distribution land in about.channels."""
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(
+        dist, channels=("conda-forge", "bioconda")
+    ).about
+    assert about["channels"] == ["conda-forge", "bioconda"]
+
+
+def test_about_channels_omitted_when_empty():
+    """No channels means about.channels is absent (CEP 34 allows it)."""
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(dist).about
+    assert "channels" not in about
+
+
+def test_about_extra_recipe_records_name_version_build():
+    """about.extra.recipe carries name/version/build for provenance."""
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["extra"]["recipe"]["name"] == "demo"
+    assert about["extra"]["recipe"]["version"] == "1.0.0"
+    assert about["extra"]["recipe"]["build"] == "pypi_0"
+
+
+def test_about_extra_generator_records_conda_pypi_version():
+    """about.extra.generator records 'conda-pypi' and its version."""
+    import conda_pypi
+
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["extra"]["generator"] == "conda-pypi"
+    assert about["extra"]["generator_version"] == conda_pypi.__version__

@@ -112,6 +112,40 @@ def test_build_conda_copies_licenses_to_info_licenses(
     assert lic_payload == b"BSD-3-Clause placeholder license text\n"
 
 
+def test_build_conda_records_channels_in_about_json(
+    tmp_env: TmpEnvFixture,
+    pypi_demo_package_wheel_path: Path,
+    tmp_path: Path,
+):
+    """Channels passed to build_conda are recorded in info/about.json (#343)."""
+    build_path = tmp_path / "build"
+    build_path.mkdir()
+    repo_path = tmp_path / "repo"
+    repo_path.mkdir()
+    target = repo_path / "demo-package-0.1.0-pypi_0.conda"
+
+    with tmp_env("python=3.12", "pip") as prefix:
+        build_conda(
+            pypi_demo_package_wheel_path,
+            build_path,
+            repo_path,
+            Path(prefix, get_python_short_path()),
+            is_editable=False,
+            channels=("conda-forge", "bioconda"),
+        )
+
+    about = None
+    for tar, member in package_streaming.stream_conda_info(target):
+        if member.name == "info/about.json":
+            about = json.load(tar.extractfile(member))
+            break
+    assert about is not None
+    assert about["channels"] == ["conda-forge", "bioconda"]
+    assert about["extra"]["generator"] == "conda-pypi"
+    assert about["extra"]["recipe"]["name"] == "demo-package"
+    assert about["extra"]["recipe"]["build"] == "pypi_0"
+
+
 def test_build_conda_members_stay_in_info_component(
     pypi_demo_package_wheel_path: Path,
     tmp_path: Path,
