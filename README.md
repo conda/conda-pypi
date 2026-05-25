@@ -29,9 +29,10 @@ Python pacakges from PyPi available to users natively through `conda install`.
 conda install --name base "conda>=26.5"
 ```
 
-To opt in, enable the Rattler solver and add the `conda-pypi` channel:
+To opt in, install the Rattler solver and add the `conda-pypi` channel:
 
 ```bash
+conda install --name base conda-rattler-solver
 conda config --set solver rattler
 conda config --append channels conda-pypi
 ```
