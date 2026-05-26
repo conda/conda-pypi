@@ -46,6 +46,36 @@ conda pypi install -n myenv package-name
 
 ## Package Resolution Issues
 
+### `conda search` reports missing `repodata.json`
+
+**Problem**: Checking the `conda-pypi` channel with `conda search` fails.
+
+**Error messages**:
+```
+UnavailableInvalidChannel: HTTP 404 Not Found for channel conda-pypi
+
+Artifact noarch/repodata.json not found
+```
+
+**Cause**: During the beta, the `conda-pypi` channel is served through wheel
+metadata for solver/install workflows. It might not appear in the Anaconda.org
+web UI, and commands such as `conda search` can still request classic
+`repodata.json` metadata. Search support for sharded repodata is tracked in
+[`conda/conda#16134`](https://github.com/conda/conda/issues/16134).
+
+**Solutions**:
+```bash
+# Make sure the supported solver path is enabled
+conda config --set solver rattler
+conda config --append channels conda-pypi
+
+# Test with a dry-run solve instead of conda search
+conda create --dry-run -n conda-pypi-test django-modern-rest
+```
+
+If a dry-run solve or install also fails while using conda 26.5 or newer and
+the Rattler solver, report the full error in the GitHub issue tracker.
+
 ### Package not found on PyPI
 
 **Problem**: Package doesn't exist or has a different name on PyPI.

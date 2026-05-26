@@ -36,6 +36,11 @@ conda config --set solver rattler
 conda config --append channels conda-pypi
 ```
 
+During the beta, the `conda-pypi` channel might not appear in the
+Anaconda.org web UI and some commands such as `conda search` can fail because
+they request classic `repodata.json` metadata. Use `conda install` or
+`conda create --dry-run` to check whether the solver can use the channel.
+
 After configuring, you can use PyPI packages alongside conda packages in
 your normal conda workflows, without needing to convert PyPI's wheel files
 to conda files.

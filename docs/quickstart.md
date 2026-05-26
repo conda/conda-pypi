@@ -48,6 +48,14 @@ package is selected, conda downloads the artifact directly from PyPI and
 installs it into the environment while tracking it like any other conda
 package.
 
+:::{note}
+During the beta, the `conda-pypi` channel might not appear in the Anaconda.org
+web UI and some commands such as `conda search` can fail because they request
+classic `repodata.json` metadata. This does not necessarily mean the channel is
+down. To test the channel, use `conda install` or `conda create --dry-run` with
+the Rattler solver enabled.
+:::
+
 :::{admonition} Beta
 :class: warning
 The conda-pypi channel is in public beta. It hosts metadata only, for pure Python wheels from PyPI. Compiled wheels are not supported at the moment.
