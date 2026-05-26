@@ -15,6 +15,7 @@ from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec
 from packaging.requirements import Requirement
 
+from conda_pypi import __version__
 from conda_pypi.name_mapping import conda_to_pypi_name, pypi_to_conda_name
 
 log = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ URL_LABEL_MAP: Dict[str, tuple] = {
 }
 
 
-def _short_description(text: str) -> str:
+def short_description(text: str) -> str:
     """
     Truncate a long Description to its first paragraph.
 
@@ -56,7 +57,7 @@ def _short_description(text: str) -> str:
     return "\n".join(lines).strip()
 
 
-def _url_from_project_urls(metadata: PackageMetadata, labels: Iterable[str]) -> Optional[str]:
+def url_from_project_urls(metadata: PackageMetadata, labels: Iterable[str]) -> Optional[str]:
     """Return the first Project-URL value whose label (case-insensitive) is in `labels`."""
     wanted = {label.lower() for label in labels}
     for entry in metadata.get_all("project-url") or ():
@@ -182,13 +183,13 @@ class CondaMetadata:
 
         about: Dict[str, Any] = {
             "summary": metadata.get("summary") or "",
-            "description": _short_description(metadata.get("description") or ""),
+            "description": short_description(metadata.get("description") or ""),
             # https://packaging.python.org/en/latest/specifications/core-metadata/#license-expression
             "license": metadata.get("License-Expression") or metadata.get("License") or "",
         }
 
         for conda_field, labels in URL_LABEL_MAP.items():
-            url = _url_from_project_urls(metadata, labels)
+            url = url_from_project_urls(metadata, labels)
             if url:
                 about[conda_field] = url
 
@@ -215,9 +216,6 @@ class CondaMetadata:
             timestamp=time.time_ns() // 1000000,
         )
 
-        # Provenance lives under `extra` (CEP 34 allows arbitrary metadata there).
-        from conda_pypi import __version__ as _conda_pypi_version
-
         about["extra"] = {
             "recipe": {
                 "name": package_record.name,
@@ -225,7 +223,7 @@ class CondaMetadata:
                 "build": package_record.build,
             },
             "generator": "conda-pypi",
-            "generator_version": _conda_pypi_version,
+            "generator_version": __version__,
         }
 
         return cls(
