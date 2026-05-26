@@ -9,7 +9,7 @@ import pathlib
 import re
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 
 if TYPE_CHECKING:
     from conda.core.solve import Solver
@@ -82,6 +82,7 @@ class ConvertTree:
         max_attempts: int,
         solver: Solver,
         tmp_path: Path,
+        channels: Iterable[str] = (),
     ) -> tuple[tuple[PrefixRecord, ...], tuple[PrefixRecord, ...]] | None:
         converted = set()
         fetched_packages = set()
@@ -127,6 +128,7 @@ class ConvertTree:
                         repo / "noarch",  # XXX could be arch
                         self.python_exe,
                         is_editable=False,
+                        channels=channels,
                     )
                     log.debug("Conda at", package_conda)
                 except FileExistsError:
@@ -198,8 +200,10 @@ class ConvertTree:
 
             if not self.override_channels:
                 channels = [local_channel, *context.channels]
+                build_channels = tuple(context.channels)
             else:  # more wheels for us to convert
                 channels = [local_channel]
+                build_channels = ()
 
             solver_backend = context.plugin_manager.get_cached_solver_backend()
             solver = solver_backend(
@@ -218,7 +222,10 @@ class ConvertTree:
             with get_spinner(self._get_converting_spinner_message(channels)):
                 with fresh_context(env=context_env):
                     changes = self._convert_loop(
-                        max_attempts=max_attempts, solver=solver, tmp_path=tmp_path
+                        max_attempts=max_attempts,
+                        solver=solver,
+                        tmp_path=tmp_path,
+                        channels=build_channels,
                     )
 
             return changes

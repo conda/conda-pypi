@@ -26,7 +26,6 @@ from conda.common.path.windows import win_path_to_unix
 from conda_package_streaming.create import conda_builder
 from installer.utils import parse_wheel_filename
 
-
 from conda_pypi import dependencies, installer, paths
 from conda_pypi.conda_build_utils import PathType, sha256_checksum
 from conda_pypi.license_files import copy_into_info_licenses

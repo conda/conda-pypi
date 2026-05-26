@@ -3,6 +3,7 @@ import os
 
 import conda_package_streaming.package_streaming as cps
 import pytest
+from conda.base.context import context
 from conda.cli.main import main_subshell
 from conda.common.compat import on_win
 from conda.exceptions import ArgumentError
@@ -15,6 +16,13 @@ PKG_TEST_DIR = "tests/packages/has-test-dir/test"
 
 # Expected output paths
 EXPECTED_TEST_SCRIPT = "info/test/run_test.bat" if on_win else "info/test/run_test.sh"
+
+
+def _read_about_json(package_path):
+    for tar, member in cps.stream_conda_info(str(package_path)):
+        if member.name == "info/about.json":
+            return json.load(tar.extractfile(member))
+    raise AssertionError("info/about.json not found")
 
 
 @pytest.mark.parametrize(
@@ -55,6 +63,7 @@ def test_convert_wheel(tmp_path):
     assert files[0].is_file()
     assert os.path.getsize(files[0]) > 0
     assert "demo-package" in files[0].name
+    assert _read_about_json(files[0])["channels"] == list(context.channels)
 
 
 def test_convert_wheel_with_tests(tmp_path):

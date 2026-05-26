@@ -145,12 +145,7 @@ def test_requires_to_conda_marker_extra_and_platform():
 
 def _distribution(**project_urls):
     """Build a FileDistribution with the given Project-URL labels."""
-    header = (
-        "Metadata-Version: 2.1\n"
-        "Name: demo\n"
-        "Version: 1.0.0\n"
-        "Summary: short summary\n"
-    )
+    header = "Metadata-Version: 2.1\nName: demo\nVersion: 1.0.0\nSummary: short summary\n"
     urls = "".join(f"Project-URL: {label}, {url}\n" for label, url in project_urls.items())
     return FileDistribution(header + urls + "\n")
 
@@ -206,13 +201,7 @@ def test_about_doc_url_from_docs_label():
 
 def test_about_description_truncates_at_first_blank_line():
     """A multi-paragraph description is truncated to the first paragraph."""
-    description = (
-        "Demo project.\n"
-        "\n"
-        "## Changelog\n"
-        "\n"
-        "- 1.0.0: initial release\n"
-    )
+    description = "Demo project.\n\n## Changelog\n\n- 1.0.0: initial release\n"
     dist = FileDistribution(
         "Metadata-Version: 2.1\n"
         "Name: demo\n"
@@ -239,10 +228,7 @@ def test_about_description_truncates_at_markdown_heading():
 def test_about_description_single_paragraph_unchanged():
     """A single-paragraph description survives truncation unchanged."""
     dist = FileDistribution(
-        "Metadata-Version: 2.1\n"
-        "Name: demo\n"
-        "Version: 1.0.0\n"
-        "Description: One line of prose.\n"
+        "Metadata-Version: 2.1\nName: demo\nVersion: 1.0.0\nDescription: One line of prose.\n"
     )
     about = CondaMetadata.from_distribution(dist).about
     assert about["description"] == "One line of prose."
@@ -251,9 +237,7 @@ def test_about_description_single_paragraph_unchanged():
 def test_about_channels_recorded_when_passed():
     """Channels passed to from_distribution land in about.channels."""
     dist = _distribution()
-    about = CondaMetadata.from_distribution(
-        dist, channels=("conda-forge", "bioconda")
-    ).about
+    about = CondaMetadata.from_distribution(dist, channels=("conda-forge", "bioconda")).about
     assert about["channels"] == ["conda-forge", "bioconda"]
 
 

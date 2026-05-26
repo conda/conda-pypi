@@ -142,6 +142,7 @@ def execute(args: Namespace) -> int:
                 python_executable,
                 test_dir=test_dir,
                 pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
+                channels=tuple(context.channels),
             )
     else:
         # Build from source (project directory or sdist)
