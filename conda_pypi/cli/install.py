@@ -93,7 +93,7 @@ def configure_parser(parser: _SubParsersAction) -> None:
     install.add_argument(
         "-e",
         "--editable",
-        help="Build and install named path as an editable package, linking project into environment.",
+        help="Build and install PACKAGE in editable mode using PEP 660.",
     )
 
 

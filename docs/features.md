@@ -66,10 +66,11 @@ be installed with `conda` directly. If not available on conda channels, the
 dependency is converted from PyPI to `.conda` format.
 
 PyPI names are mapped to conda names with a bundled Grayskull table, plus a
-simple normalization rule when a package is not listed. `conda pypi convert`
-can load a replacement table from a JSON file via `--name-mapping`. With
-`-e` / `--editable`, a local project directory is built into a `.conda`
-package and installed.
+simple normalization rule when a package is not listed. `conda pypi convert` can
+load a replacement table from a JSON file via `--name-mapping`. With `-e` /
+`--editable`, a `.conda` package containing a link to the local project
+directory is built and installed using [PEP
+660](https://peps.python.org/pep-0660/).
 
 You can preview what would be installed without making changes using
 `--dry-run`, install packages in editable development mode with `--editable`

@@ -1,0 +1,22 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Update command line help text, documentation to clarify that `conda pypi
+  install --editable PROJECT` creates and installs a `.conda` package with the
+  contents of a [PEP 660 "editable wheel"](https://peps.python.org/pep-0660/),
+  linking `PROJECT` into the target conda environment. (#390)
+
+### Other
+
+* <news item>

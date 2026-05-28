@@ -73,7 +73,7 @@ def configure_parser(parser: _SubParsersAction) -> None:
         "-e",
         "--editable",
         action="store_true",
-        help="Build PROJECT as an editable package.",
+        help="Build an editable package linking PROJECT to the target conda environment when installed.",
     )
     convert.add_argument(
         "-t",
