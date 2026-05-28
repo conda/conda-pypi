@@ -65,7 +65,7 @@ def test_extract_whl_as_conda_pkg(
 
 
 @pytest.mark.parametrize("command", ["install", "create", "env_create"])
-def test_notify_warns_when_pip_installed(
+def test_notify_logs_tip_when_pip_installed(
     mocker: MockerFixture,
     tmp_path: Path,
     command: str,
@@ -80,7 +80,8 @@ def test_notify_warns_when_pip_installed(
 
     notify_externally_managed_future(command)
 
-    mock_logger.warning.assert_called_once()
+    mock_logger.info.assert_called_once()
+    mock_logger.warning.assert_not_called()
 
 
 def test_notify_skips_build_env(
@@ -99,7 +100,7 @@ def test_notify_skips_build_env(
 
     notify_externally_managed_future("install")
 
-    mock_logger.warning.assert_not_called()
+    mock_logger.info.assert_not_called()
 
 
 def test_notify_skips_base_prefix(
@@ -116,7 +117,7 @@ def test_notify_skips_base_prefix(
 
     notify_externally_managed_future("install")
 
-    mock_logger.warning.assert_not_called()
+    mock_logger.info.assert_not_called()
 
 
 def test_notify_skips_no_pip(
@@ -131,14 +132,14 @@ def test_notify_skips_no_pip(
 
     notify_externally_managed_future("install")
 
-    mock_logger.warning.assert_not_called()
+    mock_logger.info.assert_not_called()
 
 
 def test_notify_skips_when_pip_warning_disabled(
     mocker: MockerFixture,
     tmp_path: Path,
 ):
-    """When conda_pypi_pip_warning is False the warning must not be emitted."""
+    """When conda_pypi_pip_warning is False the tip must not be emitted."""
     ctx = mocker.patch("conda_pypi.main.context")
     ctx.conda_prefix = str(tmp_path / "base")
     ctx.target_prefix = str(tmp_path / "env")
@@ -150,7 +151,7 @@ def test_notify_skips_when_pip_warning_disabled(
 
     notify_externally_managed_future("install")
 
-    mock_logger.warning.assert_not_called()
+    mock_logger.info.assert_not_called()
 
 
 def test_pip_warning_setting_defaults_to_true():

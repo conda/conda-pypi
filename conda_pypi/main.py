@@ -191,8 +191,7 @@ def ensure_target_env_has_externally_managed(command: str):
 
 def notify_externally_managed_future(command: str):
     """
-    Beta-period post-command hook that logs a warning about upcoming
-    EXTERNALLY-MANAGED enforcement instead of placing the marker file.
+    Beta-period post-command hook that points pip users to the conda-pypi beta.
     """
     # Build environments are ephemeral; never show user-facing notices.
     if os.environ.get("CONDA_BUILD_STATE") == "BUILD":
@@ -202,23 +201,17 @@ def notify_externally_managed_future(command: str):
     target_prefix = Path(context.target_prefix)
     if base_prefix == target_prefix or base_prefix.resolve() == target_prefix.resolve():
         return
-    # No point warning about pip protection if pip isn't installed.
+    # No point showing the beta tip if pip isn't installed.
     prefix_data = PrefixData(target_prefix)
     if not list(prefix_data.query("pip")):
         return
 
     if context.plugins.conda_pypi_pip_warning:
-        logger.warning(
+        logger.info(
             "\n"
-            "  This environment has pip installed. A future conda release will\n"
-            "  protect conda environments from accidental 'pip install' usage.\n"
-            "  Try the beta to install PyPI packages natively with conda:\n"
-            "    conda config --set solver rattler\n"
-            "    conda config --append channels conda-pypi\n"
-            "    conda install <package>\n"
-            "  More info: https://docs.conda.io/projects/conda/en/stable/new-features.html"
-            "  To disable this warning, run:"
-            "    conda config --set plugins.conda_pypi_pip_warning false\n"
+            "  Did you know? You can install many PyPI packages with conda\n"
+            "  using the conda-pypi beta. Get started:\n"
+            "    https://docs.conda.io/projects/conda/en/stable/new-features.html\n"
         )
 
 

@@ -180,11 +180,10 @@ conda pypi install --dry-run niquests pandas
 
 ### Environment protection
 
-`conda-pypi` ships a special file called `EXTERNALLY-MANAGED` that helps
-protect your conda environments from accidental pip usage that could break
-their integrity. This file is automatically installed in the `base`
-environment, all new environments, and existing environments that after running
-a `conda pypi` command on them.
+`conda-pypi` includes support for a special file called `EXTERNALLY-MANAGED`
+that can help protect conda environments from accidental pip usage that could
+break their integrity. During the beta, `conda-pypi` does not automatically add
+this file to conda environments.
 
 More details about this protection mechanism can be found at
 {ref}`externally-managed`.
@@ -196,12 +195,11 @@ More details about this protection mechanism can be found at
 
 #### `conda_pypi_pip_warning`
 
-By default, `conda-pypi` displays a warning when `pip` is detected in a conda
-environment. This warning reminds you that future updates will protect environments
-from using `pip` via the `EXTERNALLY-MANAGED` file defined by
-[PEP 668](https://peps.python.org/pep-0668/).
+By default, `conda-pypi` displays a short beta tip when `pip` is detected in a
+conda environment. The tip points to the conda-pypi beta docs for installing
+PyPI packages with conda.
 
-To disable this warning:
+To disable this tip:
 
 ```bash
 conda config --set plugins.conda_pypi_pip_warning false
