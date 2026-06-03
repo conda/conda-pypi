@@ -14,7 +14,6 @@ from conda.testing.fixtures import TmpEnvFixture
 
 from conda_pypi.exceptions import CondaPypiError
 
-
 REPO = Path(__file__).parents[1] / "synthetic_repo"
 
 
@@ -22,8 +21,9 @@ def test_downloader_detects_no_wheels(tmp_env: TmpEnvFixture, monkeypatch, tmp_p
     """
     Test that the downloader correctly raises an error when no wheels are available.
     """
-    from conda_pypi.downloader import get_package_finder, find_and_fetch
     import tempfile
+
+    from conda_pypi.downloader import find_and_fetch, get_package_finder
 
     CONDA_PKGS_DIRS = tmp_path / "test-pkgs"
     CONDA_PKGS_DIRS.mkdir(exist_ok=True)

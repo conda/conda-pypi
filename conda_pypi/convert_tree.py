@@ -9,21 +9,20 @@ import pathlib
 import re
 import tempfile
 from pathlib import Path
-from typing import Union, Optional, List
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 
-from conda_rattler_solver.solver import RattlerSolver
+if TYPE_CHECKING:
+    from conda.core.solve import Solver
 
 import conda.exceptions
 import platformdirs
 from conda.base.context import context, fresh_context
 from conda.common.path import get_python_short_path
+from conda.exceptions import UnsatisfiableError
 from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PrefixRecord
 from conda.reporters import get_spinner
-from conda.core.solve import Solver
-from conda.exceptions import UnsatisfiableError
-
 from unearth import PackageFinder
 
 from conda_pypi.build import build_conda
@@ -104,6 +103,7 @@ class ConvertTree:
         max_attempts: int,
         solver: Solver,
         tmp_path: Path,
+        channels: Iterable[str] = (),
     ) -> tuple[tuple[PrefixRecord, ...], tuple[PrefixRecord, ...]] | None:
         converted = set()
         fetched_packages = set()
@@ -125,9 +125,9 @@ class ConvertTree:
                 missing_packages = set(e._kwargs["packages"])
                 log.debug(f"Missing packages: {missing_packages}")
             except UnsatisfiableError as e:
-                # parse message
                 log.debug("Unsatisfiable: %r", e)
-                missing_packages.update(set(parse_rattler_solver_error(e.message)))
+                missing_packages.update(parse_libmamba_solver_error(e.message))
+                missing_packages.update(parse_rattler_solver_error(e.message))
 
             for package in sorted(missing_packages - fetched_packages):
                 find_and_fetch(self.finder, wheel_dir, package)
@@ -149,6 +149,7 @@ class ConvertTree:
                         repo / "noarch",  # XXX could be arch
                         self.python_exe,
                         is_editable=False,
+                        channels=channels,
                     )
                     log.debug("Conda at", package_conda)
                 except FileExistsError:
@@ -375,10 +376,13 @@ class ConvertTree:
 
             if not self.override_channels:
                 channels = [local_channel, *context.channels]
+                build_channels = tuple(context.channels)
             else:  # more wheels for us to convert
                 channels = [local_channel]
+                build_channels = ()
 
-            solver = RattlerSolver(
+            solver_backend = context.plugin_manager.get_cached_solver_backend()
+            solver = solver_backend(
                 prefix=str(prefix),
                 channels=channels,
                 subdirs=context.subdirs,
@@ -394,7 +398,10 @@ class ConvertTree:
             with get_spinner(self._get_converting_spinner_message(channels)):
                 with fresh_context(env=context_env):
                     changes = self._convert_loop(
-                        max_attempts=max_attempts, solver=solver, tmp_path=tmp_path
+                        max_attempts=max_attempts,
+                        solver=solver,
+                        tmp_path=tmp_path,
+                        channels=build_channels,
                     )
 
             # PEP 794: raise an error if any two packages to be installed share an

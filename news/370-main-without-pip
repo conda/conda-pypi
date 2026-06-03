@@ -1,0 +1,19 @@
+### Enhancements
+
+* Remove the CLI entry point because a CLI doesn't make sense for a plugin. (#327 via #370)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

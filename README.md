@@ -17,13 +17,48 @@ This is a **community-maintained** project under the [conda](https://github.com/
 
 ## What is this?
 
-Includes:
+The `conda-pypi` plugin improves conda's integration with the PyPI ecosystem. The most
+important feature is the `conda-pypi` channel, hosted by Anaconda, which makes pure
+Python pacakges from PyPi available to users natively through `conda install`.
+
+## Using `conda-pypi`
+
+`conda-pypi` is available in conda 26.5 or later. To update:
+
+```bash
+conda install --name base "conda>=26.5"
+```
+
+To opt in, enable the Rattler solver and add the `conda-pypi` channel:
+
+```bash
+conda config --set solver rattler
+conda config --append channels conda-pypi
+```
+
+During the beta, the `conda-pypi` channel might not appear in the
+Anaconda.org web UI and some commands such as `conda search` can fail because
+they request classic `repodata.json` metadata. Use `conda install` or
+`conda create --dry-run` to check whether the solver can use the channel.
+
+After configuring, you can use PyPI packages alongside conda packages in
+your normal conda workflows, without needing to convert PyPI's wheel files
+to conda files.
+
+## Advanced options
+
+`conda-pypi` includes more advanced subcommand controls for working with PyPI
+packages. These options are recommended for users who want to experiment with
+conda and wheels and work with cutting-edge plugin features.
+
+You can use the following commands with the `conda pypi` subcommand to do more
+with the `conda-pypi` plugin:
 
 - `conda pypi install`: Converts PyPI packages to `.conda` format for safer installation.
 - `conda pypi install -e .`: Converts a path to an editable `.conda` format package.
 - `conda pypi convert`: Convert PyPI packages to `.conda` format without installing them.
 - `conda install` from wheel channels (experimental): channels can serve pure Python wheels directly in `repodata.json`.
-- Adds `EXTERNALLY-MANAGED` to your environments.
+- A warning when running `conda create` or `conda install` with `pip` in the environment.
 
 ## Why?
 

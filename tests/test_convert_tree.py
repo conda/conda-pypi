@@ -8,9 +8,9 @@ import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
 from conda.models.match_spec import MatchSpec
 from conda.testing.fixtures import TmpEnvFixture
-
 from pytest_mock import MockerFixture
 
 from conda_pypi.convert_tree import (
@@ -21,8 +21,6 @@ from conda_pypi.convert_tree import (
 )
 from conda_pypi.downloader import get_package_finder
 from conda_pypi.exceptions import CondaPypiError
-
-import pytest
 
 REPO = Path(__file__).parents[1] / "synthetic_repo"
 
@@ -156,8 +154,15 @@ def test_format_conflict_line_cross_install_exclusive_vs_namespace():
     )
     assert "azure" in line
     assert "namespace" in line
-def _make_wheel(tmp_path: Path, pkg_name: str, version: str = "1.0.0",
-                import_names=None, import_namespaces=None) -> Path:
+
+
+def _make_wheel(
+    tmp_path: Path,
+    pkg_name: str,
+    version: str = "1.0.0",
+    import_names=None,
+    import_namespaces=None,
+) -> Path:
     lines = ["Metadata-Version: 2.5", f"Name: {pkg_name}", f"Version: {version}"]
     for n in import_names or []:
         lines.append(f"Import-Name: {n}")
@@ -167,8 +172,10 @@ def _make_wheel(tmp_path: Path, pkg_name: str, version: str = "1.0.0",
     wheel_path = tmp_path / f"{pkg_name}-{version}-py3-none-any.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
         zf.writestr(f"{dist_info}/METADATA", "\n".join(lines) + "\n")
-        zf.writestr(f"{dist_info}/WHEEL",
-                    "Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n")
+        zf.writestr(
+            f"{dist_info}/WHEEL",
+            "Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n",
+        )
         zf.writestr(f"{dist_info}/RECORD", "")
     return wheel_path
 
@@ -182,9 +189,12 @@ def _bare_convert_tree(prefix=None) -> ConvertTree:
 
 def test_collect_import_names_from_wheels_reads_metadata(tmp_path: Path):
     _make_wheel(tmp_path, "mylib", import_names=["mylib"])
-    _make_wheel(tmp_path, "azure-mgmt-search",
-                import_names=["azure.mgmt.search"],
-                import_namespaces=["azure", "azure.mgmt"])
+    _make_wheel(
+        tmp_path,
+        "azure-mgmt-search",
+        import_names=["azure.mgmt.search"],
+        import_namespaces=["azure", "azure.mgmt"],
+    )
     ct = _bare_convert_tree()
     names, namespaces = ct._collect_import_names_from_wheels(tmp_path)
     all_names = [name for name_list in names.values() for name in name_list]
@@ -215,8 +225,10 @@ def test_collect_import_names_from_prefix_reads_about_json(tmp_path: Path, monke
     fake_record.extracted_package_dir = str(epd)
 
     import conda.core.prefix_data as _pd_mod
-    monkeypatch.setattr(_pd_mod, "PrefixData",
-                        lambda prefix: MagicMock(iter_records=lambda: iter([fake_record])))
+
+    monkeypatch.setattr(
+        _pd_mod, "PrefixData", lambda prefix: MagicMock(iter_records=lambda: iter([fake_record]))
+    )
 
     ct = _bare_convert_tree(tmp_path)
     names, namespaces = ct._collect_import_names_from_prefix()
@@ -228,8 +240,11 @@ def test_check_import_name_conflicts_raises_on_batch_conflict(tmp_path: Path, mo
     from conda.exceptions import CondaError
 
     ct = _bare_convert_tree()
-    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
-                        lambda _: ({"pkg-a": ["utils"], "pkg-b": ["utils"]}, {}))
+    monkeypatch.setattr(
+        ct,
+        "_collect_import_names_from_wheels",
+        lambda _: ({"pkg-a": ["utils"], "pkg-b": ["utils"]}, {}),
+    )
     monkeypatch.setattr(ct, "_collect_import_names_from_prefix", lambda: ({}, {}))
 
     with pytest.raises(CondaError, match="Import name conflicts"):
@@ -242,29 +257,32 @@ def test_check_import_name_conflicts_warns_on_cross_install_conflict(
     import logging
 
     ct = _bare_convert_tree()
-    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
-                        lambda _: ({"pkg-new": ["utils"]}, {}))
-    monkeypatch.setattr(ct, "_collect_import_names_from_prefix",
-                        lambda: ({"pkg-installed": ["utils"]}, {}))
+    monkeypatch.setattr(
+        ct, "_collect_import_names_from_wheels", lambda _: ({"pkg-new": ["utils"]}, {})
+    )
+    monkeypatch.setattr(
+        ct, "_collect_import_names_from_prefix", lambda: ({"pkg-installed": ["utils"]}, {})
+    )
 
     with caplog.at_level(logging.WARNING, logger="conda_pypi.convert_tree"):
         ct._check_import_name_conflicts(tmp_path)
 
-    assert any("overlap" in r.message.lower() or "conflict" in r.message.lower()
-               for r in caplog.records)
+    assert any(
+        "overlap" in r.message.lower() or "conflict" in r.message.lower() for r in caplog.records
+    )
 
 
-def test_check_import_name_conflicts_no_false_conflict_on_update(
-    tmp_path: Path, monkeypatch
-):
+def test_check_import_name_conflicts_no_false_conflict_on_update(tmp_path: Path, monkeypatch):
     # Updating a package means the same key appears in both prefix and incoming wheels.
     # The dict merge ({**installed, **new}) overwrites the old entry, so
     # check_import_name_conflicts only sees one entry and raises no conflict.
     ct = _bare_convert_tree()
-    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
-                        lambda _: ({"python-dateutil": ["dateutil"]}, {}))
-    monkeypatch.setattr(ct, "_collect_import_names_from_prefix",
-                        lambda: ({"python-dateutil": ["dateutil"]}, {}))
+    monkeypatch.setattr(
+        ct, "_collect_import_names_from_wheels", lambda _: ({"python-dateutil": ["dateutil"]}, {})
+    )
+    monkeypatch.setattr(
+        ct, "_collect_import_names_from_prefix", lambda: ({"python-dateutil": ["dateutil"]}, {})
+    )
     ct._check_import_name_conflicts(tmp_path)
 
 
@@ -276,10 +294,12 @@ def test_check_import_name_conflicts_batch_conflicts_not_re_reported_as_cross(
     from conda.exceptions import CondaError
 
     ct = _bare_convert_tree()
-    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
-                        lambda _: ({"pkg-a": ["utils"], "pkg-b": ["utils"]}, {}))
-    monkeypatch.setattr(ct, "_collect_import_names_from_prefix",
-                        lambda: ({}, {}))
+    monkeypatch.setattr(
+        ct,
+        "_collect_import_names_from_wheels",
+        lambda _: ({"pkg-a": ["utils"], "pkg-b": ["utils"]}, {}),
+    )
+    monkeypatch.setattr(ct, "_collect_import_names_from_prefix", lambda: ({}, {}))
 
     with pytest.raises(CondaError):
         ct._check_import_name_conflicts(tmp_path)

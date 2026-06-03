@@ -4,14 +4,12 @@ import base64
 import hashlib
 import os
 import sys
-
 from logging import getLogger
 from pathlib import Path
 from typing import Iterator
 
 from conda.base.context import context, locate_prefix_by_name
 from conda.models.match_spec import MatchSpec
-
 
 logger = getLogger(f"conda.{__name__}")
 

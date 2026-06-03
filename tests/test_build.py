@@ -1,10 +1,11 @@
 import json
+import sys
+import zipfile
 from pathlib import Path
 
-from conda_package_streaming import package_streaming
-
-from conda.testing.fixtures import TmpEnvFixture
 from conda.common.path import get_python_short_path
+from conda.testing.fixtures import TmpEnvFixture
+from conda_package_streaming import package_streaming
 
 from conda_pypi.build import build_conda
 from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
@@ -112,6 +113,147 @@ def test_build_conda_copies_licenses_to_info_licenses(
     assert lic_payload == b"BSD-3-Clause placeholder license text\n"
 
 
+def test_build_conda_records_channels_in_about_json(
+    tmp_env: TmpEnvFixture,
+    pypi_demo_package_wheel_path: Path,
+    tmp_path: Path,
+):
+    """Channels passed to build_conda are recorded in info/about.json (#343)."""
+    build_path = tmp_path / "build"
+    build_path.mkdir()
+    repo_path = tmp_path / "repo"
+    repo_path.mkdir()
+    target = repo_path / "demo-package-0.1.0-pypi_0.conda"
+
+    with tmp_env("python=3.12", "pip") as prefix:
+        build_conda(
+            pypi_demo_package_wheel_path,
+            build_path,
+            repo_path,
+            Path(prefix, get_python_short_path()),
+            is_editable=False,
+            channels=("conda-forge", "bioconda"),
+        )
+
+    about = None
+    for tar, member in package_streaming.stream_conda_info(target):
+        if member.name == "info/about.json":
+            about = json.load(tar.extractfile(member))
+            break
+    assert about is not None
+    assert about["channels"] == ["conda-forge", "bioconda"]
+    assert about["extra"]["generator"] == "conda-pypi"
+    assert about["extra"]["recipe"]["name"] == "demo-package"
+    assert about["extra"]["recipe"]["build"] == "pypi_0"
+
+
+def test_build_conda_members_stay_in_info_component(
+    pypi_demo_package_wheel_path: Path,
+    tmp_path: Path,
+):
+    build_path = tmp_path / "build"
+    build_path.mkdir()
+    repo_path = tmp_path / "repo"
+    repo_path.mkdir()
+    out_conda = repo_path / "demo-package-0.1.0-pypi_0.conda"
+
+    build_conda(
+        pypi_demo_package_wheel_path,
+        build_path,
+        repo_path,
+        sys.executable,
+        is_editable=False,
+    )
+
+    assert out_conda.is_file()
+
+    pkg_names = {member.name for _, member in package_streaming.stream_conda_component(out_conda)}
+    info_names = {member.name for _, member in package_streaming.stream_conda_info(out_conda)}
+
+    assert "/" not in pkg_names
+    assert "/" not in info_names
+    assert "info/" not in pkg_names
+    assert "info/" not in info_names
+    assert not any(name.startswith("info/") for name in pkg_names)
+
+    # True for our test demo_package but not universally true. Meant to catch
+    # user's homedir or /tmp/ sneaking into pkg_names:
+    assert all(name.startswith("site-packages") for name in pkg_names)
+
+
+def test_conda_package_conforms_to_cep_34_35(
+    tmp_env: TmpEnvFixture,
+    pypi_demo_package_wheel_path: Path,
+    tmp_path: Path,
+):
+    """Validate package conforms to CEP 34 (contents) and CEP 35 (file format).
+
+    CEP 35 MUST requirements tested:
+    - info-* tarball MUST contain the full info/ folder
+    - pkg-* tarball MUST carry everything else
+    - Root level of tarballs MUST match target location (no intermediate subdirectories)
+
+    CEP 34 MUST requirements tested:
+    - Package MUST include info/index.json and info/paths.json
+    - info/paths.json MUST NOT list contents of info/ folder
+    - conda-meta/ MUST NOT be present
+    - info/repodata_record.json MUST NOT be present
+    """
+    target_package_path, paths_json = _build_demo_conda_and_paths(
+        tmp_env, pypi_demo_package_wheel_path, tmp_path
+    )
+
+    # Collect all entries from both archives
+    info_entries = [m.name for _, m in package_streaming.stream_conda_info(target_package_path)]
+    pkg_entries = [
+        m.name for _, m in package_streaming.stream_conda_component(target_package_path)
+    ]
+
+    # === CEP 35: Archive structure requirements ===
+
+    # "info-* tarball MUST contain the full info/ folder"
+    # All info archive entries must start with 'info/'
+    invalid_info = [e for e in info_entries if not e.startswith("info/")]
+    assert not invalid_info, (
+        f"CEP 35 violation: info archive has entries not under info/: {invalid_info}"
+    )
+
+    # "pkg-* tarball MUST carry everything else"
+    # No pkg entries should be info/ content
+    misplaced_info = [e for e in pkg_entries if e.startswith("info/")]
+    assert not misplaced_info, f"CEP 35 violation: pkg archive has info/ entries: {misplaced_info}"
+
+    # "Root level MUST match target location (no intermediate subdirectories)"
+    # No absolute paths (leading /) or empty strings representing root
+    all_entries = info_entries + pkg_entries
+    invalid_roots = [e for e in all_entries if e.startswith("/") or e == ""]
+    assert not invalid_roots, (
+        f"CEP 35 violation: archive has intermediate subdirectories or absolute paths: {invalid_roots}"
+    )
+
+    # === CEP 34: Package contents requirements ===
+
+    # "Package MUST include info/index.json and info/paths.json"
+    assert "info/index.json" in info_entries, "CEP 34 violation: info/index.json missing"
+    assert "info/paths.json" in info_entries, "CEP 34 violation: info/paths.json missing"
+
+    # "info/paths.json MUST NOT list contents of info/ folder"
+    paths_in_paths_json = [p["_path"] for p in paths_json.get("paths", [])]
+    info_in_paths = [p for p in paths_in_paths_json if p.startswith("info/") or p == "info"]
+    assert not info_in_paths, (
+        f"CEP 34 violation: info/paths.json lists info/ contents: {info_in_paths}"
+    )
+
+    # "conda-meta/ directory MUST NOT be populated by conda packages"
+    conda_meta = [e for e in all_entries if e.startswith("conda-meta/") or e == "conda-meta"]
+    assert not conda_meta, f"CEP 34 violation: package contains conda-meta/: {conda_meta}"
+
+    # "info/repodata_record.json MUST NOT be present in distributed artifacts"
+    assert "info/repodata_record.json" not in info_entries, (
+        "CEP 34 violation: info/repodata_record.json must not be in distributed artifacts"
+    )
+
+
 def test_extract_whl_copies_licenses_to_info_licenses(
     pypi_license_file_wheel_path: Path,
     tmp_path: Path,
@@ -123,6 +265,8 @@ def test_extract_whl_copies_licenses_to_info_licenses(
     lic = dest / "info" / "licenses" / "LICENSE"
     assert lic.is_file()
     assert lic.read_bytes() == b"BSD-3-Clause placeholder license text\n"
+
+
 def _make_minimal_pep794_wheel(
     tmp_path: Path,
     pkg_name: str = "pep794pkg",

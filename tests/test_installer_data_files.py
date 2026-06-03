@@ -4,14 +4,17 @@ Tests for installer data file handling.
 Tests that data files in wheels are properly installed.
 """
 
+import io
 import json
 import os
+import sys
+import tarfile
 from pathlib import Path
 
 import pytest
-from conda.testing.fixtures import TmpEnvFixture
-from conda.common.path import get_python_short_path
 from conda.base.context import context
+from conda.common.path import get_python_short_path
+from conda.testing.fixtures import TmpEnvFixture
 
 from conda_pypi import installer
 from conda_pypi.build import build_pypa
@@ -21,8 +24,8 @@ HERE = Path(__file__).parent
 
 
 # This mirrors the layout of the pybind11-global wheel. The identical header files
-# appear in both data/include/ and headers/. The data/ copy is listed first in RECORD
-# so it is written first. The headers/ copy must not raise a FileExistsError.
+# appear in both data/include/ and headers/. Duplicate archive members should be
+# treated as fatal to avoid ambiguous package contents.
 @pytest.fixture(scope="session")
 def wheel_with_headers() -> Path:
     return HERE / "pypi_local_index" / "header-pkg" / "header_pkg-1.0.0-py3-none-any.whl"
@@ -43,51 +46,47 @@ def test_package_wheel_path(tmp_path_factory):
     )
 
 
-def test_install_installer_data_files_present(
-    tmp_env: TmpEnvFixture,
+def test_install_installer_to_tar_data_files_present(
     test_package_wheel_path: Path,
     tmp_path: Path,
 ):
-    """Test that data files from wheels are installed in build_path."""
-    build_path = tmp_path / "build"
-    build_path.mkdir()
-
-    with tmp_env("python=3.12", "pip") as prefix:
-        python_executable = Path(prefix, get_python_short_path())
-
-        installer.install_installer(
-            str(python_executable),
+    """Test that data files from wheels are included in package_paths."""
+    tar_path = tmp_path / "output.tar"
+    with tarfile.open(tar_path, "w") as tar:
+        package_paths = installer.install_installer_to_tar(
+            sys.executable,
             test_package_wheel_path,
-            build_path,
+            tar,
         )
 
-        # Data files should be installed in build_path/share/ (data scheme)
-        data_file = build_path / "share" / "test-package-with-data" / "data" / "test.txt"
-
-        assert data_file.exists(), f"Data file not found at {data_file}"
+    # Data files should be recorded with data scheme path (share/)
+    paths = {p["_path"] for p in package_paths}
+    data_path = "share/test-package-with-data/data/test.txt"
+    assert data_path in paths, f"Data file not found in package_paths: {paths}"
+    assert not any(p.startswith("/") for p in paths), (
+        f"Package paths must be relative, got absolute entries: {paths}"
+    )
 
 
 def test_install_installer_headers(
     tmp_env: TmpEnvFixture,
     wheel_with_headers: Path,
-    tmp_path: Path,
 ):
-    """Wheel .data/headers/ files are installed to build_path/include/."""
-    build_path = tmp_path / "build"
-    build_path.mkdir()
+    """Wheel .data/headers/ files are added to include/ in tar members."""
+    tar = tarfile.TarFile("conda.tar", "w", fileobj=io.BytesIO())
 
     with tmp_env("python=3.12") as prefix:
         python_executable = Path(prefix, get_python_short_path())
 
-        installer.install_installer(
+        installer.install_installer_to_tar(
             str(python_executable),
             wheel_with_headers,
-            build_path,
+            tar,
         )
 
-        header_file = build_path / "include" / "header_pkg" / "header_pkg.h"
-        assert header_file.exists()
-        assert header_file.read_text().startswith("// header_pkg public API")
+        member_names = {member.name for member in tar.getmembers()}
+        header_path = "include/header_pkg/header_pkg.h"
+        assert header_path in member_names
 
 
 @pytest.fixture(scope="session")
@@ -116,6 +115,9 @@ def test_extract_whl_data_scheme_file_placement(
     assert "share/man/man1/man-pkg.1" in paths, "data-scheme path missing from paths.json"
     assert not any(p.startswith("site-packages/share") for p in paths), (
         "data-scheme files must not be nested under site-packages"
+    )
+    assert not any(p.startswith("/") for p in paths), (
+        "paths.json entries must be relative and must not start with '/'"
     )
 
 

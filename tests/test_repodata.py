@@ -2,6 +2,10 @@
 Test functions for transforming repodata.
 """
 
+import tempfile
+from importlib.metadata import PathDistribution
+from pathlib import Path
+
 from conda_pypi.translate import (
     CondaMetadata,
     FileDistribution,
@@ -11,9 +15,6 @@ from conda_pypi.translate import (
     pypi_to_conda_name,
     remap_match_spec_name,
 )
-import tempfile
-from importlib.metadata import PathDistribution
-from pathlib import Path
 
 
 def test_file_distribution():
@@ -137,9 +138,7 @@ def test_import_names_absent_when_not_declared():
     with tempfile.TemporaryDirectory() as tmpdir:
         dist_info = Path(tmpdir) / "test-1.0.0.dist-info"
         dist_info.mkdir()
-        (dist_info / "METADATA").write_text(
-            "Metadata-Version: 2.1\nName: test\nVersion: 1.0.0\n"
-        )
+        (dist_info / "METADATA").write_text("Metadata-Version: 2.1\nName: test\nVersion: 1.0.0\n")
         cm = CondaMetadata.from_distribution(PathDistribution(dist_info))
         assert "import_names" not in cm.about
         assert "import_namespaces" not in cm.about
@@ -151,10 +150,7 @@ def test_import_names_read_from_metadata():
         dist_info = Path(tmpdir) / "scikit_learn-1.7.0.dist-info"
         dist_info.mkdir()
         (dist_info / "METADATA").write_text(
-            "Metadata-Version: 2.5\n"
-            "Name: scikit-learn\n"
-            "Version: 1.7.0\n"
-            "Import-Name: sklearn\n"
+            "Metadata-Version: 2.5\nName: scikit-learn\nVersion: 1.7.0\nImport-Name: sklearn\n"
         )
         cm = CondaMetadata.from_distribution(PathDistribution(dist_info))
         assert cm.about["import_names"] == ["sklearn"]
@@ -202,10 +198,7 @@ def test_empty_import_names_declaration():
         dist_info = Path(tmpdir) / "data_only-1.0.dist-info"
         dist_info.mkdir()
         (dist_info / "METADATA").write_text(
-            "Metadata-Version: 2.5\n"
-            "Name: data-only\n"
-            "Version: 1.0\n"
-            "Import-Name: \n"
+            "Metadata-Version: 2.5\nName: data-only\nVersion: 1.0\nImport-Name: \n"
         )
         cm = CondaMetadata.from_distribution(PathDistribution(dist_info))
         # Field is present (declared) but normalized to [] — not [""]
@@ -215,15 +208,13 @@ def test_empty_import_names_declaration():
 def test_check_import_name_conflicts_no_conflict():
     # python-dateutil and requests have disjoint import names
     result = check_import_name_conflicts(
-        {"python-dateutil": ["yaml"], "requests": ["requests", "urllib3"]}
+        {"python-dateutil": ["dateutil"], "requests": ["requests", "urllib3"]}
     )
     assert result == []
 
 
 def test_check_import_name_conflicts_detects_overlap():
-    conflicts = check_import_name_conflicts(
-        {"pkg-a": ["utils"], "pkg-b": ["utils"]}
-    )
+    conflicts = check_import_name_conflicts({"pkg-a": ["utils"], "pkg-b": ["utils"]})
     assert len(conflicts) == 1
     name, first, second, kind = conflicts[0]
     assert name == "utils"
@@ -257,8 +248,10 @@ def test_check_import_name_conflicts_multiple_conflicts():
 def test_check_import_name_conflicts_namespace_allowed():
     result = check_import_name_conflicts(
         {},
-        package_import_namespaces={"azure-mgmt-search": ["azure", "azure.mgmt"],
-                                    "azure-mgmt-compute": ["azure", "azure.mgmt"]},
+        package_import_namespaces={
+            "azure-mgmt-search": ["azure", "azure.mgmt"],
+            "azure-mgmt-compute": ["azure", "azure.mgmt"],
+        },
     )
     assert result == []
 
@@ -306,5 +299,3 @@ def test_check_import_name_conflicts_exclusive_name_vs_multiple_namespace_holder
     assert len(conflicts) == 1
     assert conflicts[0][0] == "azure"
     assert conflicts[0][3] == "exclusive-vs-namespace"
-
-

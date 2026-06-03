@@ -7,3 +7,7 @@ from conda.exceptions import CondaError
 
 class CondaPypiError(CondaError):
     pass
+
+
+class UnableToConvertToRepodataEntry(CondaPypiError):
+    pass

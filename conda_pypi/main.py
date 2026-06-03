@@ -9,20 +9,19 @@ from csv import reader as csv_reader
 from email.parser import HeaderParser
 from logging import getLogger
 from pathlib import Path
-from subprocess import run, CompletedProcess
+from subprocess import CompletedProcess, run
 from tempfile import NamedTemporaryFile
 from typing import Any, Iterable, Literal
 
 from conda.base.context import context
 from conda.cli.main import main_subshell
-from conda.plugins.prefix_data_loaders.pypi.pkg_format import PythonDistribution
 from conda.core.prefix_data import PrefixData
-from conda.exceptions import InvalidVersionSpec
+from conda.exceptions import CondaError, InvalidVersionSpec
 from conda.gateways.disk.read import compute_sum
 from conda.models.enums import PackageType
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PackageRecord
-from conda.exceptions import CondaError
+from conda.plugins.prefix_data_loaders.pypi.pkg_format import PythonDistribution
 from packaging.requirements import Requirement
 from packaging.tags import parse_tag
 from packaging.version import Version
@@ -188,6 +187,39 @@ def ensure_target_env_has_externally_managed(command: str):
                 path.unlink()
     else:
         raise ValueError(f"command {command} not recognized.")
+
+
+def notify_externally_managed_future(command: str):
+    """
+    Beta-period post-command hook that logs a warning about upcoming
+    EXTERNALLY-MANAGED enforcement instead of placing the marker file.
+    """
+    # Build environments are ephemeral; never show user-facing notices.
+    if os.environ.get("CONDA_BUILD_STATE") == "BUILD":
+        return
+    # Only notify in non-base environments where pip interop is relevant.
+    base_prefix = Path(context.conda_prefix)
+    target_prefix = Path(context.target_prefix)
+    if base_prefix == target_prefix or base_prefix.resolve() == target_prefix.resolve():
+        return
+    # No point warning about pip protection if pip isn't installed.
+    prefix_data = PrefixData(target_prefix)
+    if not list(prefix_data.query("pip")):
+        return
+
+    if context.plugins.conda_pypi_pip_warning:
+        logger.warning(
+            "\n"
+            "  This environment has pip installed. A future conda release will\n"
+            "  protect conda environments from accidental 'pip install' usage.\n"
+            "  Try the beta to install PyPI packages natively with conda:\n"
+            "    conda config --set solver rattler\n"
+            "    conda config --append channels conda-pypi\n"
+            "    conda install <package>\n"
+            "  More info: https://docs.conda.io/projects/conda/en/stable/new-features.html"
+            "  To disable this warning, run:"
+            "    conda config --set plugins.conda_pypi_pip_warning false\n"
+        )
 
 
 def pypi_lines_for_explicit_lockfile(

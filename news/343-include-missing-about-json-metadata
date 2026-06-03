@@ -1,0 +1,19 @@
+### Enhancements
+
+* Populate additional `info/about.json` fields (`home`, `dev_url`, `doc_url`, `channels`, `extra.recipe`, `extra.generator`) when converting PyPI projects, and truncate `description` to the first paragraph to avoid embedding the full README + CHANGELOG. (#343)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

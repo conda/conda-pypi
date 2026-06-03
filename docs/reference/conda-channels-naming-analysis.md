@@ -1,11 +1,11 @@
-# Conda Channel Naming Discrepancies Analysis Report
+# Conda channel naming discrepancies analysis report
 
-## Executive Summary
+## Executive summary
 
 This report analyzes naming differences between the main conda channel and conda-forge channel for Python packages.  The analysis was done by comparing the PyPI mappings between main and conda-forge channel packages
 and then identifying when they, the conda package names, are different.  This analysis was done mid August 2025.
 
-## Study Overview
+## Study overview
 
 Channel data was downloaded from cf-graph-countyfair (grayskull_pypi_mapping.json) for conda-forge
 channel and an internal Anaconda metadata source for the main channel. With both sources, containing
@@ -42,7 +42,7 @@ found_on_main = [
 ]
 ```
 
-## Data Overview
+## Data overview
 
 **72 packages** were found with discrepancies between main conda channel and conda-forge channel conda
 package names.  This was done by collecting information main's packages (from an internal to Anaconda
@@ -53,14 +53,14 @@ was not used in this comparison.
 
 A few of these were not listed below as the data mapping was incorrect.
 
-## Key Findings
+## Key findings
 
 Discrepancies fall in several categories.  There are cases where the name of the package was changed
 (This, of course, has it's own challenges by having to select the 'correct' conda package).
 
-###  Naming Pattern Categories
+###  Naming pattern categories
 
-#### **Prefix/Suffix Standardization Differences**
+#### **Prefix/suffix standardization differences**
 
 |#| Main Channel Name | Conda-Forge Name | PyPI Name | Notes |
 |-|-------------------|-------------------|-----------|-------|
@@ -75,7 +75,7 @@ Discrepancies fall in several categories.  There are cases where the name of the
 |9| `spyder` | `spyder-base` | `spyder` |  |
 |10| `tables` | `pytables` | `tables` | main also has `pytables` |
 
-#### **Vendor/Project Name Clarification**
+#### **Vendor/project name clarification**
 
 |#| Main Channel Name | Conda-Forge Name | PyPI Name | Notes |
 |-|-------------------|-------------------|-----------|-------|
@@ -87,7 +87,7 @@ Discrepancies fall in several categories.  There are cases where the name of the
 |6| `pywget` | `python-wget` | `wget` |  |
 |7| `lit` | `lit-nlp` | `lit` ||
 
-#### **Hyphen vs Underscore Standardization**
+#### **Hyphen vs underscore standardization**
 
 |#| Main Channel Name | Conda-Forge Name | PyPI Name | Notes |
 |-|-------------------|-------------------|-----------|-------|
@@ -104,7 +104,7 @@ Discrepancies fall in several categories.  There are cases where the name of the
 |11| `streamlit-option-menu` | `streamlit_option_menu` | `streamlit-option-menu` |  |
 |12| `typing-extensions` | `typing_extensions` | `typing-extensions` |  |
 
-#### **Package Family Consolidation**
+#### **Package family consolidation**
 
 |#| Main Channel Name | Conda-Forge Name | PyPI Name | Notes |
 |-|-------------------|-------------------|-----------|-------|
@@ -135,13 +135,13 @@ Discrepancies fall in several categories.  There are cases where the name of the
 |25| `uvicorn-standard` | `uvicorn` | `uvicorn` | main also has `uvicorn` |
 
 
-### Impact Analysis
+### Impact analysis
 
 - There are discrepancies even within channels (pandera and pandera-core)
 - There are very few discrepancies between the two channels.  Main has more than 2k different PyPI projects and there are only about 20 real differences.
 - Because of main's longevity, there are older packages that are no longer maintained as main seems to be moving to use conda-forge package names whenever possible.
 
-## Research Questions for Further Investigation
+## Research questions for further investigation
 
 - Is there disagreement among cf-graph-countyfair and parselmouth?
   - Would we expect it to be very significant if there was?

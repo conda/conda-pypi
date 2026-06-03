@@ -99,26 +99,6 @@ html_theme_options = {
     "navigation_depth": -1,
     "use_edit_page_button": True,
     "navbar_center": ["navbar_center"],
-    "icon_links": [
-        {
-            "name": "GitHub",
-            "url": "https://github.com/conda/conda-pypi",
-            "icon": "fa-brands fa-square-github",
-            "type": "fontawesome",
-        },
-        {
-            "name": "Element",
-            "url": "https://matrix.to/#/#conda_conda:gitter.im",
-            "icon": "_static/element_logo.svg",
-            "type": "local",
-        },
-        {
-            "name": "Discourse",
-            "url": "https://conda.discourse.group/",
-            "icon": "fa-brands fa-discourse",
-            "type": "fontawesome",
-        },
-    ],
 }
 
 html_context = {

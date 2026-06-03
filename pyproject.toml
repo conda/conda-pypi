@@ -27,9 +27,8 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
   # "conda >=25.11.0",
-  # "conda-rattler-solver >=0.0.5",
   "build",
-  "conda-index >=0.7.0",
+  "conda-index >=0.11.0",
   "conda-package-streaming >=0.11",
   "installer >=1.0",
   "packaging",
@@ -47,15 +46,14 @@ conda-pypi = "conda_pypi.plugin"
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64", "linux-aarch64"]
+platforms = ["linux-64", "osx-arm64", "win-64", "linux-aarch64"]
 
 [tool.pixi.dependencies]
 # must match project.dependencies (sans python and conda)
 python = ">=3.10"
 conda = ">=26.1"
-conda-index = ">=0.7.0"
+conda-index = ">=0.11.0"
 conda-package-streaming = ">=0.11"
-conda-rattler-solver = ">=0.0.6"
 packaging = "*"
 pip = "*"
 unearth = "*"
@@ -63,25 +61,51 @@ unearth = "*"
 [tool.pixi.pypi-dependencies]
 "conda-pypi" = { path  = ".", editable = true }
 
-[tool.pixi.tasks]
-dev = 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()"'
+[tool.pixi.tasks.dev]
+cmd = 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()"'
+description = """Set up the environment for development
+            This calls `conda_pypi.python_paths.ensure_externally_managed`:
+                    conda-pypi places its own EXTERNALLY-MANAGED file when it is installed in an environment.
+                    We also need to place it in _new_ environments created by conda. We do this by
+                    implementing some extra plugin hooks."""
 
 [tool.pixi.feature.build]
 dependencies = { anaconda-client = "*", conda-build = "*" }
-tasks = { build = "conda build recipe" }
+
+[tool.pixi.feature.build.tasks.build]
+cmd = "conda build recipe"
+description = "Build conda packages using conda-build. The recipe should be located in the `recipe/` directory."
 
 [tool.pixi.feature.lint.dependencies]
 python = "3.12.*"
 pre-commit = "*"
 
-[tool.pixi.feature.lint.tasks]
-lint = "pre-commit"
-pre-commit = "pre-commit"
+[tool.pixi.feature.lint.tasks.pre-commit]
+cmd = "pre-commit"
+description = "Run pre-commit hooks to lint the codebase."
 
-[tool.pixi.feature.docs.tasks]
-docs = { cmd = "sphinx-build -M dirhtml . _build", cwd = "docs" }
-serve = { cmd = "python -m http.server", cwd = "docs/_build/dirhtml" }
-clean = { cmd = "rm -rf _build", cwd = "docs" }
+[tool.pixi.feature.lint.tasks.lint]
+cmd = "pre-commit"
+description = "Run pre-commit hooks to lint the codebase. Alias for `pre-commit` task."
+
+[tool.pixi.feature.docs.tasks.build-docs]
+cmd = "sphinx-build -M dirhtml . _build"
+cwd = "docs"
+description = "Build the documentation using Sphinx. The output will be in docs/_build/dirhtml"
+
+[tool.pixi.feature.docs.tasks.serve-docs]
+cmd = "python -m http.server"
+cwd = "docs/_build/dirhtml"
+description = "Serve the built documentation locally at http://localhost:8000/ Run `pixi docs` first to build the documentation before serving it."
+
+[tool.pixi.feature.docs.tasks.make-docs]
+depends-on = ["build-docs", "serve-docs"]
+description = "Build the documentation and serve it locally at http://localhost:8000/ Runs tasks `build-docs` and `serve-docs` in one step."
+
+[tool.pixi.feature.docs.tasks.clean-docs]
+cmd = "rm -rf _build"
+cwd = "docs"
+description = "Clean the documentation build directory"
 
 [tool.pixi.feature.docs.dependencies]
 python = "3.10.*"
@@ -95,9 +119,16 @@ sphinx-design = "*"
 sphinx-reredirects = "*"
 sphinx-sitemap = "*"
 
-[tool.pixi.feature.test.tasks]
-test = 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()" && python -mpytest -m "not benchmark"'
-benchmark= 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()" && python -mpytest --codspeed'
+[tool.pixi.feature.test.tasks.test]
+cmd = 'python -m pytest -m "not benchmark"'
+description = "Run the test suite using pytest, excluding benchmarks. This calls task `dev` first to ensure the environment is set up correctly for testing."
+depends-on = ["dev"]
+
+[tool.pixi.feature.test.tasks.benchmark]
+cmd = "python -mpytest --codspeed"
+description = "Run the benchmark tests using pytest-codspeed. This calls task `dev` first to ensure the environment is set up correctly for testing."
+depends-on = ["dev"]
+
 
 [tool.pixi.feature.test.dependencies]
 pytest = "7.4.3.*"
@@ -117,6 +148,8 @@ pyyaml = "*"
 zstandard = "*"  # Will be in stdlib as compression.zstd in Python 3.14+
 # Build backend for flit tests
 flit = "*"
+# Solver for wheel-augmented repodata tests
+conda-rattler-solver = ">=0.0.6"
 
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
@@ -166,6 +199,15 @@ version-file = "conda_pypi/_version.py"
 
 [tool.ruff]
 line-length = 99
+
+[tool.ruff.lint]
+extend-select = [
+  "I", # sort imports
+  "TID", # use absolute imports
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]

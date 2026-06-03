@@ -1,7 +1,7 @@
-from tempfile import TemporaryDirectory
+import json
 from argparse import Namespace, _SubParsersAction
 from pathlib import Path
-import json
+from tempfile import TemporaryDirectory
 
 from conda.auxlib.ish import dals
 from conda.base.context import context
@@ -142,6 +142,7 @@ def execute(args: Namespace) -> int:
                 python_executable,
                 test_dir=test_dir,
                 pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
+                channels=tuple(context.channels),
             )
     else:
         # Build from source (project directory or sdist)
@@ -153,6 +154,7 @@ def execute(args: Namespace) -> int:
             prefix=prefix_path,
             test_dir=test_dir,
             pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
+            channels=tuple(context.channels),
         )
 
     print(f"Conda package at {package_path} built successfully. Output folder: {output_folder}.")

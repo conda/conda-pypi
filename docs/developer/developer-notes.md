@@ -1,4 +1,4 @@
-# Developer Notes
+# Developer notes
 
 This section contains implementation notes, technical insights, and development considerations for conda-pypi.
 

@@ -4,9 +4,11 @@ Authors are sorted alphabetically.
 * Agriya Khetarpal
 * Dan Yeaw
 * Daniel Holth
+* Daniel Petry
 * Jaime Rodríguez-Guerra
 * Jannis Leidel
 * Jean-Christophe Morin
+* Katherine Kinnaman
 * Ken Odegard
 * Mahe Iram Khan
 * Ryan Keith
@@ -14,6 +16,5 @@ Authors are sorted alphabetically.
 * Tomasz Beneś
 * Travis Hathaway
 * conda-bot
-* danpetry
 * dependabot[bot]
 * pre-commit-ci[bot]

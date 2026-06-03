@@ -13,12 +13,9 @@ Marker conversion includes:
 
 import json
 import sys
-
-from packaging.markers import Marker
-from packaging.requirements import Requirement
 from typing import Any
 
-from conda_pypi.name_mapping import pypi_to_conda_name
+from packaging.markers import Marker
 
 if sys.version_info >= (3, 11):
     from enum import StrEnum
@@ -161,80 +158,6 @@ def dependency_when(dependency: str, condition: str | None) -> str:
     # ensure proper quoting
     condition = json.dumps(condition)
     return f"{dependency}[when={condition}]"
-
-
-def pypi_to_repodata_noarch_whl_entry(
-    pypi_data: dict[str, Any],
-    pypi_to_conda_name_mapping: dict | None = None,
-) -> dict[str, Any] | None:
-    """Convert PyPI JSON API payload to a repodata.json v3.whl entry for a pure-Python wheel.
-
-    Dependency and record names use ``pypi_to_conda_name`` (same default table and
-    unmapped-name fallback as :func:`conda_pypi.translate.requires_to_conda`).
-    ``depends`` / ``extra_depends`` strings keep PEP 508 optional extras and specifier
-    spelling. ``.whl`` → ``.conda`` conversion uses :func:`conda_dep_string_from_pep508_requirement`
-    instead. This repodata path may emit ``[when=…]``, wheel conversion does not until conda has
-    support for `[when="…"]` syntax in MatchSpec.
-    """
-    # Find a pure Python wheel (platform tag "none-any")
-    for wheel_url in pypi_data.get("urls", []):
-        if wheel_url.get("packagetype") != "bdist_wheel":
-            continue
-        if not wheel_url.get("filename", "").endswith("-none-any.whl"):
-            continue
-        # found valid wheel_url
-        break
-    else:
-        # no wheel_url found
-        return None
-
-    pypi_info = pypi_data.get("info")
-
-    depends_list: list[str] = []
-    extra_depends_dict: dict[str, list[str]] = {}
-    for dep in pypi_info.get("requires_dist") or []:
-        req = Requirement(dep)
-        req.name = pypi_to_conda_name(req.name, pypi_to_conda_name_mapping)
-        # Preserve PEP 508 spelling (including optional dependency extras). Rattler-safe
-        # normalization applies only to wheel → .conda :func:`conda_pypi.translate.requires_to_conda`.
-        conda_dep = req.name + dependency_extras_suffix(req.extras) + str(req.specifier)
-
-        non_extra_condition, extra_names = (
-            extract_marker_condition_and_extras(req.marker) if req.marker else (None, [])
-        )
-        full_dep = dependency_when(conda_dep, non_extra_condition)
-
-        if extra_names:
-            for extra_name in extra_names:
-                extra_depends_dict.setdefault(extra_name, []).append(full_dep)
-        else:
-            depends_list.append(full_dep)
-
-    python_requires = pypi_info.get("requires_python")
-    if python_requires:
-        depends_list.append(f"python {python_requires}")
-    else:
-        # Noarch python packages should still depend on python when PyPI omits requires_python
-        depends_list.append("python")
-
-    # Build the repodata entry
-    entry = {
-        "url": wheel_url.get("url", ""),
-        "name": pypi_to_conda_name(pypi_info.get("name") or "", pypi_to_conda_name_mapping),
-        "version": pypi_info.get("version"),
-        "build": "py3_none_any_0",
-        "build_number": 0,
-        "depends": depends_list,
-        "extra_depends": extra_depends_dict,
-        "fn": f"{pypi_info.get('name')}-{pypi_info.get('version')}-py3-none-any.whl",
-        "sha256": wheel_url.get("digests", {}).get("sha256", ""),
-        "size": wheel_url.get("size", 0),
-        "subdir": "noarch",
-        # "timestamp": wheel_url.get("upload_time", 0),
-        "noarch": "python",
-    }
-
-    return entry
 
 
 def _marker_value(token: Any) -> str:

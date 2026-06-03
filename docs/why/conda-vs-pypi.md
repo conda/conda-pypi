@@ -8,9 +8,9 @@ and how each tool tracks what is currently installed.
 ## Summary
 
 - Conda and PyPI use different strategies for building binary distributions; when
-  using these packaging formats together, it can lead to hard debug issues.
+  using these packaging formats together, it can lead to difficult to debug issues.
 - PyPI tools are aware of what is installed in a conda environment but when these
-  tools make changes to the environment conda looses track of what is installed.
+  tools make changes to the environment conda loses track of what is installed.
 - conda relies on all packaging metadata (available packages, their dependencies, etc)
   being available upfront. PyPI only lists the available packages, but their dependencies
   need to be fetched on a package-per-package basis. This means that the solvers are
@@ -35,10 +35,10 @@ ecosystems together? Because wheels typically include all of their pre-compiled 
 the wheel itself, this can lead to incompatibilities when used with conda packages containing
 pre-compiled binaries. In the conda ecosystem, these dependencies are normally tested with
 each other before being published during the build process, but the PyPI ecosystem does not test
-its wheels with conda packages and therefore users are typically the first one to run into these
+its wheels with conda packages and therefore users are typically the first to encounter these
 errors.
 
-Some examples of these incompatibilities include symbol errors, segfaults and other hard to debug
+Some examples of these incompatibilities include symbol errors, segfaults and other difficult to debug
 issues. Refer to the excellent [pypackaging-native key issues](https://pypackaging-native.github.io/#key-issues)
 for even more information on this topic and specific examples.
 
@@ -122,7 +122,7 @@ Even if we had all the necessary metadata available upfront, we would face one m
 - A package with names encoding versions: `PyQt` v5 is published in PyPI as `pyqt5`, but in conda-forge is simply `pyqt` with version `5` (`pyqt=5`).
 - Different packages with the same name: `art` is a [popular ASCII art package](https://github.com/sepandhaghighi/art/) in PyPI but a [genomics project](https://www.niehs.nih.gov/research/resources/software/biostatistics/art) in `bioconda`.
 
-Additionally there are other challenges like name normalization: in PyPI dashes and underscores are treated in the same way, but conda packaging considers them separate. This leads to efforts like publishing two conda packages for a given PyPI project if it contains any of this separators: PyPI's `typing-extensions` is available as both `typing-extensions` and `typing_extensions`. However these alias packages are not always published, and the separator flavor you get on the conda side is not always consistent.
+Additionally there are other challenges like name normalization: in PyPI dashes and underscores are treated in the same way, but conda packaging considers them separate. This leads to efforts like publishing two conda packages for a given PyPI project if it contains any of these separators: PyPI's `typing-extensions` is available as both `typing-extensions` and `typing_extensions`. However these alias packages are not always published, and the separator flavor you get on the conda side is not always consistent.
 
 ## More on this topic
 

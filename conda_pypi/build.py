@@ -4,21 +4,27 @@ Create .conda packages from wheels.
 Create wheels from pypa projects.
 """
 
+from __future__ import annotations
+
 import csv
+import hashlib
+import io
 import json
 import logging
 import os
-import shutil
 import sys
+import tarfile
 import tempfile
+import zipfile
 from importlib.metadata import PathDistribution
 from pathlib import Path
-from typing import Union
+from typing import Iterable
 
 from build import ProjectBuilder
 from conda.common.compat import on_win
 from conda.common.path.windows import win_path_to_unix
 from conda_package_streaming.create import conda_builder
+from installer.utils import parse_wheel_filename
 
 from conda_pypi import dependencies, installer, paths
 from conda_pypi.conda_build_utils import PathType, sha256_checksum
@@ -41,7 +47,7 @@ def filter(tarinfo):
 
 
 # see conda_build.build.build_info_files_json_v1
-def paths_json(base: Union[Path, str]):
+def paths_json(base: Path | str):
     """
     Build simple paths.json with only 'hardlink' or 'symlink' types.
     """
@@ -88,6 +94,14 @@ def json_dumps(object):
     return json.dumps(object, indent=2, sort_keys=True)
 
 
+def _add_to_tar(tar: tarfile.TarFile, name: str, data: bytes, mode: int = 0o644) -> None:
+    # 0o644 matches conda-build's convention for info/ metadata files
+    tar_info = tarfile.TarInfo(name)
+    tar_info.size = len(data)
+    tar_info.mode = mode
+    tar.addfile(tar_info, io.BytesIO(data))
+
+
 def build_pypa(
     path: Path,
     output_path,
@@ -131,7 +145,7 @@ def build_pypa(
 
 
 def build_conda(
-    whl,
+    whl: Path,
     build_path: Path,
     output_path: Path,
     python_executable,
@@ -139,54 +153,102 @@ def build_conda(
     test_dir: Path | None = None,
     is_editable=False,
     pypi_to_conda_name_mapping: dict | None = None,
+    channels: Iterable[str] = (),
 ) -> Path:
     if not build_path.exists():
         build_path.mkdir()
 
-    installer.install_installer(python_executable, whl, build_path)
+    with (
+        zipfile.ZipFile(whl) as wheel_zip,
+        tempfile.TemporaryDirectory(prefix="dist-info") as dist_info_tmp,
+    ):
+        parsed = parse_wheel_filename(whl.name)
+        dist_info_name = f"{parsed.distribution}-{parsed.version}.dist-info"
 
-    site_packages = build_path / "site-packages"
-    dist_info = next(site_packages.glob("*.dist-info"))
-    metadata = CondaMetadata.from_distribution(
-        PathDistribution(dist_info), pypi_to_conda_name_mapping
-    )
-    record = metadata.package_record.to_index_json()
-    # XXX set build string as hash of pypa metadata so that conda can re-install
-    # when project gains new entry-points, dependencies?
+        dist_info_tmp_path = Path(dist_info_tmp)
+        prefix = f"{dist_info_name}/"
+        for zip_info in wheel_zip.infolist():
+            if zip_info.filename.startswith(prefix):
+                wheel_zip.extract(zip_info, dist_info_tmp_path)
+        dist_info = dist_info_tmp_path / dist_info_name
+        wheel_zip.close()  # so installer has exclusive access below
 
-    file_id = f"{record['name']}-{record['version']}-{record['build']}"
-
-    (build_path / "info").mkdir()
-    (build_path / "info" / "index.json").write_text(json_dumps(record))
-    copy_into_info_licenses(dist_info, build_path / "info", metadata.metadata)
-    (build_path / "info" / "about.json").write_text(json_dumps(metadata.about))
-
-    # used especially for console_scripts
-    if link_json := metadata.link_json():
-        (build_path / "info" / "link.json").write_text(json_dumps(link_json))
-
-    # Allow pip to list us as editable or show the path to our project.
-    # XXX leaks path
-    if project_path:
-        direct_url = project_path.absolute().as_uri()
-        direct_url_path = dist_info / "direct_url.json"
-        direct_url_path.write_text(
-            json.dumps({"dir_info": {"editable": is_editable}, "url": direct_url})
+        # This is mainly for METADATA and entry_points.txt. It would be
+        # straightforward to write or find a WheelDistribution() to grab these
+        # files from the wheel archive directly, instead of PathDistribution():
+        metadata = CondaMetadata.from_distribution(
+            PathDistribution(dist_info),
+            pypi_to_conda_name_mapping,
+            channels=channels,
         )
-        record_path = dist_info / "RECORD"
-        # Rewrite RECORD for any changed files
-        update_RECORD(record_path, site_packages, direct_url_path)
+        record = metadata.package_record.to_index_json()
+        file_id = f"{record['name']}-{record['version']}-{record['build']}"
 
-    if test_dir:
-        shutil.copytree(test_dir, build_path / "info" / "test")
+        # conda_builder() creates a TarFile that routes members to `.conda`'s
+        # two inner TarFile(), a pkg- or an info- SpooledTemporaryFile()
+        # depending on whether the filename matches an is_info() function
+        # default `filename.startswith("info/")`. Knowing the size before
+        # compression saves memory on decompression by allocating correct-sized
+        # buffers. The compressed data is written directly into the ZipFile()
+        # `.conda` archive.
+        with conda_builder(file_id, output_path) as tar:
+            package_paths = installer.install_installer_to_tar(python_executable, whl, tar)
 
-    # Write conda's paths after all other changes
-    paths = paths_json(build_path)
+            # XXX set build string as hash of pypa metadata so that conda can re-install
+            # when project gains new entry-points, dependencies?
 
-    (build_path / "info" / "paths.json").write_text(json_dumps(paths))
+            _add_to_tar(tar, "info/index.json", json_dumps(record).encode("utf-8"))
+            _add_to_tar(tar, "info/about.json", json_dumps(metadata.about).encode("utf-8"))
 
-    with conda_builder(file_id, output_path) as tar:
-        tar.add(build_path, "", filter=filter)
+            info_tmp = build_path / "info"
+            copy_into_info_licenses(dist_info, info_tmp, metadata.metadata)
+            licenses_dir = info_tmp / "licenses"
+            if licenses_dir.exists():
+                for license_path in sorted(licenses_dir.rglob("*")):
+                    if not license_path.is_file():
+                        continue
+                    rel = license_path.relative_to(info_tmp).as_posix()
+                    _add_to_tar(tar, f"info/{rel}", license_path.read_bytes())
+
+            # used especially for console_scripts
+            if link_json := metadata.link_json():
+                _add_to_tar(tar, "info/link.json", json_dumps(link_json).encode("utf-8"))
+
+            # Allow pip to list us as editable or show the path to our project.
+            # XXX this includes e.g. a path to the user's checkout of their
+            # project; but if this only applies for ephemeral editable packages,
+            # as designed, the path will never be copied to another
+            # machine.
+            if project_path:
+                direct_url = project_path.absolute().as_uri()
+                direct_url_bytes = json.dumps(
+                    {"dir_info": {"editable": is_editable}, "url": direct_url}
+                ).encode("utf-8")
+                direct_url_member = f"site-packages/{dist_info_name}/direct_url.json"
+                _add_to_tar(tar, direct_url_member, direct_url_bytes)
+                package_paths.append(
+                    {
+                        "_path": direct_url_member,
+                        "path_type": str(PathType.hardlink),
+                        "sha256": hashlib.sha256(direct_url_bytes).hexdigest(),
+                        "size_in_bytes": len(direct_url_bytes),
+                    }
+                )
+
+            if test_dir:
+                for test_path in sorted(test_dir.rglob("*")):
+                    if not test_path.is_file():
+                        continue
+                    rel = test_path.relative_to(test_dir).as_posix()
+                    _add_to_tar(tar, f"info/test/{rel}", test_path.read_bytes())
+
+            paths_data = json_dumps(
+                {
+                    "paths": sorted(package_paths, key=lambda entry: entry["_path"]),
+                    "paths_version": 1,
+                }
+            ).encode("utf-8")
+            _add_to_tar(tar, "info/paths.json", paths_data)
 
     return output_path / f"{file_id}.conda"
 
@@ -218,6 +280,7 @@ def pypa_to_conda(
     output_path: Path | None = None,
     test_dir: Path | None = None,
     pypi_to_conda_name_mapping: dict | None = None,
+    channels: Iterable[str] = (),
 ):
     project = Path(project)
 
@@ -237,7 +300,7 @@ def pypa_to_conda(
         build_path = tmp_path / "build"
 
         package_conda = build_conda(
-            normal_wheel,
+            Path(normal_wheel),
             build_path,
             output_path or tmp_path,
             sys.executable,
@@ -245,6 +308,7 @@ def pypa_to_conda(
             test_dir=test_dir,
             is_editable=distribution == "editable",
             pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
+            channels=channels,
         )
 
     return package_conda

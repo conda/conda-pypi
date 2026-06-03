@@ -2,13 +2,13 @@ import json
 import subprocess
 from pathlib import Path
 
+import build
 import pytest
 from conda.base.context import context
 from conda.cli.main import main_subshell
 from conda.core.prefix_data import PrefixData
 from packaging.requirements import InvalidRequirement
 
-import build
 import conda_pypi.dependencies_subprocess
 from conda_pypi.build import filter, pypa_to_conda
 from conda_pypi.dependencies.pypi import check_dependencies, ensure_requirements
@@ -129,9 +129,8 @@ def test_build_in_env(tmp_path):
         str(Path(__file__).parent / "packages" / "has-build-dep"),
     )
 
-    installed = [
-        record.name for record in PrefixData(prefix, pip_interop_enabled=True).iter_records()
-    ]
+    prefix_data = PrefixData(prefix, interoperability=True)
+    installed = [record.name for record in prefix_data.iter_records()]
 
     assert "packaging" in installed
 

@@ -1,11 +1,15 @@
-from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
-from conda.base.context import context
-from conda_pypi import plugin
-from pytest_mock import MockerFixture
-from conda_pypi.package_extractors import whl
-import pytest
 from pathlib import Path
 
+import pytest
+from conda.base.context import context, reset_context
+from conda.plugins.types import CondaSetting
+from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
+from pytest_mock import MockerFixture
+
+from conda_pypi import plugin
+from conda_pypi.main import notify_externally_managed_future
+from conda_pypi.package_extractors import whl
+from conda_pypi.plugin import conda_settings
 
 WHL_HTTP_URL = "https://files.pythonhosted.org/packages/45/7f/0e961cf3908bc4c1c3e027de2794f867c6c89fb4916fc7dba295a0e80a2d/boltons-25.0.0-py3-none-any.whl"
 CONDA_URL = "https://repo.anaconda.com/pkgs/main/osx-arm64/boltons-25.0.0-py314hca03da5_0.conda"
@@ -58,3 +62,115 @@ def test_extract_whl_as_conda_pkg(
 ):
     whl.extract_whl_as_conda_pkg(pypi_demo_package_wheel_path, tmp_path)
     assert (tmp_path / "info" / "index.json").is_file()
+
+
+@pytest.mark.parametrize("command", ["install", "create", "env_create"])
+def test_notify_warns_when_pip_installed(
+    mocker: MockerFixture,
+    tmp_path: Path,
+    command: str,
+):
+    ctx = mocker.patch("conda_pypi.main.context")
+    ctx.conda_prefix = str(tmp_path / "base")
+    ctx.target_prefix = str(tmp_path / "env")
+    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
+        mocker.MagicMock()
+    ]
+    mock_logger = mocker.patch("conda_pypi.main.logger")
+
+    notify_externally_managed_future(command)
+
+    mock_logger.warning.assert_called_once()
+
+
+def test_notify_skips_build_env(
+    mocker: MockerFixture,
+    monkeypatch,
+    tmp_path: Path,
+):
+    monkeypatch.setenv("CONDA_BUILD_STATE", "BUILD")
+    ctx = mocker.patch("conda_pypi.main.context")
+    ctx.conda_prefix = str(tmp_path / "base")
+    ctx.target_prefix = str(tmp_path / "env")
+    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
+        mocker.MagicMock()
+    ]
+    mock_logger = mocker.patch("conda_pypi.main.logger")
+
+    notify_externally_managed_future("install")
+
+    mock_logger.warning.assert_not_called()
+
+
+def test_notify_skips_base_prefix(
+    mocker: MockerFixture,
+    tmp_path: Path,
+):
+    ctx = mocker.patch("conda_pypi.main.context")
+    ctx.conda_prefix = str(tmp_path / "base")
+    ctx.target_prefix = str(tmp_path / "base")
+    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
+        mocker.MagicMock()
+    ]
+    mock_logger = mocker.patch("conda_pypi.main.logger")
+
+    notify_externally_managed_future("install")
+
+    mock_logger.warning.assert_not_called()
+
+
+def test_notify_skips_no_pip(
+    mocker: MockerFixture,
+    tmp_path: Path,
+):
+    ctx = mocker.patch("conda_pypi.main.context")
+    ctx.conda_prefix = str(tmp_path / "base")
+    ctx.target_prefix = str(tmp_path / "env")
+    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = []
+    mock_logger = mocker.patch("conda_pypi.main.logger")
+
+    notify_externally_managed_future("install")
+
+    mock_logger.warning.assert_not_called()
+
+
+def test_notify_skips_when_pip_warning_disabled(
+    mocker: MockerFixture,
+    tmp_path: Path,
+):
+    """When conda_pypi_pip_warning is False the warning must not be emitted."""
+    ctx = mocker.patch("conda_pypi.main.context")
+    ctx.conda_prefix = str(tmp_path / "base")
+    ctx.target_prefix = str(tmp_path / "env")
+    ctx.plugins.conda_pypi_pip_warning = False
+    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
+        mocker.MagicMock()
+    ]
+    mock_logger = mocker.patch("conda_pypi.main.logger")
+
+    notify_externally_managed_future("install")
+
+    mock_logger.warning.assert_not_called()
+
+
+def test_pip_warning_setting_defaults_to_true():
+    """The conda_pypi_pip_warning setting must default to True."""
+
+    settings = list(conda_settings())
+    assert len(settings) == 1
+    setting = settings[0]
+    assert isinstance(setting, CondaSetting)
+    assert setting.name == "conda_pypi_pip_warning"
+    assert setting.parameter.default.value is True
+
+
+def test_pip_warning_setting_in_context(monkeypatch, tmp_path: Path):
+    """Verify that setting the plugin setting is refelcted in the context object."""
+    # Test with a non-default value first
+    monkeypatch.setenv("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING", 0)
+    reset_context(())
+    assert context.plugins.conda_pypi_pip_warning is False
+
+    monkeypatch.setenv("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING", 1)
+    reset_context(())
+    assert context.plugins.conda_pypi_pip_warning is True

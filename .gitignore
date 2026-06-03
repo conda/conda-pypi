@@ -147,3 +147,6 @@ synthetic_repodata.json
 synthetic_repo/
 
 .codspeed/
+
+# If we conda pypi convert ourselves
+conda-pypi-output/

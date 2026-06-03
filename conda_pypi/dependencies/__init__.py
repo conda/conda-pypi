@@ -1,9 +1,9 @@
 """ """
 
 from conda_pypi.dependencies.pypi import (
+    MissingDependencyError,
     check_dependencies,
     ensure_requirements,
-    MissingDependencyError,
 )
 
 __all__ = [

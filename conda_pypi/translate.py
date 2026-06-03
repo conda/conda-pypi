@@ -4,19 +4,67 @@ Convert Python `*.dist-info/METADATA` to conda `info/index.json`
 
 import dataclasses
 import logging
+import re
 import sys
 import time
 from importlib.metadata import Distribution, PackageMetadata, PathDistribution
 from pathlib import Path
-from typing import Any, Optional, List, Dict, Callable
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec
 from packaging.requirements import Requirement
 
+from conda_pypi import __version__
 from conda_pypi.name_mapping import conda_to_pypi_name, pypi_to_conda_name
 
 log = logging.getLogger(__name__)
+
+# Project-URL label (case-insensitive) → about.json field.
+# First matching label wins.
+URL_LABEL_MAP: Dict[str, tuple] = {
+    "home": ("homepage", "home", "home-page"),
+    "dev_url": ("source", "repository", "source code", "development", "github"),
+    "doc_url": ("documentation", "docs"),
+}
+
+
+def short_description(text: str) -> str:
+    """
+    Truncate a long Description to its first paragraph.
+
+    Stops at the first blank line or the first Markdown heading
+    (`#`, setext underline of `=` or `-`), so README+CHANGELOG dumps
+    don't end up in about.json.
+    """
+    if not text:
+        return ""
+    # email.parser un-indents the continuation lines but may leave a leading
+    # space on each line; strip uniformly.
+    lines: List[str] = []
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        stripped = line.lstrip()
+        if not stripped:
+            break
+        if stripped.startswith("#"):
+            break
+        if lines and re.fullmatch(r"[=\-]{3,}", stripped):
+            # setext heading underline for the previous line
+            lines.pop()
+            break
+        lines.append(stripped)
+    return "\n".join(lines).strip()
+
+
+def url_from_project_urls(metadata: PackageMetadata, labels: Iterable[str]) -> Optional[str]:
+    """Return the first Project-URL value whose label (case-insensitive) is in `labels`."""
+    wanted = {label.lower() for label in labels}
+    for entry in metadata.get_all("project-url") or ():
+        label, _, url = entry.partition(", ")
+        if label.strip().lower() in wanted:
+            return url.strip()
+    return None
 
 
 class FileDistribution(Distribution):
@@ -102,7 +150,10 @@ class CondaMetadata:
 
     @classmethod
     def from_distribution(
-        cls, distribution: Distribution, pypi_to_conda_name_mapping: dict | None = None
+        cls,
+        distribution: Distribution,
+        pypi_to_conda_name_mapping: dict | None = None,
+        channels: Iterable[str] = (),
     ):
         metadata = distribution.metadata
 
@@ -130,11 +181,11 @@ class CondaMetadata:
         # 'keywords', 'license', 'license_family', 'license_file', 'root_pkgs',
         # 'summary', 'tags', 'conda_private', 'doc_source_url', 'license_url']
 
-        about = {
+        about: Dict[str, Any] = {
             "summary": metadata.get("summary") or "",
-            "description": metadata.get("description") or "",
+            "description": short_description(metadata.get("description") or ""),
             # https://packaging.python.org/en/latest/specifications/core-metadata/#license-expression
-            "license": metadata.get("license_expression") or metadata.get("license") or "",
+            "license": metadata.get("License-Expression") or metadata.get("License") or "",
         }
 
         import_names = metadata.get_all("import-name")
@@ -146,15 +197,14 @@ class CondaMetadata:
         if import_namespaces is not None:
             about["import_namespaces"] = [n for n in import_namespaces if n.strip()]
 
-        if project_urls := metadata.get_all("project-url"):
-            urls = dict(url.split(", ", 1) for url in project_urls)
-            for py_name, conda_name in (
-                ("Home", "home"),
-                ("Development", "dev_url"),
-                ("Documentation", "doc_url"),
-            ):
-                if py_name in urls:
-                    about[conda_name] = urls[py_name]
+        for conda_field, labels in URL_LABEL_MAP.items():
+            url = url_from_project_urls(metadata, labels)
+            if url:
+                about[conda_field] = url
+
+        channels_list = list(channels)
+        if channels_list:
+            about["channels"] = channels_list
 
         name = pypi_to_conda_name(
             getattr(distribution, "name", None) or distribution.metadata.get("name"),
@@ -174,6 +224,16 @@ class CondaMetadata:
             noarch=noarch,
             timestamp=time.time_ns() // 1000000,
         )
+
+        about["extra"] = {
+            "recipe": {
+                "name": package_record.name,
+                "version": package_record.version,
+                "build": package_record.build,
+            },
+            "generator": "conda-pypi",
+            "generator_version": __version__,
+        }
 
         return cls(
             metadata=metadata,

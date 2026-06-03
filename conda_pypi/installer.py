@@ -2,19 +2,27 @@
 Install a wheel / install a conda.
 """
 
+from __future__ import annotations
+
+import base64
+import logging
 import os
 import subprocess
+import tarfile
 import tempfile
 from pathlib import Path
+from typing import BinaryIO, Iterable
 from unittest.mock import patch
-import logging
 
 from conda.cli.main import main_subshell
 from conda.core.package_cache_data import PackageCacheData
 from installer import install
 from installer.destinations import SchemeDictionaryDestination
-from installer.records import RecordEntry
+from installer.records import Hash, RecordEntry
 from installer.sources import WheelFile
+from installer.utils import Scheme, construct_record_file, copyfileobj_with_hashing
+
+from conda_pypi.conda_build_utils import PathType
 
 log = logging.getLogger(__name__)
 
@@ -27,26 +35,118 @@ class _CondaWheelDestination(SchemeDictionaryDestination):
     that breaks in other environments.
     """
 
+    conda_builder: tarfile.TarFile
+
+    def __init__(self, *args, conda_builder: tarfile.TarFile, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.conda_builder = conda_builder
+        self.package_paths: list[dict] = []
+        self._members: set[str] = set()
+
     def write_script(self, name, module, attr, section):
         log.debug(f"Skipping script generation for {name} (handled via link.json)")
         return RecordEntry(path=name, hash_=None, size=None)
 
+    def write_to_fs(
+        self,
+        scheme: Scheme,
+        path: str,
+        stream: BinaryIO,
+        is_executable: bool,
+    ) -> RecordEntry:
+        """
+        In installer==1.0.0, the SchemeDirectoryDestination() superclass
+        delegates all write_*() functions here.
+        """
+        archive_path = str(Path(self.scheme_dict[scheme], path).as_posix())
 
-def install_installer(python_executable: str, whl: Path, build_path: Path):
-    # Handler for installation directories and writing into them.
-    # Create site-packages directory if it doesn't exist
-    site_packages = build_path / "site-packages"
-    site_packages.mkdir(parents=True, exist_ok=True)
+        if ".." in archive_path.split("/"):
+            raise ValueError(f"Path traversal detected: {archive_path}")
 
-    # Scheme keys are defined by PEP 427 (the wheel format spec) and must match
-    # what the installer library extracts from .data/ subdirectory names.
-    # https://packaging.python.org/en/latest/specifications/binary-distribution-format/
+        tar_info = tarfile.TarInfo(name=archive_path)
+        tar_info.mode = 0o775 if is_executable else 0o664
+
+        with tempfile.SpooledTemporaryFile() as buffer:
+            hash_, size = copyfileobj_with_hashing(stream, buffer, self.hash_algorithm)
+
+            # hash_ is urlsafe-b64encode without padding. self.hash_algorithm is
+            # "sha256" although it is implemented to be flexible on the wheel
+            # side; but conda requires sha256.
+            pad = "=" * (-len(hash_) % 4)
+            hash_hex = base64.urlsafe_b64decode(hash_ + pad).hex()
+
+            # Almost never happens, OK to waste effort before error.
+            if archive_path in self._members:
+                message = f"File already exists: {archive_path}"
+                raise_exists = True
+                if self.overwrite_existing:
+                    p = next(p for p in self.package_paths if p["_path"] == archive_path)
+                    if p["sha256"] == hash_hex:
+                        log.warning(
+                            "Wheel has overlapping paths %s with same content.", archive_path
+                        )
+                        raise_exists = False
+                        message = (
+                            f"{message}; overwrite_existing not available in write-to-archive."
+                        )
+                if raise_exists or not self.overwrite_existing:
+                    raise FileExistsError(message)
+            self._members.add(archive_path)
+
+            tar_info.size = size
+            buffer.seek(0)
+
+            # add only happens here
+            self.conda_builder.addfile(tar_info, buffer)
+
+        self.package_paths.append(
+            {
+                "_path": archive_path,
+                "path_type": str(PathType.hardlink),
+                "sha256": hash_hex,
+                "size_in_bytes": size,
+            }
+        )
+
+        return RecordEntry(path, Hash(self.hash_algorithm, hash_), size)
+
+    def finalize_installation(
+        self,
+        scheme: Scheme,
+        record_file_path: str,
+        records: Iterable[tuple[Scheme, RecordEntry]],
+    ):
+        """Finalize installation, by writing the ``RECORD`` file.
+        Account for relpath() differences between superclass (installs to a real
+        filesystem) and _CondaWheelDestination (creates an archive). Unlike
+        superclass, doesn't compile bytecode.
+        """
+
+        def prefix_for_scheme(file_scheme: str) -> str | None:
+            if file_scheme == scheme:
+                return None
+
+            source_prefix = self.scheme_dict[file_scheme] or "."
+            target_prefix = self.scheme_dict[scheme] or "."
+            path = os.path.relpath(source_prefix, start=target_prefix)
+            return path + "/"
+
+        record_list = list(records)
+        with construct_record_file(record_list, prefix_for_scheme) as record_stream:
+            self.write_to_fs(scheme, record_file_path, record_stream, is_executable=False)
+
+
+def install_installer_to_tar(
+    python_executable: str,
+    whl: Path,
+    tar: tarfile.TarFile,
+) -> list[dict]:
     scheme = {
-        "purelib": str(site_packages),  # Pure Python packages
-        "platlib": str(site_packages),  # Platform-specific packages
-        "scripts": str(build_path / "bin"),  # Console scripts
-        "data": str(build_path),  # Data files (JS, CSS, templates, etc.)
-        "headers": str(build_path / "include"),  # C/C++ headers (PEP 427 .data/headers/)
+        "purelib": "site-packages",
+        "platlib": "site-packages",
+        "scripts": "bin",
+        "data": "",
+        "headers": "include",
     }
 
     destination = _CondaWheelDestination(
@@ -54,6 +154,7 @@ def install_installer(python_executable: str, whl: Path, build_path: Path):
         interpreter=str(python_executable),
         script_kind="posix",
         overwrite_existing=True,
+        conda_builder=tar,
     )
 
     with WheelFile.open(whl) as source:
@@ -62,11 +163,11 @@ def install_installer(python_executable: str, whl: Path, build_path: Path):
             destination=destination,
             # Additional metadata that is generated by the installation tool.
             additional_metadata={
-                "INSTALLER": b"conda-pypi",
+                "INSTALLER": b"conda-pypi\n",
             },
         )
 
-    log.debug(f"Installed to {build_path}")
+    return destination.package_paths
 
 
 def install_pip(python_executable: str, whl: Path, build_path: Path):

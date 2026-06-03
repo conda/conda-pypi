@@ -2,9 +2,9 @@
 Fetch matching wheels from pypi.
 """
 
-from pathlib import Path
-from collections.abc import Iterable
 import logging
+from collections.abc import Iterable
+from pathlib import Path
 
 from conda.core.prefix_data import PrefixData
 from conda.gateways.connection.download import download

@@ -15,15 +15,18 @@ from conda.cli.conda_argparse import (
 )
 from conda.exceptions import ArgumentError
 
-from conda_pypi.cli.install import (
-    execute as execute_install,
-    configure_parser as configure_parser_install,
+from conda_pypi.cli.convert import (
+    configure_parser as configure_parser_convert,
 )
 from conda_pypi.cli.convert import (
     execute as execute_convert,
-    configure_parser as configure_parser_convert,
 )
-
+from conda_pypi.cli.install import (
+    configure_parser as configure_parser_install,
+)
+from conda_pypi.cli.install import (
+    execute as execute_install,
+)
 
 logger = getLogger(__name__)
 

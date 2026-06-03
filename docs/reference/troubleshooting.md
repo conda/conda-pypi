@@ -46,6 +46,36 @@ conda pypi install -n myenv package-name
 
 ## Package Resolution Issues
 
+### `conda search` reports missing `repodata.json`
+
+**Problem**: Checking the `conda-pypi` channel with `conda search` fails.
+
+**Error messages**:
+```
+UnavailableInvalidChannel: HTTP 404 Not Found for channel conda-pypi
+
+Artifact noarch/repodata.json not found
+```
+
+**Cause**: During the beta, the `conda-pypi` channel is served through wheel
+metadata for solver/install workflows. It might not appear in the Anaconda.org
+web UI, and commands such as `conda search` can still request classic
+`repodata.json` metadata. Search support for sharded repodata is tracked in
+[`conda/conda#16134`](https://github.com/conda/conda/issues/16134).
+
+**Solutions**:
+```bash
+# Make sure the supported solver path is enabled
+conda config --set solver rattler
+conda config --append channels conda-pypi
+
+# Test with a dry-run solve instead of conda search
+conda create --dry-run -n conda-pypi-test django-modern-rest
+```
+
+If a dry-run solve or install also fails while using conda 26.5 or newer and
+the Rattler solver, report the full error in the GitHub issue tracker.
+
 ### Package not found on PyPI
 
 **Problem**: Package doesn't exist or has a different name on PyPI.
@@ -121,7 +151,7 @@ conda pypi install package-name
 ping pypi.org
 
 # Try with verbose output to see connection details
-conda -v pip install package-name
+conda -v pypi install package-name
 
 # Check conda's network configuration
 conda config --show channels
@@ -135,16 +165,16 @@ For detailed debugging information:
 
 ```bash
 # Basic verbose output
-conda -v pip install package-name
+conda -v pypi install package-name
 
 # INFO level logging (repeat -v twice)
-conda -vv pip install package-name
+conda -vv pypi install package-name
 
 # DEBUG level logging (repeat -v three times) - most useful for troubleshooting
-conda -vvv pip install package-name
+conda -vvv pypi install package-name
 
 # TRACE level logging (repeat -v four times) - maximum detail
-conda -vvvv pip install package-name
+conda -vvvv pypi install package-name
 ```
 
 ## When to Seek Further Help
@@ -153,6 +183,6 @@ If you encounter issues not covered here:
 
 1. **Check the version**: Ensure you're using the latest version of `conda-pypi`
 2. **Search existing issues**: Check the [GitHub repository](https://github.com/conda/conda-pypi) for similar problems
-3. **Report issues**: When reporting issues please to include all the relevant details
+3. **Report issues**: When reporting issues, please include all the relevant details
 
 Remember that `conda-pypi` is still in early development, so feedback about unexpected behavior is valuable for improving the tool.

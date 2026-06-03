@@ -1,4 +1,4 @@
-# Developer Guide
+# Developer guide
 
 Welcome to the `conda-pypi` developer guide! This section provides comprehensive documentation for contributors and developers working on `conda-pypi`.
 

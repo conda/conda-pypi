@@ -3,7 +3,13 @@
 import pytest
 from conda.exceptions import ArgumentError
 
-from conda_pypi.translate import requires_to_conda, validate_name_mapping_format
+from conda_pypi import __version__
+from conda_pypi.translate import (
+    CondaMetadata,
+    FileDistribution,
+    requires_to_conda,
+    validate_name_mapping_format,
+)
 
 
 def test_validate_name_mapping_format_valid():
@@ -133,3 +139,81 @@ def test_requires_to_conda_marker_extra_and_platform():
     assert "dev" in extras
     assert any(x.startswith("requests>=") for x in extras["dev"])
     assert requires == []
+
+
+def _distribution(project_urls=(), description=None):
+    """Build a FileDistribution with the given Project-URL labels."""
+    header = [
+        "Metadata-Version: 2.1\n",
+        "Name: demo\n",
+        "Version: 1.0.0\n",
+        "Summary: short summary\n",
+    ]
+    if description is not None:
+        header.append("Description: " + description.replace("\n", "\n        ") + "\n")
+    urls = "".join(f"Project-URL: {label}, {url}\n" for label, url in project_urls)
+    return FileDistribution("".join(header) + urls + "\n")
+
+
+@pytest.mark.parametrize(
+    ("label", "field", "url"),
+    [
+        ("Homepage", "home", "https://example.com/"),
+        ("Home", "home", "https://example.com/"),
+        ("HOMEPAGE", "home", "https://example.com/"),
+        ("Source", "dev_url", "https://github.com/example/demo"),
+        ("Repository", "dev_url", "https://github.com/example/demo"),
+        ("Documentation", "doc_url", "https://demo.readthedocs.io"),
+        ("Docs", "doc_url", "https://demo.readthedocs.io"),
+    ],
+)
+def test_about_url_fields_from_project_url_labels(label, field, url):
+    dist = _distribution(project_urls=[(label, url)])
+    about = CondaMetadata.from_distribution(dist).about
+    assert about[field] == url
+
+
+@pytest.mark.parametrize(
+    ("description", "expected"),
+    [
+        ("Demo project.\n\n## Changelog\n\n- 1.0.0: initial release\n", "Demo project."),
+        ("Demo project.\n# Heading\nMore text.\n", "Demo project."),
+        ("Demo project.\nHeading\n---\nMore text.\n", "Demo project."),
+        ("One line of prose.", "One line of prose."),
+    ],
+)
+def test_about_description_is_shortened(description, expected):
+    dist = _distribution(description=description)
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["description"] == expected
+
+
+def test_about_channels_recorded_when_passed():
+    """Channels passed to from_distribution land in about.channels."""
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(dist, channels=("conda-forge", "bioconda")).about
+    assert about["channels"] == ["conda-forge", "bioconda"]
+
+
+def test_about_channels_omitted_when_empty():
+    """No channels means about.channels is absent (CEP 34 allows it)."""
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(dist).about
+    assert "channels" not in about
+
+
+def test_about_extra_recipe_records_name_version_build():
+    """about.extra.recipe carries name/version/build for provenance."""
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["extra"]["recipe"]["name"] == "demo"
+    assert about["extra"]["recipe"]["version"] == "1.0.0"
+    assert about["extra"]["recipe"]["build"] == "pypi_0"
+
+
+def test_about_extra_generator_records_conda_pypi_version():
+    """about.extra.generator records 'conda-pypi' and its version."""
+    dist = _distribution()
+    about = CondaMetadata.from_distribution(dist).about
+    assert about["extra"]["generator"] == "conda-pypi"
+    assert about["extra"]["generator_version"] == __version__
