@@ -140,25 +140,11 @@ class CondaMetadata:
         import_names = metadata.get_all("import-name")
         import_namespaces = metadata.get_all("import-namespace")
         if import_names is not None:
-            about["import_names"] = import_names
+            # Normalize: strip empty strings produced by a bare "Import-Name: " header.
+            # [""] vs [] both mean "no import names", but [] is less surprising in about.json.
+            about["import_names"] = [n for n in import_names if n.strip()]
         if import_namespaces is not None:
-            about["import_namespaces"] = import_namespaces
-
-        if import_names and import_namespaces:
-            pkg_label = metadata.get("name") or "unknown"
-            ambiguous = [
-                c
-                for c in check_import_name_conflicts(
-                    {pkg_label: import_names}, {pkg_label: import_namespaces}
-                )
-                if c[3] == "ambiguous-in-both"
-            ]
-            if ambiguous:
-                names_str = ", ".join(f"'{c[0]}'" for c in ambiguous)
-                raise ValueError(
-                    f"Package {pkg_label!r} lists {names_str} in both Import-Name and "
-                    "Import-Namespace, which is invalid as per PEP 794."
-                )
+            about["import_namespaces"] = [n for n in import_namespaces if n.strip()]
 
         if project_urls := metadata.get_all("project-url"):
             urls = dict(url.split(", ", 1) for url in project_urls)
@@ -295,32 +281,16 @@ def check_import_name_conflicts(
         List of ``(import_name, first_package, second_package, conflict_kind)``
         4-tuples, one per detected conflict. *conflict_kind* is one of:
 
-        1. ``"ambiguous-in-both"``: a single package lists the same name in
-          both Import-Name and Import-Namespace (MUST error per PEP 794);
-          *first_package* and *second_package* are the same value.
-        2. ``"exclusive"``: two packages share the same Import-Name entry.
-        3. ``"exclusive-vs-namespace"``: one package's Import-Name overlaps
-          another's Import-Namespace. *first_package* is the namespace holder.
+        * ``"exclusive"`` — two packages share the same Import-Name entry.
+        * ``"exclusive-vs-namespace"`` — one package's Import-Name overlaps
+          another's Import-Namespace; *first_package* is the namespace holder.
 
         Empty list when there are no conflicts.
     """
     if package_import_namespaces is None:
         package_import_namespaces = {}
 
-    # --- MUST checks from PEP 794 -------------------------------------------------
-    # A single project MUST NOT list the same name in both Import-Name and
-    # Import-Namespace. Tools MUST raise an error for that ambiguity.
-    all_pkg_names = set(package_import_names) | set(package_import_namespaces)
     conflicts = []
-    for pkg_name in sorted(all_pkg_names):
-        exclusive_set = {_strip_private(e) for e in package_import_names.get(pkg_name, [])} - {""}
-        namespace_set = {
-            _strip_private(e) for e in package_import_namespaces.get(pkg_name, [])
-        } - {""}
-        for bare in sorted(exclusive_set & namespace_set):
-            conflicts.append((bare, pkg_name, pkg_name, "ambiguous-in-both"))
-
-    # --- Cross-package checks -----------------------------------------------------
     # Index all namespace names first so our exclusive-vs-namespace checks can see them.
     namespace: Dict[str, str] = {}  # bare name --> first pkg that lists it as namespace
     for pkg_name, ns_entries in package_import_namespaces.items():

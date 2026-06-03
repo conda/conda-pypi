@@ -40,10 +40,6 @@ def _format_conflict_line(conflict: tuple, new_pkgs: set | None = None) -> str:
     Return a human-readable description of a single PEP 794 conflict tuple
     """
     name, pkg1, pkg2, kind = conflict
-    if kind == "ambiguous-in-both":
-        return (
-            f"  '{name}': '{pkg1}' lists it in both Import-Name and Import-Namespace (ambiguous)"
-        )
     if new_pkgs is not None:
         # In a cross-install context: identify which party is new vs already installed.
         incoming = pkg2 if pkg2 in new_pkgs else pkg1

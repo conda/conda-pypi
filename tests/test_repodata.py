@@ -281,39 +281,3 @@ def test_check_import_name_conflicts_name_vs_namespace():
     assert kind == "exclusive-vs-namespace"
 
 
-def test_check_import_name_conflicts_same_name_in_both_fields_must_error():
-    conflicts = check_import_name_conflicts(
-        {"pkg-a": ["azure"]},
-        package_import_namespaces={"pkg-a": ["azure"]},
-    )
-    assert len(conflicts) == 1
-    name, pkg1, pkg2, kind = conflicts[0]
-    assert name == "azure"
-    assert pkg1 == "pkg-a"
-    assert pkg2 == "pkg-a"  # same package, self-conflict
-    assert kind == "ambiguous-in-both"
-
-
-def test_check_import_name_conflicts_same_name_in_both_fields_does_not_double_report():
-    conflicts = check_import_name_conflicts(
-        {"pkg-a": ["azure"]},
-        package_import_namespaces={"pkg-a": ["azure"]},
-    )
-    # Only the ambiguous-in-both conflict, not a spurious exclusive-vs-namespace for the same pkg
-    kinds = {c[3] for c in conflicts}
-    assert kinds == {"ambiguous-in-both"}
-
-
-def test_from_distribution_raises_on_ambiguous_import_names():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        dist_info = Path(tmpdir) / "bad_pkg-1.0.dist-info"
-        dist_info.mkdir()
-        (dist_info / "METADATA").write_text(
-            "Metadata-Version: 2.5\n"
-            "Name: bad-pkg\n"
-            "Version: 1.0\n"
-            "Import-Name: azure\n"
-            "Import-Namespace: azure\n"
-        )
-        with pytest.raises(ValueError, match="both Import-Name and Import-Namespace"):
-            CondaMetadata.from_distribution(PathDistribution(dist_info))

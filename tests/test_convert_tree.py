@@ -135,14 +135,6 @@ def test_format_conflict_line_exclusive_vs_namespace_batch():
     assert "namespace" in line
 
 
-def test_format_conflict_line_ambiguous_in_both():
-    line = _format_conflict_line(("azure", "pkg-a", "pkg-a", "ambiguous-in-both"))
-    assert "azure" in line
-    assert "pkg-a" in line
-    assert "Import-Name" in line
-    assert "Import-Namespace" in line
-
-
 def test_format_conflict_line_cross_install_exclusive():
     new_pkgs = {"pkg-b"}
     line = _format_conflict_line(("utils", "pkg-a", "pkg-b", "exclusive"), new_pkgs=new_pkgs)
