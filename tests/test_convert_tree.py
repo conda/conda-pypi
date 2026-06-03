@@ -259,9 +259,9 @@ def test_check_import_name_conflicts_no_false_conflict_on_update(
     # check_import_name_conflicts only sees one entry and raises no conflict.
     ct = _bare_convert_tree()
     monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
-                        lambda _: ({"pillow": ["PIL"]}, {}))
+                        lambda _: ({"python-dateutil": ["dateutil"]}, {}))
     monkeypatch.setattr(ct, "_collect_import_names_from_prefix",
-                        lambda: ({"pillow": ["PIL"]}, {}))
+                        lambda: ({"python-dateutil": ["dateutil"]}, {}))
     ct._check_import_name_conflicts(tmp_path)
 
 

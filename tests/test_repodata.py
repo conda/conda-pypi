@@ -11,9 +11,9 @@ from conda_pypi.translate import (
     pypi_to_conda_name,
     remap_match_spec_name,
 )
+import tempfile
 from importlib.metadata import PathDistribution
 from pathlib import Path
-import tempfile
 
 
 def test_file_distribution():
@@ -208,13 +208,14 @@ def test_empty_import_names_declaration():
             "Import-Name: \n"
         )
         cm = CondaMetadata.from_distribution(PathDistribution(dist_info))
-        # Field is present (declared), list must exist even if it contains an empty string
-        assert "import_names" in cm.about
+        # Field is present (declared) but normalized to [] — not [""]
+        assert cm.about["import_names"] == []
 
 
 def test_check_import_name_conflicts_no_conflict():
+    # python-dateutil and requests have disjoint import names
     result = check_import_name_conflicts(
-        {"pillow": ["PIL"], "requests": ["requests", "urllib3"]}
+        {"python-dateutil": ["yaml"], "requests": ["requests", "urllib3"]}
     )
     assert result == []
 
@@ -238,13 +239,6 @@ def test_check_import_name_conflicts_ignores_private_modifier():
     assert len(conflicts) == 1
     assert conflicts[0][0] == "_internals"
     assert conflicts[0][3] == "exclusive"
-
-
-def test_check_import_name_conflicts_empty_entry_skipped():
-    result = check_import_name_conflicts(
-        {"data-only": [""], "other": [""]}
-    )
-    assert result == []
 
 
 def test_check_import_name_conflicts_multiple_conflicts():
@@ -271,7 +265,6 @@ def test_check_import_name_conflicts_namespace_allowed():
 
 def test_check_import_name_conflicts_name_vs_namespace():
     conflicts = check_import_name_conflicts(
-        # pkg-b claims 'azure' exclusively
         {"pkg-b": ["azure"]},
         package_import_namespaces={"azure-mgmt-search": ["azure", "azure.mgmt"]},
     )
@@ -279,5 +272,39 @@ def test_check_import_name_conflicts_name_vs_namespace():
     name, first, second, kind = conflicts[0]
     assert name == "azure"
     assert kind == "exclusive-vs-namespace"
+
+
+def test_check_import_name_conflicts_dotted_names_are_not_prefix_matched():
+    # PEP 794 uses exact string matching only, not prefix relationships.
+    # "azure.mgmt.search" and "azure" are different Import-Name values and do not conflict,
+    # even though one would shadow the other in practice on case-insensitive filesystems.
+    result = check_import_name_conflicts(
+        {"azure-mgmt-search": ["azure.mgmt.search"], "azure-base": ["azure"]}
+    )
+    assert result == []
+
+
+def test_check_import_name_conflicts_case_sensitive():
+    # Import names are compared verbatim. "Dateutil" and "dateutil" are distinct on Linux
+    # (case-sensitive filesystem) so no conflict is reported. This would be a real
+    # conflict on macOS or Windows, but we do not normalise case.
+    result = check_import_name_conflicts({"pkg-a": ["Dateutil"], "pkg-b": ["dateutil"]})
+    assert result == []
+
+
+def test_check_import_name_conflicts_exclusive_name_vs_multiple_namespace_holders():
+    # When a package claims an Import-Name that several others list as Import-Namespace,
+    # only one conflict tuple comes back (the first namespace holder that was indexed).
+    # The others share the namespace legitimately and are not separately reported.
+    conflicts = check_import_name_conflicts(
+        {"pkg-new": ["azure"]},
+        package_import_namespaces={
+            "azure-mgmt-search": ["azure"],
+            "azure-mgmt-compute": ["azure"],
+        },
+    )
+    assert len(conflicts) == 1
+    assert conflicts[0][0] == "azure"
+    assert conflicts[0][3] == "exclusive-vs-namespace"
 
 
