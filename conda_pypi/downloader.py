@@ -78,16 +78,14 @@ def fetch_pep658_wheel_metadata(wheel_url: str) -> str | None:
     return None
 
 
-def find_and_fetch(finder: PackageFinder, target: Path, package: str) -> Path:
+def find_wheel_link(finder: PackageFinder, package: str):
     """
-    Find package on PyPI, download best link to target.
+    Resolve package to its best wheel link, raising ``CondaPypiError`` if unavailable.
     """
     result = find_package(finder, package)
     link = result.best and result.best.link
     if not link:
         raise CondaPypiError(f"No PyPI link for {package}")
-
-    # Check if the file is a wheel (.whl)
     filename = link.url_without_fragment.rsplit("/", 1)[-1]
     if not filename.endswith(".whl"):
         raise CondaPypiError(
@@ -95,8 +93,28 @@ def find_and_fetch(finder: PackageFinder, target: Path, package: str) -> Path:
             f"Only source distributions are available. "
             f"conda-pypi requires wheel files for conversion."
         )
+    return link
 
-    log.info(f"Fetch {package} as {filename}")
+
+def download_wheel(link, target: Path) -> Path:
+    """
+    Download a wheel link into target directory and return the local path.
+    """
+    # Check if the file is a wheel (.whl)
+    filename = link.url_without_fragment.rsplit("/", 1)[-1]
     target_path = target / filename
+    log.info("Fetch %s", filename)
     download(link.url, target_path)
     return target_path
+
+
+def find_and_fetch(finder: PackageFinder, target: Path, package: str) -> Path:
+    """Find package on PyPI, download best link to target."""
+    # Phase 1: resolve link (no download yet)
+    link = find_wheel_link(finder, package)
+
+    # Phase 2: pre-download checks. In this case, fetch_pep658_wheel_metadata
+    # is a hook for future use
+
+    # Phase 3: download
+    return download_wheel(link, target)
