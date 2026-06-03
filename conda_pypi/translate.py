@@ -144,6 +144,22 @@ class CondaMetadata:
         if import_namespaces is not None:
             about["import_namespaces"] = import_namespaces
 
+        if import_names and import_namespaces:
+            pkg_label = metadata.get("name") or "unknown"
+            ambiguous = [
+                c
+                for c in check_import_name_conflicts(
+                    {pkg_label: import_names}, {pkg_label: import_namespaces}
+                )
+                if c[3] == "ambiguous-in-both"
+            ]
+            if ambiguous:
+                names_str = ", ".join(f"'{c[0]}'" for c in ambiguous)
+                raise ValueError(
+                    f"Package {pkg_label!r} lists {names_str} in both Import-Name and "
+                    "Import-Namespace, which is invalid as per PEP 794."
+                )
+
         if project_urls := metadata.get_all("project-url"):
             urls = dict(url.split(", ", 1) for url in project_urls)
             for py_name, conda_name in (
