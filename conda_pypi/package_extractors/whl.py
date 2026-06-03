@@ -149,9 +149,9 @@ class MyWheelDestination(WheelDestination):
             import_names = wheel_metadata.get_all("import-name")
             import_namespaces = wheel_metadata.get_all("import-namespace")
             if import_names is not None:
-                about_json_data["import_names"] = import_names
+                about_json_data["import_names"] = [name for name in import_names if name.strip()]
             if import_namespaces is not None:
-                about_json_data["import_namespaces"] = import_namespaces
+                about_json_data["import_namespaces"] = [name for name in import_namespaces if name.strip()]
             if about_json_data:
                 about_path = info_dir / "about.json"
                 existing = (
