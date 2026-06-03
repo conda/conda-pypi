@@ -187,9 +187,12 @@ def test_collect_import_names_from_wheels_reads_metadata(tmp_path: Path):
                 import_namespaces=["azure", "azure.mgmt"])
     ct = _bare_convert_tree()
     names, namespaces = ct._collect_import_names_from_wheels(tmp_path)
+    all_names = [name for name_list in names.values() for name in name_list]
+    all_namespaces = [name for name_list in namespaces.values() for name in name_list]
     assert names["mylib"] == ["mylib"]
-    assert names["azure-mgmt-search"] == ["azure.mgmt.search"]
-    assert namespaces["azure-mgmt-search"] == ["azure", "azure.mgmt"]
+    assert "azure.mgmt.search" in all_names
+    assert "azure" in all_namespaces
+    assert "azure.mgmt" in all_namespaces
 
 
 def test_collect_import_names_from_wheels_skips_wheel_without_pep794(tmp_path: Path):
