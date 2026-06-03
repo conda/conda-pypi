@@ -248,38 +248,83 @@ def remap_match_spec_name(match_spec: MatchSpec, name_map: Callable[[str], str])
     return MatchSpec(match_spec, name=mapped_name)
 
 
+def _strip_private(entry: str) -> str:
+    """Strip the optional ``; private`` modifier from an Import-Name/Namespace entry."""
+    return entry.split(";")[0].strip()
+
+
 def check_import_name_conflicts(
     package_import_names: Dict[str, List[str]],
+    package_import_namespaces: Optional[Dict[str, List[str]]] = None,
 ) -> List[tuple]:
     """Check for Import-Name conflicts between packages (PEP 794).
 
-    Per PEP 794, tools SHOULD raise an error when two projects about to be
-    installed list names that overlap in each other's ``Import-Name`` entries,
-    because one project would shadow the other's code at runtime.
+    Per PEP 794 (SHOULD level):
+
+    * Two packages sharing the same ``Import-Name`` entry would shadow each
+      other's modules: this is an error.
+    * A package whose ``Import-Name`` overlaps with another package's
+      ``Import-Namespace`` entry is also an error, because the exclusive name
+      would shadow the namespace package.
+    * Overlapping ``Import-Namespace`` entries are intentionally allowed
+      (that is the whole point of namespace packages) and are not checked here.
 
     Args:
         package_import_names: Mapping of ``{package_name: [import_name_entries]}``.
-            Each entry may have an optional ``; private`` suffix which is stripped
-            before comparison.
+        package_import_namespaces: Optional mapping of
+            ``{package_name: [import_namespace_entries]}``.  Pass ``None`` (or
+            omit) when namespace data is unavailable.
 
     Returns:
-        List of ``(import_name, first_package, second_package)`` tuples, one per
-        detected conflict.  Empty when there are no conflicts.
+        List of ``(import_name, first_package, second_package, conflict_kind)``
+        4-tuples, one per detected conflict.  *conflict_kind* is either
+        ``"exclusive"`` (Import-Name vs Import-Name) or
+        ``"exclusive-vs-namespace"`` (Import-Name vs Import-Namespace).
+        Empty list when there are no conflicts.
     """
-    seen: Dict[str, str] = {}
-    conflicts = []
+    if package_import_namespaces is None:
+        package_import_namespaces = {}
 
-    for pkg_name, names in package_import_names.items():
-        for name_entry in names:
-            # Strip the optional "; private" modifier (e.g. "PIL ; private" -> "PIL")
-            bare = name_entry.split(";")[0].strip()
+    # --- MUST checks from PEP 794 -------------------------------------------------
+    # A single project MUST NOT list the same name in both Import-Name and
+    # Import-Namespace. Tools MUST raise an error for that ambiguity.
+    all_pkg_names = set(package_import_names) | set(package_import_namespaces)
+    conflicts = []
+    for pkg_name in sorted(all_pkg_names):
+        exclusive_set = {_strip_private(e) for e in package_import_names.get(pkg_name, [])} - {""}
+        namespace_set = {
+            _strip_private(e) for e in package_import_namespaces.get(pkg_name, [])
+        } - {""}
+        for bare in sorted(exclusive_set & namespace_set):
+            conflicts.append((bare, pkg_name, pkg_name, "ambiguous-in-both"))
+
+    # --- Cross-package checks -----------------------------------------------------
+    # Index all namespace names first so our exclusive-vs-namespace checks can see them.
+    namespace: Dict[str, str] = {}  # bare name --> first pkg that lists it as namespace
+    for pkg_name, ns_entries in package_import_namespaces.items():
+        for entry in ns_entries:
+            bare = _strip_private(entry)
+            if bare and bare not in namespace:
+                namespace[bare] = pkg_name
+
+    exclusive: Dict[str, str] = {}  # bare name --> pkg that owns it exclusively
+
+    for pkg_name, name_entries in package_import_names.items():
+        for entry in name_entries:
+            bare = _strip_private(entry)
             if not bare:
-                # Explicitly-empty Import-Name means the project has no import names.
+                # An explicitly-empty Import-Name means that the project has no import names.
                 continue
-            if bare in seen:
-                conflicts.append((bare, seen[bare], pkg_name))
+
+            # Import-Name vs Import-Name (both exclusive: SHOULD error per PEP 794)
+            if bare in exclusive:
+                conflicts.append((bare, exclusive[bare], pkg_name, "exclusive"))
             else:
-                seen[bare] = pkg_name
+                exclusive[bare] = pkg_name
+
+            # Import-Name vs Import-Namespace cross-conflicts (also SHOULD error per PEP 794)
+            if bare in namespace and namespace[bare] != pkg_name:
+                conflicts.append((bare, namespace[bare], pkg_name, "exclusive-vs-namespace"))
 
     return conflicts
 
