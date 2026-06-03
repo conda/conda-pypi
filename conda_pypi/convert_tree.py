@@ -193,10 +193,16 @@ class ConvertTree:
                 # would be treated as different packages, causing spurious upgrade warnings.
                 raw_name = dist.metadata.get("name") or wheel.stem
                 pkg_name = pypi_to_conda_name(raw_name)
-                if import_names := dist.metadata.get_all("import-name"):
-                    names[pkg_name] = import_names
-                if import_namespaces := dist.metadata.get_all("import-namespace"):
-                    namespaces[pkg_name] = import_namespaces
+                raw_names = dist.metadata.get_all("import-name")
+                raw_namespaces = dist.metadata.get_all("import-namespace")
+                if raw_names is not None:
+                    filtered = [name for name in raw_names if name.strip()]
+                    if filtered:
+                        names[pkg_name] = filtered
+                if raw_namespaces is not None:
+                    filtered = [name for name in raw_namespaces if name.strip()]
+                    if filtered:
+                        namespaces[pkg_name] = filtered
             except Exception:
                 log.debug("Could not read Import-Name from %s", wheel, exc_info=True)
 
