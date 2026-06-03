@@ -117,3 +117,46 @@ def test_parse_libmamba_solver_error():
 def test_parse_rattler_solver_error():
     error_message = "'Cannot solve the request because of: scipy * cannot be installed because there are no viable options:\n└─ scipy 1.16.3 would require\n   └─ numpy <2.6,>=1.25.2, for which no candidates were found.\n'"
     assert set(parse_rattler_solver_error(error_message)) == {"numpy <2.6,>=1.25.2"}
+
+
+def test_format_conflict_line_exclusive_batch():
+    line = _format_conflict_line(("utils", "pkg-a", "pkg-b", "exclusive"))
+    assert "utils" in line
+    assert "pkg-a" in line
+    assert "pkg-b" in line
+    assert "exclusively" in line
+
+
+def test_format_conflict_line_exclusive_vs_namespace_batch():
+    line = _format_conflict_line(("azure", "azure-mgmt-search", "pkg-b", "exclusive-vs-namespace"))
+    assert "azure" in line
+    assert "pkg-b" in line
+    assert "azure-mgmt-search" in line
+    assert "namespace" in line
+
+
+def test_format_conflict_line_ambiguous_in_both():
+    line = _format_conflict_line(("azure", "pkg-a", "pkg-a", "ambiguous-in-both"))
+    assert "azure" in line
+    assert "pkg-a" in line
+    assert "Import-Name" in line
+    assert "Import-Namespace" in line
+
+
+def test_format_conflict_line_cross_install_exclusive():
+    new_pkgs = {"pkg-b"}
+    line = _format_conflict_line(("utils", "pkg-a", "pkg-b", "exclusive"), new_pkgs=new_pkgs)
+    assert "pkg-b" in line
+    assert "pkg-a" in line
+    # pkg-b is incoming, pkg-a is already installed
+    assert line.index("incoming") < line.index("pkg-b") or "incoming" in line
+    assert "shadow" in line or "conflict" in line
+
+
+def test_format_conflict_line_cross_install_exclusive_vs_namespace():
+    new_pkgs = {"pkg-b"}
+    line = _format_conflict_line(
+        ("azure", "azure-mgmt-search", "pkg-b", "exclusive-vs-namespace"), new_pkgs=new_pkgs
+    )
+    assert "azure" in line
+    assert "namespace" in line
