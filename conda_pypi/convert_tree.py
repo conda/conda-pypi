@@ -42,15 +42,20 @@ def _format_conflict_line(conflict: tuple, new_pkgs: set | None = None) -> str:
     name, pkg1, pkg2, kind = conflict
     if kind == "ambiguous-in-both":
         return (
-            f"  '{name}': package '{pkg1}' lists it in both "
-            "Import-Name and Import-Namespace (ambiguous)"
+            f"  '{name}': '{pkg1}' lists it in both Import-Name and Import-Namespace (ambiguous)"
         )
     if new_pkgs is not None:
         # In a cross-install context: identify which party is new vs already installed.
         incoming = pkg2 if pkg2 in new_pkgs else pkg1
         existing = pkg1 if pkg2 in new_pkgs else pkg2
-        return f"  '{name}': incoming '{incoming}' conflicts with already-installed '{existing}' ({kind})"
-    return f"  '{name}': '{pkg1}' and '{pkg2}' ({kind})"
+        if kind == "exclusive":
+            return f"  '{name}': incoming '{incoming}' would shadow already-installed '{existing}' (both claim it exclusively)"
+        # exclusive-vs-namespace: incoming exclusive name shadows existing namespace
+        return f"  '{name}': incoming '{incoming}' exclusively claims a name that already-installed '{existing}' uses as a namespace"
+    if kind == "exclusive":
+        return f"  '{name}': '{pkg1}' and '{pkg2}' both claim it exclusively (Import-Name)"
+    # exclusive-vs-namespace: pkg2 exclusively claims a name that pkg1 uses as a namespace
+    return f"  '{name}': '{pkg2}' claims it exclusively (Import-Name) but '{pkg1}' uses it as a namespace (Import-Namespace)"
 
 
 NOTHING_PROVIDES_RE = re.compile(r"nothing provides (.*) needed by")
