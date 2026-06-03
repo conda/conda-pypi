@@ -277,9 +277,15 @@ def check_import_name_conflicts(
 
     Returns:
         List of ``(import_name, first_package, second_package, conflict_kind)``
-        4-tuples, one per detected conflict.  *conflict_kind* is either
-        ``"exclusive"`` (Import-Name vs Import-Name) or
-        ``"exclusive-vs-namespace"`` (Import-Name vs Import-Namespace).
+        4-tuples, one per detected conflict. *conflict_kind* is one of:
+
+        1. ``"ambiguous-in-both"``: a single package lists the same name in
+          both Import-Name and Import-Namespace (MUST error per PEP 794);
+          *first_package* and *second_package* are the same value.
+        2. ``"exclusive"``: two packages share the same Import-Name entry.
+        3. ``"exclusive-vs-namespace"``: one package's Import-Name overlaps
+          another's Import-Namespace. *first_package* is the namespace holder.
+
         Empty list when there are no conflicts.
     """
     if package_import_namespaces is None:
