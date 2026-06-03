@@ -122,6 +122,56 @@ checks `.dist-info/<path>` (pre-PEP 639 wheels) and `.dist-info/licenses/<path>`
 
 PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) are translated for the solver where possible. When building installable .conda packages from wheels, `[when="…"]` is not attached to dependency strings. The `extra == "…"` marker is split into per-extra tables, and other marker conditions are omitted from depends. See {doc}`developer/marker-conversion`.
 
+#### Import name metadata (PEP 794, Metadata-Version 2.5+)
+
+Wheels that carry [PEP 794](https://peps.python.org/pep-0794/) metadata can
+declare the import names they provide using `Import-Name` and `Import-Namespace`
+fields.
+
+When `conda-pypi` converts such a wheel to a `.conda` package, it reads both
+fields and stores them in `info/about.json` as `import_names` and
+`import_namespaces`. The same happens for wheels extracted directly through a
+wheel channel.
+
+`Import-Name` lists names a project _exclusively_ owns, meaning two packages
+with the same `Import-Name` would shadow each other at runtime. `Import-Namespace`
+lists names that multiple packages share, as is normal for namespace packages like
+`azure` or `google.cloud`. Each `Import-Name` entry can carry an optional
+`; private` suffix to indicate the name is not part of the public API.
+
+`conda pypi install` checks for two kinds of conflicts:
+
+- **Batch conflicts (error):** If two or more packages in the same install
+  operation share an `Import-Name`, or one package's `Import-Name` overlaps
+  another's `Import-Namespace`, the install is aborted with an error before
+  anything is written to the environment. This follows the SHOULD-level
+  requirement in PEP 794.
+- **Cross-install conflicts (warning):** If an incoming package conflicts with
+  something already in the environment, a warning is logged but the install
+  proceeds. This is a MAY per PEP 794, since some workflows deliberately replace
+  modules across multiple install steps.
+
+Shared `Import-Namespace` entries are never flagged as conflicts, since that is
+exactly what namespace packages are for.
+
+##### Known limitations:
+
+- **conda-forge packages are invisible to this check.** The conda package format
+  has no equivalent of PEP 794 import name metadata, so only packages previously
+  installed via `conda pypi` contribute to conflict detection. That said,
+  conda-pypi's conda-first approach means it only fetches a package from PyPI
+  when it is absent from all configured conda channels, so the solver will not
+  install a conda-forge version and a PyPI version of the same package side by
+  side. Properly fixing this gap requires a CEP to add import name fields to the
+  conda package format.
+- **Wheel channel path.** Wheels served via an experimental wheel channel
+  (`v3.whl` repodata entries) are extracted one at a time by conda's extractor
+  plugin, with no batch-level hook available. This means conflicts among a set of
+  simultaneously-installed wheel-channel packages cannot be caught before
+  installation. The `import_names` data is still written to `info/about.json`,
+  so subsequent `conda pypi install` runs can detect conflicts against those
+  packages.
+
 ### Wheel channels
 
 :::{admonition} Experimental
