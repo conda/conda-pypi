@@ -142,9 +142,9 @@ class MyWheelDestination(WheelDestination):
             wheel_metadata = package_metadata_from_metadata_body(source.read_dist_info("METADATA"))
             copy_into_info_licenses(dist_infos[0], info_dir, wheel_metadata)
 
-            # We persist Import-Name / Import-Namespace to disk so that
-            # conflict-detection and index tools can read them without
-            # having to unpack further. TODO any better approaches?
+            # We persist PEP 794 Import-Name / Import-Namespace into about.json on
+            # disk so that conflict-detection and index tools can read them from the
+            # extracted package dir without having to reopen wheel archives further.
             about_json_data = {}
             import_names = wheel_metadata.get_all("import-name")
             import_namespaces = wheel_metadata.get_all("import-namespace")
@@ -153,7 +153,13 @@ class MyWheelDestination(WheelDestination):
             if import_namespaces is not None:
                 about_json_data["import_namespaces"] = import_namespaces
             if about_json_data:
-                write_as_json_to_file(info_dir / "about.json", about_json_data)
+                about_path = info_dir / "about.json"
+                existing = (
+                    json.loads(about_path.read_text(encoding="utf-8"))
+                    if about_path.exists()
+                    else {}
+                )
+                write_as_json_to_file(about_path, {**existing, **about_json_data})
 
     def finalize_installation(
         self,
