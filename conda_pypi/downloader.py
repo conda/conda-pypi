@@ -51,6 +51,33 @@ def find_package(finder: PackageFinder, package: str):
     return finder.find_best_match(requirement)
 
 
+def fetch_pep658_wheel_metadata(wheel_url: str) -> str | None:
+    """Fetch a wheel's METADATA file via PEP 658/714 without downloading the
+    full archive.
+
+    PEP 658 standardises a ``{wheel_url}.metadata`` endpoint on index servers.
+    Returns the raw METADATA text on success. PyPI has served this for newly
+    uploaded wheels since May 2023. Older wheels may not have this metadata
+    available and the endpoint will be absent,in which case it returns None
+    and the caller can fall back to downloading the wheel and extracting the
+    METADATA file locally.
+    """
+    from conda.gateways.connection import CondaSession
+
+    metadata_url = wheel_url + ".metadata"
+    try:
+        with CondaSession() as session:
+            response = session.get(metadata_url, timeout=10)
+        if response.ok:
+            return response.text
+        log.debug(
+            "PEP 658 metadata endpoint returned %s for %s", response.status_code, metadata_url
+        )
+    except Exception:
+        log.debug("Could not fetch PEP 658 metadata from %s", metadata_url, exc_info=True)
+    return None
+
+
 def find_and_fetch(finder: PackageFinder, target: Path, package: str) -> Path:
     """
     Find package on PyPI, download best link to target.
