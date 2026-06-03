@@ -2,8 +2,11 @@
 Test converting a dependency tree to conda.
 """
 
+import json
 import os
+import zipfile
 from pathlib import Path
+from unittest.mock import MagicMock
 
 from conda.models.match_spec import MatchSpec
 from conda.testing.fixtures import TmpEnvFixture
@@ -12,6 +15,7 @@ from pytest_mock import MockerFixture
 
 from conda_pypi.convert_tree import (
     ConvertTree,
+    _format_conflict_line,
     parse_libmamba_solver_error,
     parse_rattler_solver_error,
 )
@@ -152,3 +156,128 @@ def test_format_conflict_line_cross_install_exclusive_vs_namespace():
     )
     assert "azure" in line
     assert "namespace" in line
+def _make_wheel(tmp_path: Path, pkg_name: str, version: str = "1.0.0",
+                import_names=None, import_namespaces=None) -> Path:
+    lines = ["Metadata-Version: 2.5", f"Name: {pkg_name}", f"Version: {version}"]
+    for n in import_names or []:
+        lines.append(f"Import-Name: {n}")
+    for ns in import_namespaces or []:
+        lines.append(f"Import-Namespace: {ns}")
+    dist_info = f"{pkg_name}-{version}.dist-info"
+    wheel_path = tmp_path / f"{pkg_name}-{version}-py3-none-any.whl"
+    with zipfile.ZipFile(wheel_path, "w") as zf:
+        zf.writestr(f"{dist_info}/METADATA", "\n".join(lines) + "\n")
+        zf.writestr(f"{dist_info}/WHEEL",
+                    "Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n")
+        zf.writestr(f"{dist_info}/RECORD", "")
+    return wheel_path
+
+
+def _bare_convert_tree(prefix=None) -> ConvertTree:
+    # Bypass __init__ so tests don't need a real conda prefix
+    obj = object.__new__(ConvertTree)
+    obj.prefix = Path(prefix or "/nonexistent")
+    return obj
+
+
+def test_collect_import_names_from_wheels_reads_metadata(tmp_path: Path):
+    _make_wheel(tmp_path, "mylib", import_names=["mylib"])
+    _make_wheel(tmp_path, "azure-mgmt-search",
+                import_names=["azure.mgmt.search"],
+                import_namespaces=["azure", "azure.mgmt"])
+    ct = _bare_convert_tree()
+    names, namespaces = ct._collect_import_names_from_wheels(tmp_path)
+    assert names["mylib"] == ["mylib"]
+    assert names["azure-mgmt-search"] == ["azure.mgmt.search"]
+    assert namespaces["azure-mgmt-search"] == ["azure", "azure.mgmt"]
+
+
+def test_collect_import_names_from_wheels_skips_wheel_without_pep794(tmp_path: Path):
+    _make_wheel(tmp_path, "legacy-pkg")
+    ct = _bare_convert_tree()
+    names, namespaces = ct._collect_import_names_from_wheels(tmp_path)
+    assert names == {}
+    assert namespaces == {}
+
+
+def test_collect_import_names_from_prefix_reads_about_json(tmp_path: Path, monkeypatch):
+    epd = tmp_path / "pkg-cache"
+    (epd / "info").mkdir(parents=True)
+    (epd / "info" / "about.json").write_text(
+        json.dumps({"import_names": ["mylib"], "import_namespaces": ["myns"]})
+    )
+
+    fake_record = MagicMock()
+    fake_record.name = "mylib"
+    fake_record.extracted_package_dir = str(epd)
+
+    import conda.core.prefix_data as _pd_mod
+    monkeypatch.setattr(_pd_mod, "PrefixData",
+                        lambda prefix: MagicMock(iter_records=lambda: iter([fake_record])))
+
+    ct = _bare_convert_tree(tmp_path)
+    names, namespaces = ct._collect_import_names_from_prefix()
+    assert names == {"mylib": ["mylib"]}
+    assert namespaces == {"mylib": ["myns"]}
+
+
+def test_check_import_name_conflicts_raises_on_batch_conflict(tmp_path: Path, monkeypatch):
+    from conda.exceptions import CondaError
+
+    ct = _bare_convert_tree()
+    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
+                        lambda _: ({"pkg-a": ["utils"], "pkg-b": ["utils"]}, {}))
+    monkeypatch.setattr(ct, "_collect_import_names_from_prefix", lambda: ({}, {}))
+
+    with pytest.raises(CondaError, match="Import name conflicts"):
+        ct._check_import_name_conflicts(tmp_path)
+
+
+def test_check_import_name_conflicts_warns_on_cross_install_conflict(
+    tmp_path: Path, monkeypatch, caplog
+):
+    import logging
+
+    ct = _bare_convert_tree()
+    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
+                        lambda _: ({"pkg-new": ["utils"]}, {}))
+    monkeypatch.setattr(ct, "_collect_import_names_from_prefix",
+                        lambda: ({"pkg-installed": ["utils"]}, {}))
+
+    with caplog.at_level(logging.WARNING, logger="conda_pypi.convert_tree"):
+        ct._check_import_name_conflicts(tmp_path)
+
+    assert any("overlap" in r.message.lower() or "conflict" in r.message.lower()
+               for r in caplog.records)
+
+
+def test_check_import_name_conflicts_no_false_conflict_on_update(
+    tmp_path: Path, monkeypatch
+):
+    # Updating a package means the same key appears in both prefix and incoming wheels.
+    # The dict merge ({**installed, **new}) overwrites the old entry, so
+    # check_import_name_conflicts only sees one entry and raises no conflict.
+    ct = _bare_convert_tree()
+    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
+                        lambda _: ({"pillow": ["PIL"]}, {}))
+    monkeypatch.setattr(ct, "_collect_import_names_from_prefix",
+                        lambda: ({"pillow": ["PIL"]}, {}))
+    ct._check_import_name_conflicts(tmp_path)
+
+
+def test_check_import_name_conflicts_batch_conflicts_not_re_reported_as_cross(
+    tmp_path: Path, monkeypatch, caplog
+):
+    # Batch conflicts (both packages are incoming) should raise immediately and
+    # not also appear as cross-install warnings via the XOR filter.
+    from conda.exceptions import CondaError
+
+    ct = _bare_convert_tree()
+    monkeypatch.setattr(ct, "_collect_import_names_from_wheels",
+                        lambda _: ({"pkg-a": ["utils"], "pkg-b": ["utils"]}, {}))
+    monkeypatch.setattr(ct, "_collect_import_names_from_prefix",
+                        lambda: ({}, {}))
+
+    with pytest.raises(CondaError):
+        ct._check_import_name_conflicts(tmp_path)
+    assert not any("overlap" in r.message.lower() for r in caplog.records)
