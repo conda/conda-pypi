@@ -123,3 +123,56 @@ def test_extract_whl_copies_licenses_to_info_licenses(
     lic = dest / "info" / "licenses" / "LICENSE"
     assert lic.is_file()
     assert lic.read_bytes() == b"BSD-3-Clause placeholder license text\n"
+def _make_minimal_pep794_wheel(
+    tmp_path: Path,
+    pkg_name: str = "pep794pkg",
+    version: str = "1.0.0",
+    import_names: list[str] | None = None,
+    import_namespaces: list[str] | None = None,
+) -> Path:
+    lines = [
+        "Metadata-Version: 2.5",
+        f"Name: {pkg_name}",
+        f"Version: {version}",
+    ]
+    for n in import_names or []:
+        lines.append(f"Import-Name: {n}")
+    for ns in import_namespaces or []:
+        lines.append(f"Import-Namespace: {ns}")
+
+    dist_info = f"{pkg_name}-{version}.dist-info"
+    wheel_path = tmp_path / f"{pkg_name}-{version}-py3-none-any.whl"
+    with zipfile.ZipFile(wheel_path, "w") as zf:
+        zf.writestr(f"{dist_info}/METADATA", "\n".join(lines) + "\n")
+        zf.writestr(
+            f"{dist_info}/WHEEL",
+            "Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n",
+        )
+        zf.writestr(f"{dist_info}/RECORD", "")
+    return wheel_path
+
+
+def test_extract_whl_writes_import_names_to_about_json(tmp_path: Path):
+    wheel = _make_minimal_pep794_wheel(
+        tmp_path, import_names=["mylib"], import_namespaces=["myns"]
+    )
+    dest = tmp_path / "pkg"
+    dest.mkdir()
+    extract_whl_as_conda_pkg(wheel, dest)
+    about = json.loads((dest / "info" / "about.json").read_text())
+    assert about["import_names"] == ["mylib"]
+    assert about["import_namespaces"] == ["myns"]
+
+
+def test_extract_whl_merges_import_names_into_existing_about_json(tmp_path: Path):
+    wheel = _make_minimal_pep794_wheel(tmp_path, import_names=["mylib"])
+    dest = tmp_path / "pkg"
+    dest.mkdir()
+    # Pre-populate about.json with unrelated metadata that must survive the merge.
+    info_dir = dest / "info"
+    info_dir.mkdir()
+    (info_dir / "about.json").write_text(json.dumps({"home": "https://example.com"}))
+    extract_whl_as_conda_pkg(wheel, dest)
+    about = json.loads((dest / "info" / "about.json").read_text())
+    assert about["import_names"] == ["mylib"]
+    assert about["home"] == "https://example.com"
