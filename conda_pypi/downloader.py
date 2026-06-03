@@ -78,7 +78,7 @@ def fetch_pep658_wheel_metadata(wheel_url: str) -> str | None:
     return None
 
 
-def find_wheel_link(finder: PackageFinder, package: str):
+def _find_wheel_link(finder: PackageFinder, package: str):
     """
     Resolve package to its best wheel link, raising ``CondaPypiError`` if unavailable.
     """
@@ -96,7 +96,7 @@ def find_wheel_link(finder: PackageFinder, package: str):
     return link
 
 
-def download_wheel(link, target: Path) -> Path:
+def _download_wheel(link, target: Path) -> Path:
     """
     Download a wheel link into target directory and return the local path.
     """
@@ -111,10 +111,10 @@ def download_wheel(link, target: Path) -> Path:
 def find_and_fetch(finder: PackageFinder, target: Path, package: str) -> Path:
     """Find package on PyPI, download best link to target."""
     # Phase 1: resolve link (no download yet)
-    link = find_wheel_link(finder, package)
+    link = _find_wheel_link(finder, package)
 
     # Phase 2: pre-download checks. In this case, fetch_pep658_wheel_metadata
     # is a hook for future use
 
     # Phase 3: download
-    return download_wheel(link, target)
+    return _download_wheel(link, target)
