@@ -110,11 +110,5 @@ def _download_wheel(link, target: Path) -> Path:
 
 def find_and_fetch(finder: PackageFinder, target: Path, package: str) -> Path:
     """Find package on PyPI, download best link to target."""
-    # Phase 1: resolve link (no download yet)
     link = _find_wheel_link(finder, package)
-
-    # Phase 2: pre-download checks. In this case, fetch_pep658_wheel_metadata
-    # is a hook for future use
-
-    # Phase 3: download
     return _download_wheel(link, target)
