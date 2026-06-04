@@ -58,7 +58,7 @@ def fetch_pep658_wheel_metadata(wheel_url: str) -> str | None:
     PEP 658 standardises a ``{wheel_url}.metadata`` endpoint on index servers.
     Returns the raw METADATA text on success. PyPI has served this for newly
     uploaded wheels since May 2023. Older wheels may not have this metadata
-    available and the endpoint will be absent,in which case it returns None
+    available and the endpoint will be absent, in which case it returns None
     and the caller can fall back to downloading the wheel and extracting the
     METADATA file locally.
     """
