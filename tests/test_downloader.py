@@ -57,7 +57,7 @@ def test_fetch_pep658_wheel_metadata_returns_text_on_success():
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_session.get.return_value = mock_response
 
-    with patch("conda.gateways.connection.CondaSession", return_value=mock_session):
+    with patch("conda.gateways.connection.Session", return_value=mock_session):
         result = fetch_pep658_wheel_metadata("https://example.com/mypkg-1.0-py3-none-any.whl")
 
     assert result == mock_response.text
@@ -76,7 +76,7 @@ def test_fetch_pep658_wheel_metadata_returns_none_on_404():
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_session.get.return_value = mock_response
 
-    with patch("conda.gateways.connection.CondaSession", return_value=mock_session):
+    with patch("conda.gateways.connection.Session", return_value=mock_session):
         result = fetch_pep658_wheel_metadata("https://example.com/legacy-1.0-py3-none-any.whl")
 
     assert result is None
@@ -88,7 +88,7 @@ def test_fetch_pep658_wheel_metadata_returns_none_on_exception():
     mock_session.__exit__ = MagicMock(return_value=False)
     mock_session.get.side_effect = ConnectionError("network failure")
 
-    with patch("conda.gateways.connection.CondaSession", return_value=mock_session):
+    with patch("conda.gateways.connection.Session", return_value=mock_session):
         result = fetch_pep658_wheel_metadata("https://example.com/mypkg-1.0-py3-none-any.whl")
 
     assert result is None

@@ -62,11 +62,11 @@ def fetch_pep658_wheel_metadata(wheel_url: str) -> str | None:
     and the caller can fall back to downloading the wheel and extracting the
     METADATA file locally.
     """
-    from conda.gateways.connection import CondaSession
+    from conda.gateways.connection import Session
 
     metadata_url = wheel_url + ".metadata"
     try:
-        with CondaSession() as session:
+        with Session() as session:
             response = session.get(metadata_url, timeout=10)
         if response.ok:
             return response.text
