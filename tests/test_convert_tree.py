@@ -168,8 +168,9 @@ def _make_wheel(
         lines.append(f"Import-Name: {n}")
     for ns in import_namespaces or []:
         lines.append(f"Import-Namespace: {ns}")
-    dist_info = f"{pkg_name}-{version}.dist-info"
-    wheel_path = tmp_path / f"{pkg_name}-{version}-py3-none-any.whl"
+    normalized = pkg_name.replace("-", "_")
+    dist_info = f"{normalized}-{version}.dist-info"
+    wheel_path = tmp_path / f"{normalized}-{version}-py3-none-any.whl"
     with zipfile.ZipFile(wheel_path, "w") as zf:
         zf.writestr(f"{dist_info}/METADATA", "\n".join(lines) + "\n")
         zf.writestr(
