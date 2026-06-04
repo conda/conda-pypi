@@ -5,3 +5,11 @@
  #rtd-footer-container {
     display: none;
 }
+
+img.conda-pypi-logo,
+figure.conda-pypi-logo,
+.conda-pypi-logo img {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}

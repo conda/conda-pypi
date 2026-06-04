@@ -1,5 +1,11 @@
 # conda-pypi
 
+```{image} _static/img/logo.png
+:alt: conda-pypi logo
+:align: center
+:class: conda-pypi-logo
+```
+
 Welcome to the `conda-pypi` documentation!
 
 `conda-pypi` provides better PyPI interoperability for the conda ecosystem.

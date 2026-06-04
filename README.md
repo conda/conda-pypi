@@ -1,5 +1,9 @@
 # conda-pypi
 
+<p align="center">
+  <img src="./docs/_static/img/logo.png" alt="conda-pypi logo"/>
+</p>
+
 Better PyPI interoperability for the conda ecosystem.
 
 > [!IMPORTANT]
@@ -70,8 +74,9 @@ for more details.
 
 ## Attribution
 
-This project now incorporates [conda-pupa](https://github.com/dholth/conda-pupa)
+- This project now incorporates [conda-pupa](https://github.com/dholth/conda-pupa)
 by Daniel Holth, which provides the core PyPI-to-conda conversion functionality.
+- The conda-pypi platypus logo is by [James Turner](http://www.eruditebaboon.co.uk/).
 
 ## Contributing
 
