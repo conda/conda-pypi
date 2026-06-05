@@ -182,8 +182,11 @@ preparing packages for offline installation.
 # Install local project in editable mode
 conda pypi install -e ./my-project/
 
-# Preview what would be installed
-conda pypi install --dry-run niquests pandas
+# Preview an editable install without changing the environment
+conda pypi install --dry-run -e ./my-project/
+
+# Install multiple local projects in editable mode
+conda pypi install -e ./package1/ -e ./package2/
 ```
 
 ### Environment protection

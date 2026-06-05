@@ -171,7 +171,10 @@ Here are some common usage patterns for editable installations:
 # Install local project in editable mode
 conda pypi install -e ./my-project/
 
-# Multiple local editable packages
+# Preview an editable install without changing the environment
+conda pypi install --dry-run -e ./my-project/
+
+# Install multiple local projects in editable mode
 conda pypi install -e ./package1/ -e ./package2/
 ```
 
