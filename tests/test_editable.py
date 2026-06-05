@@ -102,6 +102,8 @@ def test_ensure_requirements_prompt_state(yes, expected_command, monkeypatch, mo
 )
 def test_install_ephemeral_conda_prompt_state(yes, source, monkeypatch, mocker, tmp_path):
     cache = SimpleNamespace(pkgs_dir=tmp_path)
+    prefix = Path("/prefix")
+    package = Path("/tmp/editable.conda")
 
     confirm = mocker.Mock()
     install = mocker.Mock()
@@ -117,20 +119,18 @@ def test_install_ephemeral_conda_prompt_state(yes, source, monkeypatch, mocker, 
     monkeypatch.setattr(installer, "main_subshell", install)
 
     installer.install_ephemeral_conda(
-        Path("/prefix"),
-        Path("/tmp/editable.conda"),
+        prefix,
+        package,
         yes=yes,
         source=source,
     )
 
     if yes:
-        expected_calls = [
-            mocker.call.install("install", "--prefix", "/prefix", "/tmp/editable.conda")
-        ]
+        expected_calls = [mocker.call.install("install", "--prefix", str(prefix), str(package))]
     else:
         expected_calls = [
-            mocker.call.confirm("Install editable package from /src/project into /prefix"),
-            mocker.call.install("install", "--prefix", "/prefix", "/tmp/editable.conda"),
+            mocker.call.confirm(f"Install editable package from {source} into {prefix}"),
+            mocker.call.install("install", "--prefix", str(prefix), str(package)),
         ]
     assert calls.mock_calls == expected_calls
 

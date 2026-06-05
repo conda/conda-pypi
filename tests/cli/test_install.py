@@ -124,7 +124,7 @@ def test_install_editable_dry_run_accepts_subcommand_json(conda_cli: CondaCLIFix
     json_actions = json.loads(out)
     assert json_actions["success"]
     assert json_actions["dry_run"]
-    assert json_actions["editables"] == ["tests/packages/has-build-dep"]
+    assert json_actions["editables"] == [str(Path("tests/packages/has-build-dep"))]
 
 
 def test_install_editable_rejects_package_specs(tmp_path, editable_args):
