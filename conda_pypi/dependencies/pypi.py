@@ -61,8 +61,11 @@ def check_dependencies(requirements: Iterable[str], prefix: Path):
     return missing
 
 
-def ensure_requirements(requirements: list[str], prefix: Path):
+def ensure_requirements(requirements: list[str], prefix: Path, yes: bool = True):
     if requirements:
         conda_requirements, _ = requires_to_conda(requirements)
-        # -y may be appropriate during tests only
-        main_subshell("install", "--prefix", str(prefix), "-y", *conda_requirements)
+        command = ["install", "--prefix", str(prefix)]
+        if yes:
+            command.append("--yes")
+        command.extend(conda_requirements)
+        main_subshell(*command)

@@ -1,9 +1,12 @@
 import tempfile
-from argparse import Namespace, _SubParsersAction
+from argparse import SUPPRESS, Namespace, _SubParsersAction
 from pathlib import Path
 
 from conda.auxlib.ish import dals
 from conda.base.context import context
+from conda.cli.common import stdout_json_success
+from conda.cli.conda_argparse import add_output_and_prompt_options
+from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec
 from packaging.requirements import InvalidRequirement, Requirement
 
@@ -78,6 +81,11 @@ def configure_parser(parser: _SubParsersAction) -> None:
         action="append",
         help="Add a PyPI index URL (can be used multiple times).",
     )
+    output_and_prompt_options = add_output_and_prompt_options(install)
+    # These options also exist on the parent parser. Suppressing subparser
+    # defaults keeps `conda pypi --dry-run install ...` from being overwritten.
+    for action in output_and_prompt_options._group_actions:
+        action.default = SUPPRESS
     install.add_argument(
         "packages",
         metavar="PACKAGE",
@@ -93,7 +101,12 @@ def configure_parser(parser: _SubParsersAction) -> None:
     install.add_argument(
         "-e",
         "--editable",
-        help="Build and install PACKAGE in editable mode using PEP 660.",
+        action="append",
+        metavar="PROJECT_PATH",
+        help=(
+            "Build and install PROJECT_PATH in editable mode using PEP 660. "
+            "Can be used multiple times."
+        ),
     )
 
 
@@ -101,23 +114,56 @@ def execute(args: Namespace) -> int:
     """
     Entry point for the `conda pypi install` subcommand.
     """
-    if not args.editable and not args.packages:
+    editable_projects = args.editable or ()
+    if isinstance(editable_projects, str):
+        editable_projects = (editable_projects,)
+
+    if editable_projects and args.packages:
+        raise ArgumentError(
+            "Cannot combine --editable with package specs. "
+            "Install editable projects and package specs separately."
+        )
+    if not editable_projects and not args.packages:
         raise SystemExit(2)
 
     prefix_path = get_prefix()
+    json_output = context.json
+    yes = bool(args.yes)
 
-    if args.editable:
-        editable_path = Path(args.editable).expanduser()
+    if editable_projects:
+        editable_paths = [Path(project).expanduser() for project in editable_projects]
+        if args.dry_run:
+            if json_output:
+                stdout_json_success(
+                    dry_run=True,
+                    editables=[str(path) for path in editable_paths],
+                    prefix=str(prefix_path),
+                )
+            else:
+                for editable_path in editable_paths:
+                    print(
+                        "Dry run: would build and install editable package "
+                        f"from {editable_path} into {prefix_path}."
+                    )
+            return 0
+
         output_path_manager = tempfile.TemporaryDirectory("conda-pypi")
         with output_path_manager as output_path:
-            package = build.pypa_to_conda(
-                editable_path,
-                distribution="editable",
-                output_path=Path(output_path),
-                prefix=prefix_path,
-                channels=() if args.ignore_channels else tuple(context.channels),
-            )
-            installer.install_ephemeral_conda(prefix_path, package)
+            for editable_path in editable_paths:
+                package = build.pypa_to_conda(
+                    editable_path,
+                    distribution="editable",
+                    output_path=Path(output_path),
+                    prefix=prefix_path,
+                    channels=() if args.ignore_channels else tuple(context.channels),
+                    yes=yes,
+                )
+                installer.install_ephemeral_conda(
+                    prefix_path,
+                    package,
+                    yes=yes,
+                    source=editable_path,
+                )
         return 0
 
     if args.index_urls:
@@ -162,7 +208,7 @@ def execute(args: Namespace) -> int:
         if pkg.channel.canonical_name == channel_url
     ]
 
-    if not context.json:
+    if not json_output:
         if converted_packages:
             converted_packages_dashed = "\n - ".join(converted_packages)
             print(f"Converted packages\n - {converted_packages_dashed}\n")
@@ -174,8 +220,9 @@ def execute(args: Namespace) -> int:
         match_specs,
         channels=[channel_url],
         override_channels=args.ignore_channels,
-        yes=args.yes,
+        yes=yes,
         quiet=args.quiet,
         verbosity=args.verbosity,
         dry_run=args.dry_run,
+        json=json_output,
     )

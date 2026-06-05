@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import BinaryIO, Iterable
 from unittest.mock import patch
 
+from conda.cli.install import confirm_yn
 from conda.cli.main import main_subshell
 from conda.core.package_cache_data import PackageCacheData
 from installer import install
@@ -186,7 +187,12 @@ def install_pip(python_executable: str, whl: Path, build_path: Path):
     log.debug(f"Installed to {build_path}")
 
 
-def install_ephemeral_conda(prefix: Path, package: Path):
+def install_ephemeral_conda(
+    prefix: Path,
+    package: Path,
+    yes: bool = True,
+    source: Path | None = None,
+):
     """
     Install [editable] conda package without adding it to the environment's
     package cache, since we don't want to accidentally re-install "a link to a
@@ -200,4 +206,7 @@ def install_ephemeral_conda(prefix: Path, package: Path):
         tempfile.TemporaryDirectory(dir=persistent_pkgs, prefix="ephemeral") as cache_dir,
         patch.dict(os.environ, {"CONDA_PKGS_DIRS": cache_dir}),
     ):
+        if not yes:
+            source_text = source if source is not None else package.name
+            confirm_yn(f"Install editable package from {source_text} into {prefix}")
         main_subshell("install", "--prefix", str(prefix), str(package))

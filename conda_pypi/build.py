@@ -107,6 +107,7 @@ def build_pypa(
     output_path,
     prefix: Path,
     distribution="editable",
+    yes: bool = True,
 ):
     """
     Args:
@@ -124,11 +125,11 @@ def build_pypa(
             try:
                 missing = dependencies.check_dependencies(requirements, prefix=prefix)
                 if missing:
-                    dependencies.ensure_requirements(missing, prefix=prefix)
+                    dependencies.ensure_requirements(missing, prefix=prefix, yes=yes)
                     continue
                 break
             except dependencies.MissingDependencyError as e:
-                dependencies.ensure_requirements(e.dependencies, prefix=prefix)
+                dependencies.ensure_requirements(e.dependencies, prefix=prefix, yes=yes)
 
     build_system_requires = builder.build_system_requires
     log.debug(f"Ensure requirements for build system: {build_system_requires}")
@@ -281,6 +282,7 @@ def pypa_to_conda(
     test_dir: Path | None = None,
     pypi_to_conda_name_mapping: dict | None = None,
     channels: Iterable[str] = (),
+    yes: bool = True,
 ):
     project = Path(project)
 
@@ -294,7 +296,11 @@ def pypa_to_conda(
         tmp_path = Path(tmp_path)
 
         normal_wheel = build_pypa(
-            Path(project), tmp_path, prefix=prefix, distribution=distribution
+            Path(project),
+            tmp_path,
+            prefix=prefix,
+            distribution=distribution,
+            yes=yes,
         )
 
         build_path = tmp_path / "build"

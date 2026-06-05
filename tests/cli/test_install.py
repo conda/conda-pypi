@@ -6,10 +6,16 @@ from __future__ import annotations
 
 import json
 import re
+from argparse import Namespace
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from conda.base.context import reset_context
+from conda.exceptions import ArgumentError
 from conda.testing.fixtures import CondaCLIFixture
+
+import conda_pypi.cli.install as install_cli
 
 
 def test_cli(conda_cli):
@@ -21,6 +27,8 @@ def test_cli(conda_cli):
     out, err, rc = conda_cli("pypi", "install", "--help", raises=SystemExit)
     assert rc.value.code == 0  # SystemExit(0) means success
     assert "PyPI packages to install" in out
+    assert "--dry-run" in out
+    assert "--yes" in out
 
     # Test that convert subcommand exists and help works
     out, err, rc = conda_cli("pypi", "convert", "--help", raises=SystemExit)
@@ -39,6 +47,160 @@ def test_cli_plugin():
     assert pypi_subcommand.summary == "Install PyPI packages as conda packages"
     assert pypi_subcommand.action is not None
     assert pypi_subcommand.configure_parser is not None
+
+
+@pytest.fixture
+def editable_args():
+    def factory(project: Path, **overrides) -> Namespace:
+        values = {
+            "editable": [str(project)],
+            "packages": (),
+            "dry_run": False,
+            "yes": False,
+            "ignore_channels": False,
+            "index_urls": None,
+            "quiet": False,
+            "verbosity": 0,
+        }
+        values.update(overrides)
+        return Namespace(**values)
+
+    return factory
+
+
+def test_install_editable_dry_run_reports_each_project(
+    tmp_path, monkeypatch, mocker, capsys, editable_args
+):
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    prefix = tmp_path / "prefix"
+    first.mkdir()
+    second.mkdir()
+
+    monkeypatch.setattr(install_cli, "context", SimpleNamespace(json=False, channels=()))
+    monkeypatch.setattr(install_cli, "get_prefix", lambda: prefix)
+    build_editable = mocker.Mock()
+    install_package = mocker.Mock()
+    monkeypatch.setattr(install_cli.build, "pypa_to_conda", build_editable)
+    monkeypatch.setattr(install_cli.installer, "install_ephemeral_conda", install_package)
+
+    assert (
+        install_cli.execute(editable_args(first, editable=[str(first), str(second)], dry_run=True))
+        == 0
+    )
+
+    build_editable.assert_not_called()
+    install_package.assert_not_called()
+    output = capsys.readouterr().out
+    assert f"from {first} into {prefix}" in output
+    assert f"from {second} into {prefix}" in output
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("pypi", "install", "--dry-run", "--yes", "-e", "tests/packages/has-build-dep"),
+        ("pypi", "--dry-run", "--yes", "install", "-e", "tests/packages/has-build-dep"),
+    ],
+)
+def test_install_editable_dry_run_accepts_output_options(args, conda_cli: CondaCLIFixture):
+    out, err, rc = conda_cli(*args)
+
+    assert rc == 0, err
+    assert "Dry run: would build and install editable package" in out
+
+
+def test_install_editable_dry_run_accepts_subcommand_json(conda_cli: CondaCLIFixture):
+    out, err, rc = conda_cli(
+        "pypi",
+        "install",
+        "--dry-run",
+        "--json",
+        "-e",
+        "tests/packages/has-build-dep",
+    )
+
+    assert rc == 0, err
+    json_actions = json.loads(out)
+    assert json_actions["success"]
+    assert json_actions["dry_run"]
+    assert json_actions["editables"] == ["tests/packages/has-build-dep"]
+
+
+def test_install_editable_rejects_package_specs(tmp_path, editable_args):
+    project = tmp_path / "project"
+    project.mkdir()
+
+    with pytest.raises(ArgumentError, match="Cannot combine --editable"):
+        install_cli.execute(editable_args(project, packages=("requests",)))
+
+
+@pytest.mark.parametrize("yes", [False, True])
+def test_install_editable_passes_prompt_state_to_mutating_steps(
+    yes, tmp_path, monkeypatch, mocker, editable_args
+):
+    project = tmp_path / "project"
+    prefix = tmp_path / "prefix"
+    package = tmp_path / "editable.conda"
+    project.mkdir()
+
+    monkeypatch.setattr(install_cli, "get_prefix", lambda: prefix)
+    monkeypatch.setattr(install_cli, "context", SimpleNamespace(json=False, channels=()))
+    build_editable = mocker.Mock(return_value=package)
+    install_package = mocker.Mock()
+    monkeypatch.setattr(install_cli.build, "pypa_to_conda", build_editable)
+    monkeypatch.setattr(install_cli.installer, "install_ephemeral_conda", install_package)
+
+    assert install_cli.execute(editable_args(project, yes=yes)) == 0
+
+    build_editable.assert_called_once()
+    assert build_editable.call_args.kwargs["yes"] is yes
+    install_package.assert_called_once_with(prefix, package, yes=yes, source=project)
+
+
+def test_install_editable_installs_multiple_projects_in_order(
+    tmp_path, monkeypatch, mocker, editable_args
+):
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    prefix = tmp_path / "prefix"
+    first_package = tmp_path / "first.conda"
+    second_package = tmp_path / "second.conda"
+    first.mkdir()
+    second.mkdir()
+
+    monkeypatch.setattr(install_cli, "get_prefix", lambda: prefix)
+    monkeypatch.setattr(install_cli, "context", SimpleNamespace(json=False, channels=()))
+    build_editable = mocker.Mock(side_effect=[first_package, second_package])
+    install_package = mocker.Mock()
+    monkeypatch.setattr(install_cli.build, "pypa_to_conda", build_editable)
+    monkeypatch.setattr(install_cli.installer, "install_ephemeral_conda", install_package)
+    calls = mocker.Mock()
+    calls.attach_mock(build_editable, "build")
+    calls.attach_mock(install_package, "install")
+
+    assert install_cli.execute(editable_args(first, editable=[str(first), str(second)])) == 0
+
+    assert calls.mock_calls == [
+        mocker.call.build(
+            first,
+            distribution="editable",
+            output_path=mocker.ANY,
+            prefix=prefix,
+            channels=(),
+            yes=False,
+        ),
+        mocker.call.install(prefix, first_package, yes=False, source=first),
+        mocker.call.build(
+            second,
+            distribution="editable",
+            output_path=mocker.ANY,
+            prefix=prefix,
+            channels=(),
+            yes=False,
+        ),
+        mocker.call.install(prefix, second_package, yes=False, source=second),
+    ]
 
 
 def test_index_urls(tmp_env, conda_cli, pypi_local_index):
@@ -108,7 +270,7 @@ def test_install_requires_package_without_editable(conda_cli: CondaCLIFixture):
 
 def test_install_editable_without_packages_succeeds(conda_cli: CondaCLIFixture):
     project = "tests/packages/has-build-dep"
-    out, err, rc = conda_cli("pypi", "install", "-e", project)
+    out, err, rc = conda_cli("pypi", "--yes", "install", "-e", project)
     assert rc == 0
 
 

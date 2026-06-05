@@ -1,6 +1,7 @@
 import json
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
 import build
 import pytest
@@ -9,7 +10,9 @@ from conda.cli.main import main_subshell
 from conda.core.prefix_data import PrefixData
 from packaging.requirements import InvalidRequirement
 
+import conda_pypi.dependencies.pypi as pypi_dependencies
 import conda_pypi.dependencies_subprocess
+from conda_pypi import installer
 from conda_pypi.build import filter, pypa_to_conda
 from conda_pypi.dependencies.pypi import check_dependencies, ensure_requirements
 
@@ -75,11 +78,61 @@ def test_build_wheel(package, package_path, tmp_path):
             pytest.xfail(reason=str(e))
 
 
-def test_ensure_requirements(mocker):
-    mock = mocker.patch("conda_pypi.dependencies.pypi.main_subshell")
-    ensure_requirements(["flit_core"], prefix=Path())
+@pytest.mark.parametrize(
+    ("yes", "expected_command"),
+    [
+        (True, ("install", "--prefix", ".", "--yes", "flit-core")),
+        (False, ("install", "--prefix", ".", "flit-core")),
+    ],
+)
+def test_ensure_requirements_prompt_state(yes, expected_command, monkeypatch, mocker):
+    mock = mocker.Mock()
+    monkeypatch.setattr(pypi_dependencies, "main_subshell", mock)
+    ensure_requirements(["flit_core"], prefix=Path(), yes=yes)
     # normalizes/converts the underscore flit_core->flit-core
-    assert mock.call_args.args == ("install", "--prefix", ".", "-y", "flit-core")
+    assert mock.call_args.args == expected_command
+
+
+@pytest.mark.parametrize(
+    ("yes", "source"),
+    [
+        (False, Path("/src/project")),
+        (True, None),
+    ],
+)
+def test_install_ephemeral_conda_prompt_state(yes, source, monkeypatch, mocker, tmp_path):
+    cache = SimpleNamespace(pkgs_dir=tmp_path)
+
+    confirm = mocker.Mock()
+    install = mocker.Mock()
+    calls = mocker.Mock()
+    calls.attach_mock(confirm, "confirm")
+    calls.attach_mock(install, "install")
+    monkeypatch.setattr(
+        installer.PackageCacheData,
+        "first_writable",
+        staticmethod(lambda: cache),
+    )
+    monkeypatch.setattr(installer, "confirm_yn", confirm)
+    monkeypatch.setattr(installer, "main_subshell", install)
+
+    installer.install_ephemeral_conda(
+        Path("/prefix"),
+        Path("/tmp/editable.conda"),
+        yes=yes,
+        source=source,
+    )
+
+    if yes:
+        expected_calls = [
+            mocker.call.install("install", "--prefix", "/prefix", "/tmp/editable.conda")
+        ]
+    else:
+        expected_calls = [
+            mocker.call.confirm("Install editable package from /src/project into /prefix"),
+            mocker.call.install("install", "--prefix", "/prefix", "/tmp/editable.conda"),
+        ]
+    assert calls.mock_calls == expected_calls
 
 
 def test_check_dependencies_flattens_missing_dependencies(mocker):
@@ -123,6 +176,7 @@ def test_build_in_env(tmp_path):
     main_subshell(
         "pypi",
         "install",
+        "--yes",
         "--prefix",
         prefix,
         "-e",
