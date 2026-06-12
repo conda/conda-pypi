@@ -2,7 +2,11 @@
 
 [//]: # (current developments)
 
-## 0.10.1 (2026-06-11)
+## 0.10.1 (2026-06-12)
+
+### Docs
+
+* Update the docs landing page to focus on `conda install` workflows. (#398 via #405)
 
 ### Other
 
