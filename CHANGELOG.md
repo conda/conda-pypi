@@ -2,6 +2,20 @@
 
 [//]: # (current developments)
 
+## 0.10.1 (2026-06-11)
+
+### Other
+
+* Remove `conda-pypi-post-install-create` post install plugin. (#408)
+
+### Contributors
+
+* @kathatherine
+* @soapy1
+* @pre-commit-ci[bot]
+
+
+
 ## 0.10.0 (2026-06-09)
 
 ### Enhancements
