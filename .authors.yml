@@ -16,7 +16,7 @@
 - name: Dan Yeaw
   email: dan@yeaw.me
   github: danyeaw
-  num_commits: 44
+  num_commits: 42
   first_commit: 2025-08-18 12:34:03
 - name: Daniel Holth
   email: dholth@fastmail.fm
@@ -40,12 +40,12 @@
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
   github: pre-commit-ci[bot]
-  num_commits: 34
+  num_commits: 35
   first_commit: 2025-08-26 05:45:12
 - name: Sophia Castellarin
   email: scastellarin@quansight.com
   github: soapy1
-  num_commits: 18
+  num_commits: 19
   first_commit: 2025-09-26 16:52:47
 - name: Jean-Christophe Morin
   email: 38703886+JeanChristopheMorinPerso@users.noreply.github.com
@@ -88,7 +88,7 @@
 - name: Katherine Kinnaman
   email: kkinnaman@anaconda.com
   github: kathatherine
-  num_commits: 1
+  num_commits: 2
   first_commit: 2026-05-11 12:50:48
 - name: Mike Müller
   email: mmueller@python-academy.de
