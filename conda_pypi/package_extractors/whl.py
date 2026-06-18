@@ -1,4 +1,5 @@
 import json
+from email.parser import HeaderParser
 from os import PathLike
 from pathlib import Path
 from typing import BinaryIO, Iterable, Literal, Tuple
@@ -7,7 +8,8 @@ import installer.utils
 from installer.destinations import WheelDestination
 from installer.records import Hash, RecordEntry
 from installer.sources import WheelFile
-from installer.utils import Scheme
+from installer.utils import Scheme, parse_wheel_filename
+from packaging.tags import parse_tag
 
 from conda_pypi.license_files import copy_into_info_licenses, package_metadata_from_metadata_body
 from conda_pypi.utils import sha256_base64url_to_hex
@@ -117,21 +119,36 @@ class MyWheelDestination(WheelDestination):
         }
         write_as_json_to_file(info_dir / "paths.json", paths_json_data)
 
-        # index.json
-        # Set fn to include the build string AND extension so _get_json_fn() works correctly
-        # Format: name-version-build.whl (e.g., "requests-2.28.0-pypi_0.whl")
-        # The extension is required because _get_json_fn() uses endswith() to detect package type
+        # index.json — fn from zip path; Tag and Build from WHEEL dist-info.
         package_name = str(source.distribution)
         package_version = str(source.version)
-        build_string = "pypi_0"
-        fn = f"{package_name}-{package_version}-{build_string}.whl"
+        wheel_filename = Path(source._zipfile.filename).name
+
+        wheel_meta = HeaderParser().parsestr(source.read_dist_info("WHEEL"))
+        tag_lines = wheel_meta.get_all("Tag") or []
+        # WHEEL lists expanded tags; filenames may compress (py2.py3-none-any). Expand via
+        # parse_tag when needed and prefer py3-none-any to match repodata v3.
+        if tag_lines:
+            tag_candidates = tag_lines
+        else:
+            # parse_tag will expand the compressed tag format (py2.py3-none-any) to a list of tags.
+            tag_candidates = [str(t) for t in parse_tag(parse_wheel_filename(wheel_filename).tag)]
+        # Prefer py3-none-any to match repodata v3.
+        wheel_tag = next((t for t in tag_candidates if t == "py3-none-any"), tag_candidates[0])
+
+        build_number = 0
+        wheel_build = wheel_meta.get("Build")
+        if wheel_build is not None and wheel_build.isdigit():
+            build_number = int(wheel_build)
+
+        build_string = f"{wheel_tag.replace('-', '_')}_{build_number}"
 
         index_json_data = {
             "name": package_name,
             "version": package_version,
             "build": build_string,
-            "build_number": 0,
-            "fn": fn,
+            "build_number": build_number,
+            "fn": wheel_filename,
         }
         write_as_json_to_file(info_dir / "index.json", index_json_data)
 

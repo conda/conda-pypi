@@ -1,6 +1,9 @@
 """
-Test that wheel files installed via conda-pypi create JSON files in conda-meta/
-with the correct filename format: name-version-build.json
+Test index.json written by direct .whl extraction (extract_whl_as_conda_pkg).
+
+conda-meta/*.json filenames use name-version-build (conda derives build from
+index.json, not fn). index.json fn is the wheel basename on disk — the same
+field repodata v3 uses (PyPI upload filename).
 """
 
 from __future__ import annotations
@@ -8,14 +11,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from installer.sources import WheelFile
+
 
 def test_extract_whl_sets_fn_correctly(
     pypi_demo_package_wheel_path: Path,
     tmp_path: Path,
 ):
     """
-    Test that extract_whl_as_conda_pkg sets the fn field correctly in index.json.
-    This is a unit test that directly tests the metadata creation.
+    extract_whl_as_conda_pkg must write index.json that matches repodata v3 channel records.
+
+    fn is the wheel basename on disk; build is tag-derived with underscores. These fields
+    are not interchangeable — lockfile restore reads index.json directly, so both must
+    be correct even when fn and build describe the same wheel differently.
     """
     from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
 
@@ -28,21 +36,17 @@ def test_extract_whl_sets_fn_correctly(
     with open(index_json_path) as f:
         index_data = json.load(f)
 
-    # Verify fn field is set correctly with build string and .whl extension
-    # Note: source.distribution returns the Python package name (with underscores),
-    # so fn will be "demo_package-0.1.0-pypi_0.whl" not "demo-package-0.1.0-pypi_0.whl"
+    # fn is the wheel basename on the path passed to extract_whl_as_conda_pkg (zip path).
+    # Repodata v3 matches: fn=requests-2.32.5-py3-none-any.whl, build=py3_none_any_0.
+    with WheelFile.open(pypi_demo_package_wheel_path) as source:
+        zip_basename = Path(source._zipfile.filename).name
     assert "fn" in index_data, "index.json should contain 'fn' field"
-    # The fn field should include the build string and .whl extension
-    assert index_data["fn"].endswith("-pypi_0.whl")
-    # Verify the format is name-version-build.whl
-    fn_parts = index_data["fn"].replace(".whl", "").rsplit("-", 2)
-    assert len(fn_parts) == 3
-    fn_name, fn_version, fn_build = fn_parts
-    assert fn_build == "pypi_0"
+    assert index_data["fn"] == pypi_demo_package_wheel_path.name
+    assert index_data["fn"] == zip_basename
 
-    # Verify other fields
-    # The name field uses the Python package name (with underscores)
+    # build from WHEEL Tag; build_number from WHEEL Build when present (PEP 427).
+    # The name field uses the Python package name from METADATA (underscores, not normalized).
     assert index_data["name"] == "demo_package"
     assert index_data["version"] == "0.1.0"
-    assert index_data["build"] == "pypi_0"
+    assert index_data["build"] == "py3_none_any_0"
     assert index_data["build_number"] == 0
