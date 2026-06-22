@@ -113,7 +113,7 @@ jobs:
           echo "channels: [conda-forge]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@9d332c4d90b43981c3e55ae8e38e68709996240f # v4.17.0
+        uses: CodSpeedHQ/action@c145068895e045cc725ee76fcd2307624b65c3af # v4.17.5
         with:
           mode: instrumentation
           token: ${{ secrets.CODSPEED_TOKEN }}
