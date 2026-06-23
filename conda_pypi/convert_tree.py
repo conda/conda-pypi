@@ -23,6 +23,7 @@ from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PrefixRecord
 from conda.reporters import get_spinner
+from conda_index.index import ChannelIndex
 from unearth import PackageFinder
 
 from conda_pypi.build import build_conda
@@ -139,7 +140,15 @@ class ConvertTree:
 
                 converted.add(normal_wheel)
 
-            update_index(repo)
+            update_index(
+                ChannelIndex(
+                    repo,
+                    None,
+                    write_run_exports=True,
+                    compact_json=True,
+                    write_current_repodata=False,
+                )
+            )
         else:
             log.debug(f"Exceeded maximum of {max_attempts} attempts")
             return None
@@ -185,7 +194,15 @@ class ConvertTree:
         """
         (self.repo / "noarch").mkdir(parents=True, exist_ok=True)
         if not (self.repo / "noarch" / "repodata.json").exists():
-            update_index(self.repo)
+            update_index(
+                ChannelIndex(
+                    self.repo,
+                    None,
+                    write_run_exports=True,
+                    compact_json=True,
+                    write_current_repodata=False,
+                )
+            )
 
         with tempfile.TemporaryDirectory() as tmp_path:
             tmp_path = pathlib.Path(tmp_path)

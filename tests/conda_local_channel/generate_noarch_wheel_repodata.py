@@ -48,8 +48,6 @@ if __name__ == "__main__":
         HERE,
         None,
         threads=1,
-        debug=False,
-        write_bz2=False,
         write_zst=False,
         compact_json=False,
         write_current_repodata=False,

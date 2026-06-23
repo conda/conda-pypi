@@ -1,0 +1,19 @@
+### Enhancements
+
+* Add a `conda pypi index <dir>` subcommand that creates a conda channel from a collection of local wheel files.
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

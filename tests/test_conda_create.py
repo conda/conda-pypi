@@ -5,6 +5,7 @@ from pathlib import Path
 
 from conda.cli.main import main_subshell
 from conda.exceptions import DryRunExit
+from conda_index.index import ChannelIndex
 from conda_package_streaming.create import conda_builder
 
 from conda_pypi.build import filter, paths_json
@@ -39,7 +40,18 @@ def test_indexable(tmp_path):
     with conda_builder(record.stem, noarch) as tar:
         tar.add(dest, "", filter=filter)
 
-    update_index(tmp_path)
+    channel_index = ChannelIndex(
+        tmp_path,
+        None,
+        threads=1,
+        debug=False,
+        write_bz2=False,
+        write_zst=True,
+        write_run_exports=True,
+        compact_json=True,
+        write_current_repodata=False,
+    )
+    update_index(channel_index)
 
     repodata = json.loads((noarch / "repodata.json").read_text())
     assert repodata["packages.conda"]

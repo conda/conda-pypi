@@ -6,23 +6,28 @@ from typing import Any
 
 from conda_index.index import ChannelIndex
 from conda_index.index.cache import BaseCondaIndexCache
+from conda_index.utils import CONDA_PACKAGE_EXTENSIONS
 
 from conda_pypi.exceptions import UnableToConvertToRepodataEntry
 from conda_pypi.pypi_metadata import pypi_to_repodata
 
 
-def update_index(path):
+def create_channel_index(path):
     channel_index = ChannelIndex(
         path,
         None,
         threads=1,
-        debug=False,
-        write_bz2=False,
         write_zst=True,
-        write_run_exports=True,
-        compact_json=True,
         write_current_repodata=False,
+        repodata_v3=True,
+        cache_kwargs={"package_extensions": CONDA_PACKAGE_EXTENSIONS + (".whl",)},
+        update_only=True,
+        save_fs_state=False,
     )
+    return channel_index
+
+
+def update_index(channel_index: ChannelIndex):
     channel_index.index(patch_generator=None)
     channel_index.update_channeldata()
 
