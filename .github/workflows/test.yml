@@ -85,7 +85,7 @@ jobs:
 
   linux-benchmarks:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && !github.event.repository.fork
     name: benchmarks py${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
