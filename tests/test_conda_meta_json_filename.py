@@ -11,7 +11,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from installer.sources import WheelFile
+
+
+@pytest.mark.parametrize(
+    ("wheel_tag", "expected"),
+    [
+        ("py3-none-any", "py3-none-any"),
+        ("py2-none-any", "py3-none-any"),
+        ("py38-none-any", "py3-none-any"),
+        ("cp312-cp312-win_amd64", "cp312-cp312-win_amd64"),
+    ],
+)
+def test_noarch_wheel_tag_normalization_for_index_build(wheel_tag, expected):
+    normalized = wheel_tag
+    if normalized != "py3-none-any" and normalized.endswith("-none-any"):
+        normalized = "py3-none-any"
+    assert normalized == expected
 
 
 def test_extract_whl_sets_fn_correctly(

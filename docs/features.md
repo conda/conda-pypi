@@ -160,8 +160,9 @@ conda-pypi writes `info/index.json` with:
 
 - `fn` — the wheel basename on disk (the PyPI upload filename), for example
   `requests-2.32.5-py3-none-any.whl`
-- `build` — derived from the WHEEL dist-info `Tag` and `Build` headers, for
-  example `py3_none_any_0`
+- `build` — from WHEEL `Tag` / `Build` headers (prefer `py3-none-any`, else highest
+  tag). Noarch tags other than `py3-none-any` are normalized to `py3_none_any_0` to
+  match repodata v3, with an informational log when that happens.
 
 These fields mirror repodata v3 channel records. They intentionally differ:
 `fn` identifies the wheel artifact, while `build` is the conda build string.

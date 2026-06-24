@@ -54,7 +54,7 @@ Omissions are mostly intentional, for example virtual-package coverage is bounde
 | {py:mod}`conda_pypi.markers` | Marker AST walk and clause normalization. |
 | {py:func}`conda_pypi.markers.extract_marker_condition_and_extras` | Splits a {py:class}`packaging.markers.Marker` into a condition string and `extra` names. |
 | {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata` | `v3.whl` repodata from PyPI JSON. Names use {py:func}`conda_pypi.name_mapping.pypi_to_conda_name`. |
-| {py:func}`conda_pypi.package_extractors.whl.extract_whl_as_conda_pkg` | Direct `.whl` install: `info/index.json` `fn` is the wheel basename on disk; `build` comes from WHEEL `Tag` / `Build` (see {ref}`wheel-installed-metadata`). |
+| {py:func}`conda_pypi.package_extractors.whl.extract_whl_as_conda_pkg` | Direct `.whl` install: `info/index.json` `fn` is the wheel basename on disk; `build` from WHEEL tags with noarch normalization to `py3_none_any_0` (see {ref}`wheel-installed-metadata`). |
 | {py:func}`conda_pypi.translate.requires_to_conda` | `depends` / `extras` when building `.conda` packages from wheel `METADATA` (no `[when="…"]` on depends, extras-only marker routing). |
 
 ## MatchSpec and `[when="…"]`
