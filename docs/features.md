@@ -151,6 +151,23 @@ conda install -c https://my-wheel-channel requests
 
 Wheels served this way behave like any other conda package.
 
+(wheel-installed-metadata)=
+
+#### Installed package metadata
+
+When a wheel is installed directly (from a wheel channel or a `.whl` file),
+conda-pypi writes `info/index.json` with:
+
+- `fn` — the wheel basename on disk (the PyPI upload filename), for example
+  `requests-2.32.5-py3-none-any.whl`
+- `build` — derived from the WHEEL dist-info `Tag` and `Build` headers, for
+  example `py3_none_any_0`
+
+These fields mirror repodata v3 channel records. They intentionally differ:
+`fn` identifies the wheel artifact, while `build` is the conda build string.
+Lockfile restore and `conda-meta` JSON filenames use `name`, `version`, and
+`build`, not `fn`.
+
 #### Extras and markers
 
 Wheels in a channel can declare [dependency specifier extras](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras)
