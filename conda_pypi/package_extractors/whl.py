@@ -134,7 +134,7 @@ class MyWheelDestination(WheelDestination):
             # parse_tag will expand the compressed tag format (py2.py3-none-any) to a list of tags.
             tag_candidates = [str(t) for t in parse_tag(parse_wheel_filename(wheel_filename).tag)]
         # Prefer py3-none-any to match repodata v3.
-        wheel_tag = next((t for t in tag_candidates if t == "py3-none-any"), tag_candidates[0])
+        wheel_tag = "py3-none-any" if "py3-none-any" in tag_candidates else max(tag_candidates)
 
         build_number = 0
         wheel_build = wheel_meta.get("Build")
