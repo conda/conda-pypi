@@ -36,8 +36,14 @@ def write_as_json_to_file(file_path, obj):
 
 
 class MyWheelDestination(WheelDestination):
-    def __init__(self, target_full_path: str | Path, source: WheelFile):
+    def __init__(
+        self,
+        target_full_path: str | Path,
+        source: WheelFile,
+        whl_full_path: str | Path,
+    ):
         self.target_full_path = Path(target_full_path)
+        self.whl_full_path = Path(whl_full_path)
         self.sp_dir = self.target_full_path / "site-packages"
         self.entry_points = []
         self.source = source
@@ -122,10 +128,10 @@ class MyWheelDestination(WheelDestination):
         }
         write_as_json_to_file(info_dir / "paths.json", paths_json_data)
 
-        # index.json — fn from zip path; Tag and Build from WHEEL dist-info.
+        # index.json — fn from wheel path; Tag and Build from WHEEL dist-info.
         package_name = str(source.distribution)
         package_version = str(source.version)
-        wheel_filename = Path(source._zipfile.filename).name
+        wheel_filename = self.whl_full_path.name
 
         wheel_meta = HeaderParser().parsestr(source.read_dist_info("WHEEL"))
         tag_lines = wheel_meta.get_all("Tag") or []
@@ -191,9 +197,10 @@ class MyWheelDestination(WheelDestination):
 
 
 def extract_whl_as_conda_pkg(whl_full_path: str | Path, target_full_path: str | Path):
+    whl_full_path = Path(whl_full_path)
     with WheelFile.open(whl_full_path) as source:
         installer.install(
             source=source,
-            destination=MyWheelDestination(target_full_path, source),
+            destination=MyWheelDestination(target_full_path, source, whl_full_path),
             additional_metadata={"INSTALLER": b"conda-via-whl"},
         )
