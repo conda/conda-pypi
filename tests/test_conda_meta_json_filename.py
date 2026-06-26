@@ -48,7 +48,7 @@ def _make_wheel_meta(
         (["cp312-cp312-win_amd64"], None, "cp312_cp312_win_amd64_0"),
     ],
 )
-def test_create_build_string_from_wheel_meta_and_filename_(
+def test_create_build_string_from_wheel_meta_and_filename(
     tags: list[str],
     wheel_build: str | None,
     expected_build: str,
