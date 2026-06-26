@@ -9,80 +9,81 @@ field repodata v3 uses (PyPI upload filename).
 from __future__ import annotations
 
 import json
-import zipfile
+from email.parser import HeaderParser
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
+from conda_pypi.package_extractors.whl import (
+    _create_build_string_from_wheel_meta_and_filename,
+    extract_whl_as_conda_pkg,
+)
 
+if TYPE_CHECKING:
+    from email.message import Message
 
-def _make_wheel(
-    path: Path,
-    name: str,
-    version: str,
-    tags: list[str],
-    filename_tag: str | None = None,
+def _make_wheel_meta(
+    tags: list[str] | None = None,
     wheel_build: str | None = None,
-) -> Path:
-    """Minimal installable wheel for extract_whl_as_conda_pkg (Tag/Build/RECORD/pkg).
-
-    Separate from tests/cli/test_index.py make_wheel, which targets indexing only.
-    """
-    if filename_tag is None:
-        filename_tag = "py3-none-any" if "py3-none-any" in tags else tags[0]
-    wheel_path = path / f"{name}-{version}-{filename_tag}.whl"
-    dist_info = f"{name}-{version}.dist-info"
-    wheel_lines = ["Wheel-Version: 1.0\nGenerator: test\n"]
-    for tag in tags:
-        wheel_lines.append(f"Tag: {tag}\n")
+) -> Message:
+    """Parsed WHEEL dist-info headers, as from HeaderParser on a WHEEL file."""
+    lines = ["Wheel-Version: 1.0\n", "Generator: test\n"]
+    if tags:
+        for tag in tags:
+            lines.append(f"Tag: {tag}\n")
     if wheel_build is not None:
-        wheel_lines.append(f"Build: {wheel_build}\n")
-    metadata = "\n".join(
-        [
-            "Metadata-Version: 2.1",
-            f"Name: {name}",
-            f"Version: {version}",
-        ]
-    )
-    with zipfile.ZipFile(wheel_path, "w") as zf:
-        zf.writestr("pkg.py", "# pkg\n")
-        zf.writestr(f"{dist_info}/METADATA", metadata)
-        zf.writestr(f"{dist_info}/WHEEL", "".join(wheel_lines))
-        zf.writestr(f"{dist_info}/top_level.txt", "pkg\n")
-        zf.writestr(f"{dist_info}/RECORD", "pkg.py,,\n")
-    return wheel_path
+        lines.append(f"Build: {wheel_build}\n")
+    return HeaderParser().parsestr("".join(lines))
 
 
 @pytest.mark.parametrize(
     ("tags", "wheel_build", "expected_build"),
     [
-        (["py2-none-any"], None, "py3_none_any_0"),
+        (["py310-none-any", "py3-none-any"], None, "py3_none_any_0"),
         (["py38-none-any"], None, "py3_none_any_0"),
         (["py2-none-any", "py3-none-any"], None, "py3_none_any_0"),
         (["py3-none-any"], "1", "py3_none_any_1"),
         (["cp312-cp312-win_amd64"], None, "cp312_cp312_win_amd64_0"),
     ],
 )
-def test_extract_whl_index_json_build_from_wheel_metadata(
-    tmp_path: Path,
+def test_create_build_string_from_wheel_meta_and_filename_(
     tags: list[str],
     wheel_build: str | None,
     expected_build: str,
 ):
-    name = "test_pkg"
-    version = "1.0.0"
-    wheel_path = _make_wheel(tmp_path, name, version, tags, wheel_build=wheel_build)
-    extract_dir = tmp_path / "extract"
-    extract_whl_as_conda_pkg(wheel_path, extract_dir)
+    wheel_meta = _make_wheel_meta(tags, wheel_build)
+    last_tag = wheel_meta.get_all("Tag")[-1]
+    wheel_filename = f"test_pkg-1.0.0-{last_tag}.whl"
 
-    index_data = json.loads((extract_dir / "info" / "index.json").read_text())
+    build_string, build_number = _create_build_string_from_wheel_meta_and_filename(
+        wheel_meta, wheel_filename
+    )
+
     expected_build_number = int(wheel_build) if wheel_build is not None else 0
-    assert index_data["name"] == name
-    assert index_data["version"] == version
-    assert index_data["fn"] == wheel_path.name
-    assert index_data["build"] == expected_build
-    assert index_data["build_number"] == expected_build_number
+    assert build_string == expected_build
+    assert build_number == expected_build_number
+
+
+@pytest.mark.parametrize(("filename", "expected_build"), [
+    ("test_pkg-1.0.0-py3-none-any.whl", "py3_none_any_0"),
+    ("test_pkg-1.0.0-py38-none-any.whl", "py3_none_any_0"),
+    ("test_pkg-1.0.0-py2-none-any.whl", "py3_none_any_0"),
+    ("test_pkg-1.0.0-py2.py3-none-any.whl", "py3_none_any_0"),
+    ("test_pkg-1.0.0-cp312-cp312-win_amd64.whl", "cp312_cp312_win_amd64_0"),
+])
+def test_create_build_string_from_wheel_meta_and_filename_filename_fallback(
+    filename: str,
+    expected_build: str,
+):
+    # No Tag headers — build string comes from the wheel filename tag segment.
+    wheel_meta = _make_wheel_meta()
+    build_string, build_number = _create_build_string_from_wheel_meta_and_filename(
+        wheel_meta, filename
+    )
+    assert build_string == expected_build
+    assert build_number == 0
+
 
 
 def test_extract_whl_sets_fn_correctly(
