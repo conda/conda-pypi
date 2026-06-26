@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
+
 
 def _make_wheel(
     path: Path,
@@ -68,8 +70,6 @@ def test_extract_whl_index_json_build_from_wheel_metadata(
     wheel_build: str | None,
     expected_build: str,
 ):
-    from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
-
     name = "test_pkg"
     version = "1.0.0"
     wheel_path = _make_wheel(tmp_path, name, version, tags, wheel_build=wheel_build)
@@ -96,8 +96,6 @@ def test_extract_whl_sets_fn_correctly(
     are not interchangeable — lockfile restore reads index.json directly, so both must
     be correct even when fn and build describe the same wheel differently.
     """
-    from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
-
     extract_whl_as_conda_pkg(pypi_demo_package_wheel_path, tmp_path)
 
     # Check that index.json was created with correct fn field
