@@ -5,7 +5,7 @@ from email.parser import HeaderParser
 from logging import getLogger
 from os import PathLike
 from pathlib import Path
-from typing import BinaryIO, Iterable, Literal, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, BinaryIO, Iterable, Literal, Tuple
 
 import installer.utils
 from installer.destinations import WheelDestination
@@ -31,6 +31,7 @@ SCHEME_TO_CONDA_PREFIX: dict[Scheme, str] = {
 
 if TYPE_CHECKING:
     from email.message import Message
+
 
 def _create_build_string_from_wheel_meta_and_filename(
     wheel_meta: Message,
@@ -66,6 +67,7 @@ def _create_build_string_from_wheel_meta_and_filename(
 
     build_string = f"{wheel_tag.replace('-', '_')}_{build_number}"
     return build_string, build_number
+
 
 # inline version of
 # from conda.gateways.disk.create import write_as_json_to_file
@@ -174,7 +176,9 @@ class MyWheelDestination(WheelDestination):
 
         wheel_meta = HeaderParser().parsestr(source.read_dist_info("WHEEL"))
 
-        build_string, build_number = _create_build_string_from_wheel_meta_and_filename(wheel_meta, wheel_filename)
+        build_string, build_number = _create_build_string_from_wheel_meta_and_filename(
+            wheel_meta, wheel_filename
+        )
 
         index_json_data = {
             "name": package_name,

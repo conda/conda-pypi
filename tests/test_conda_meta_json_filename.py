@@ -23,6 +23,7 @@ from conda_pypi.package_extractors.whl import (
 if TYPE_CHECKING:
     from email.message import Message
 
+
 def _make_wheel_meta(
     tags: list[str] | None = None,
     wheel_build: str | None = None,
@@ -65,13 +66,16 @@ def test_create_build_string_from_wheel_meta_and_filename_(
     assert build_number == expected_build_number
 
 
-@pytest.mark.parametrize(("filename", "expected_build"), [
-    ("test_pkg-1.0.0-py3-none-any.whl", "py3_none_any_0"),
-    ("test_pkg-1.0.0-py38-none-any.whl", "py3_none_any_0"),
-    ("test_pkg-1.0.0-py2-none-any.whl", "py3_none_any_0"),
-    ("test_pkg-1.0.0-py2.py3-none-any.whl", "py3_none_any_0"),
-    ("test_pkg-1.0.0-cp312-cp312-win_amd64.whl", "cp312_cp312_win_amd64_0"),
-])
+@pytest.mark.parametrize(
+    ("filename", "expected_build"),
+    [
+        ("test_pkg-1.0.0-py3-none-any.whl", "py3_none_any_0"),
+        ("test_pkg-1.0.0-py38-none-any.whl", "py3_none_any_0"),
+        ("test_pkg-1.0.0-py2-none-any.whl", "py3_none_any_0"),
+        ("test_pkg-1.0.0-py2.py3-none-any.whl", "py3_none_any_0"),
+        ("test_pkg-1.0.0-cp312-cp312-win_amd64.whl", "cp312_cp312_win_amd64_0"),
+    ],
+)
 def test_create_build_string_from_wheel_meta_and_filename_filename_fallback(
     filename: str,
     expected_build: str,
@@ -83,7 +87,6 @@ def test_create_build_string_from_wheel_meta_and_filename_filename_fallback(
     )
     assert build_string == expected_build
     assert build_number == 0
-
 
 
 def test_extract_whl_sets_fn_correctly(
