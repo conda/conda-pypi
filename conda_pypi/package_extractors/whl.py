@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from email.parser import HeaderParser
 from logging import getLogger
