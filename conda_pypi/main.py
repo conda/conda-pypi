@@ -153,7 +153,7 @@ def notify_externally_managed_future(command: str):
         return
 
     if context.plugins.conda_pypi_pip_warning:
-        logger.info(
+        logger.warning(
             "\n"
             "  Did you know? You can install many PyPI packages with conda\n"
             "  using the conda-pypi beta. Get started:\n"

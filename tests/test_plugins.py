@@ -80,8 +80,8 @@ def test_notify_logs_tip_when_pip_installed(
 
     notify_externally_managed_future(command)
 
-    mock_logger.info.assert_called_once()
-    mock_logger.warning.assert_not_called()
+    mock_logger.warning.assert_called_once()
+    mock_logger.info.assert_not_called()
 
 
 def test_notify_skips_build_env(
@@ -100,7 +100,7 @@ def test_notify_skips_build_env(
 
     notify_externally_managed_future("install")
 
-    mock_logger.info.assert_not_called()
+    mock_logger.warning.assert_not_called()
 
 
 def test_notify_skips_base_prefix(
@@ -117,7 +117,7 @@ def test_notify_skips_base_prefix(
 
     notify_externally_managed_future("install")
 
-    mock_logger.info.assert_not_called()
+    mock_logger.warning.assert_not_called()
 
 
 def test_notify_skips_no_pip(
@@ -132,7 +132,7 @@ def test_notify_skips_no_pip(
 
     notify_externally_managed_future("install")
 
-    mock_logger.info.assert_not_called()
+    mock_logger.warning.assert_not_called()
 
 
 def test_notify_skips_when_pip_warning_disabled(
@@ -151,7 +151,18 @@ def test_notify_skips_when_pip_warning_disabled(
 
     notify_externally_managed_future("install")
 
-    mock_logger.info.assert_not_called()
+    mock_logger.warning.assert_not_called()
+
+
+def test_pip_beta_tip_visible_at_default_verbosity(
+    conda_cli: CondaCLIFixture,
+    tmp_path: Path,
+):
+    """The beta tip must appear at default conda verbosity (not only with -vv)."""
+    prefix = tmp_path / "env"
+    _, err, rc = conda_cli("create", "--prefix", str(prefix), "--yes", "python", "pip")
+    assert rc == 0
+    assert "Did you know?" in err
 
 
 def test_pip_warning_setting_defaults_to_true():
