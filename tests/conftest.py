@@ -115,6 +115,7 @@ def channel_index_with_wheels(tmp_path: Path) -> ChannelIndex:
         write_current_repodata=False,
         cache_kwargs={
             "package_extensions": CONDA_PACKAGE_EXTENSIONS + (".whl",),
+            "include_stages": ["md"],
         },
     )
 
