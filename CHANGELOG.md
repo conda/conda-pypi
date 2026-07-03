@@ -2,6 +2,41 @@
 
 [//]: # (current developments)
 
+## 0.11.0 (2026-07-03)
+
+### Enhancements
+
+* Add a `conda pypi index <dir>` subcommand that creates a conda channel from a collection of local wheel files. (#410)
+* Add `wheels_local_channel` pytest fixture that builds and serves a fully offline
+conda wheel channel from `tests/pypi_local_index/` using `conda pypi index`. (#433)
+
+### Bug fixes
+
+* Fix direct `.whl` install `info/index.json` metadata: `fn` is the wheel basename on disk and `build` is derived from WHEEL tags (normalizing noarch tags to `py3_none_any_0` to match repodata v3), fixing lockfile restore mismatches. (#417 via #420)
+* Restore visibility of the conda-pypi beta tip at default conda verbosity by logging it at WARNING instead of INFO. (#442 via #443)
+
+### Docs
+
+* Switch to using the new on-demand release process, based on the release process that was being used for conda-pypi. (#414)
+* Document installed wheel `index.json` `fn` and `build` fields in the wheel channels guide. (#420)
+* Add documentation for the new `conda pypi index` command. (#430)
+
+### Other
+
+* Enable infrastructure-managed Dependabot configuration via conda/infrastructure templates. (#418)
+
+### Contributors
+
+* @danyeaw
+* @jezdez
+* @ForgottenProgramme
+* @ryanskeith
+* @conda-bot
+* @dependabot[bot]
+* @pre-commit-ci[bot]
+
+
+
 ## 0.10.1 (2026-06-12)
 
 ### Docs

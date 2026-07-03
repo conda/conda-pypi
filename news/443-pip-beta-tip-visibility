@@ -1,3 +1,0 @@
-### Bug fixes
-
-* Restore visibility of the conda-pypi beta tip at default conda verbosity by logging it at WARNING instead of INFO. (#442 via #443)

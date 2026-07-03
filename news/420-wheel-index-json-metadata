@@ -1,7 +1,0 @@
-### Bug fixes
-
-* Fix direct `.whl` install `info/index.json` metadata: `fn` is the wheel basename on disk and `build` is derived from WHEEL tags (normalizing noarch tags to `py3_none_any_0` to match repodata v3), fixing lockfile restore mismatches. (#417 via #420)
-
-### Docs
-
-* Document installed wheel `index.json` `fn` and `build` fields in the wheel channels guide. (#420)

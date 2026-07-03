@@ -1,3 +1,0 @@
-### Docs
-
-* Switch to using the new on-demand release process, based on the release process that was being used for conda-pypi. (#414)
