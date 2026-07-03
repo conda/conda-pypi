@@ -1,20 +1,4 @@
 ### Enhancements
 
 * Add `wheels_local_channel` pytest fixture that builds and serves a fully offline
-conda wheel channel from `tests/pypi_local_index/` using `conda pypi index`.
-
-### Bug fixes
-
-* <news item>
-
-### Deprecations
-
-* <news item>
-
-### Docs
-
-* <news item>
-
-### Other
-
-* <news item>
+conda wheel channel from `tests/pypi_local_index/` using `conda pypi index`. (#433)
