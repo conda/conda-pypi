@@ -150,3 +150,6 @@ synthetic_repo/
 
 # If we conda pypi convert ourselves
 conda-pypi-output/
+# pixi environments
+.pixi/*
+!.pixi/config.toml

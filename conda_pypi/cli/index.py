@@ -114,7 +114,7 @@ def execute(args: Namespace) -> int:
     from packaging.requirements import InvalidRequirement
 
     from conda_pypi.exceptions import UnableToConvertToRepodataEntry
-    from conda_pypi.index import create_channel_index, store_pypi_metadata, update_index
+    from conda_pypi.index import create_channel_index, store_pypi_metadata
     from conda_pypi.license_files import package_metadata_from_metadata_body
 
     directory = Path(args.directory).expanduser()
@@ -129,6 +129,9 @@ def execute(args: Namespace) -> int:
     channel_index = create_channel_index(directory)
     cache = channel_index.cache_for_subdir("noarch")
 
+    # Collect stat entries to store them all at once
+    stat_entries = []
+
     for wheel in all_wheels:
         try:
             with WheelFile.open(wheel) as source:
@@ -140,7 +143,8 @@ def execute(args: Namespace) -> int:
             else:
                 url = wheel.resolve().as_uri()
             pypi_data = pypi_data_dict(wheel, wheel_metadata, url)
-            store_pypi_metadata(cache, pypi_data)
+            stat_entry = store_pypi_metadata(cache, pypi_data)
+            stat_entries.append(stat_entry)
         except UnableToConvertToRepodataEntry as e:
             print(f"Skipping {wheel.name}: not a pure-python wheel ({e})")
             failed_wheels.append(wheel)
@@ -153,6 +157,13 @@ def execute(args: Namespace) -> int:
         except (OSError, zipfile.BadZipFile) as e:
             print(f"Failed to read {wheel.name}: {e}")
             failed_wheels.append(wheel)
+
+    # Store all stat entries in the 'md' stage in one batch
+    if stat_entries:
+        cache.store_stat_state("md", stat_entries)
+
+    # Generate repodata from cached entries (save_fs_state ignores 'md' stage entries)
+    from conda_pypi.index import update_index
 
     update_index(channel_index)
 

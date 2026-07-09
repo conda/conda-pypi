@@ -22,7 +22,9 @@ def test_store_pypi_metadata(channel_index_with_wheels: ChannelIndex):
     pypi_data = json.loads(
         (PYPI_JSON_FIXTURES / "fastapi-0.116.1.json").read_text(encoding="utf-8")
     )
-    store_pypi_metadata(cache, pypi_data)
+    stat_entry = store_pypi_metadata(cache, pypi_data)
+    # Store the metadata state entry to make the package available in indexed_packages()
+    cache.store_stat_state("md", [stat_entry])
 
     # packages from database
     packages = cache.indexed_packages()

@@ -33,13 +33,16 @@ def update_index(channel_index: ChannelIndex):
     channel_index.index(patch_generator=None)
 
 
-def store_pypi_metadata(cache: BaseCondaIndexCache, pypi_json: dict[str, Any]):
+def store_pypi_metadata(
+    cache: BaseCondaIndexCache, pypi_json: dict[str, Any]
+) -> dict[str, Any] | None:
     """Convert and cache a single pypi package as a conda repodata entry.
 
     Starting in conda-index 0.11.0, conda index can output repodata v3, including
     wheel packages.
 
     This function takes the output from the PyPI API and converts it to a conda repodata entry.
+    Returns the stat entry dict to be stored in 'md' stage.
     For example,
 
     ```
@@ -58,16 +61,11 @@ def store_pypi_metadata(cache: BaseCondaIndexCache, pypi_json: dict[str, Any]):
         )
     path = f"{repodata_entry['name']}-{repodata_entry['version']}-py3_none_any_0.whl"
 
-    cache.store_stat_state(
-        "md",
-        [
-            {
-                "path": cache.database_path(path),
-                "size": repodata_entry["size"],
-                "mtime": repodata_entry.get("timestamp", 0),
-            }
-        ],
-    )
+    stat_entry = {
+        "path": cache.database_path(path),
+        "size": repodata_entry["size"],
+        "mtime": repodata_entry.get("timestamp", 0),
+    }
 
     # must contain sha256 and md5 keys but values may be None
     if not repodata_entry.get("sha256"):
@@ -83,3 +81,5 @@ def store_pypi_metadata(cache: BaseCondaIndexCache, pypi_json: dict[str, Any]):
         members={},
         index_json=repodata_entry,
     )
+
+    return stat_entry
