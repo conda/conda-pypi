@@ -114,13 +114,12 @@ def execute(args: Namespace) -> int:
     from packaging.requirements import InvalidRequirement
 
     from conda_pypi.exceptions import UnableToConvertToRepodataEntry
-    from conda_pypi.index import create_channel_index, store_pypi_metadata
+    from conda_pypi.index import create_channel_index, store_pypi_metadata, update_index
     from conda_pypi.license_files import package_metadata_from_metadata_body
 
     directory = Path(args.directory).expanduser()
 
-    if args.base_url:
-        base_url = args.base_url.rstrip("/") + "/"
+    base_url = args.base_url.rstrip("/") + "/" if args.base_url else ""
 
     all_wheels = validate_dir_and_return_whl_files(directory)
     failed_wheels = []
@@ -138,7 +137,7 @@ def execute(args: Namespace) -> int:
                 wheel_metadata = package_metadata_from_metadata_body(
                     source.read_dist_info("METADATA")
                 )
-            if args.base_url:
+            if base_url:
                 url = base_url + wheel.relative_to(directory).as_posix()
             else:
                 url = wheel.resolve().as_uri()
@@ -162,9 +161,7 @@ def execute(args: Namespace) -> int:
     if stat_entries:
         cache.store_stat_state("md", stat_entries)
 
-    # Generate repodata from cached entries (save_fs_state ignores 'md' stage entries)
-    from conda_pypi.index import update_index
-
+    # Generate repodata from cached entries
     update_index(channel_index)
 
     # inform user about wheels that couldn't be indexed
