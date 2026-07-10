@@ -1,0 +1,21 @@
+### Enhancements
+
+* In `conda pypi index`, store wheel files in the 'md' stage of the conda-index
+  database, avoiding potential conflict with the non-wheel parts of conda-index.
+  (#403)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>
