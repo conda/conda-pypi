@@ -26410,7 +26410,7 @@ packages:
   name: conda-pypi
   requires_dist:
   - build
-  - conda-index>=0.11.0
+  - conda-index>=0.12.0
   - conda-package-streaming>=0.11
   - installer>=1.0
   - packaging
