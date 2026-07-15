@@ -36,7 +36,7 @@ requirements:
     - python-build
     - python-installer >=1.0
     - platformdirs
-    - conda-index
+    - conda-index >=0.12.0
     - conda-package-streaming
 
 test:
