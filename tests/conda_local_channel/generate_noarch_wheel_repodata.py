@@ -72,7 +72,6 @@ if __name__ == "__main__":
         if entry is not None:
             md_entries.append(entry)
 
-    if md_entries:
-        cache.store_stat_state("md", md_entries)
+    cache.store_stat_state("md", md_entries)
 
     channel_index.index(patch_generator=None)
