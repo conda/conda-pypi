@@ -2,8 +2,8 @@
   "info": {
     "repodata_revisions": [
       {
-        "n_packages": 30,
-        "newest": 1755549960000,
+        "n_packages": 31,
+        "newest": 1777519103000,
         "oldest": 1550110819000,
         "revision": 3
       }
@@ -713,6 +713,40 @@
         "timestamp": 1737682930000,
         "url": "https://files.pythonhosted.org/packages/f4/3c/8cc1cc84deffa6e25d2d0c688ebb80635dfdbf1dbea3e30c541c8cf4d860/pydantic-2.10.6-py3-none-any.whl",
         "version": "2.10.6"
+      },
+      "python-build-1.5.0-py3_none_any_0": {
+        "build": "py3_none_any_0",
+        "build_number": 0,
+        "depends": [
+          "packaging>=24.0",
+          "pyproject_hooks",
+          "colorama[when=\"__win\"]",
+          "importlib-metadata>=4.6[when=\"python<3.10.2\"]",
+          "tomli>=1.1.0[when=\"python<3.11\"]",
+          "python >=3.10"
+        ],
+        "extra_depends": {
+          "keyring": [
+            "keyring"
+          ],
+          "uv": [
+            "uv>=0.1.18"
+          ],
+          "virtualenv": [
+            "virtualenv>=20.17[when=\"(python>=3.10 and python<3.14)\"]",
+            "virtualenv>=20.31[when=\"python>=3.14\"]"
+          ]
+        },
+        "fn": "build-1.5.0-py3-none-any.whl",
+        "md5": null,
+        "name": "python-build",
+        "noarch": "python",
+        "sha256": "13f3eecb844759ab66efec90ca17639bbf14dc06cb2fdf37a9010322d9c50a6f",
+        "size": 26018,
+        "subdir": "noarch",
+        "timestamp": 1777519103000,
+        "url": "https://files.pythonhosted.org/packages/0d/fe/6bea5c9162869c5beba5d9c8abbed835ec85bf1ec1fba05a3822325c45f3/build-1.5.0-py3-none-any.whl",
+        "version": "1.5.0"
       },
       "requests-2.32.5-py3_none_any_0": {
         "build": "py3_none_any_0",
