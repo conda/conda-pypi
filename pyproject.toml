@@ -51,7 +51,7 @@ platforms = ["linux-64", "osx-arm64", "win-64", "linux-aarch64"]
 [tool.pixi.dependencies]
 # must match project.dependencies (sans python and conda)
 python = ">=3.10"
-conda = ">=26.1,<26.5"    # notice this new constraint on conda
+conda = ">=26.1"
 conda-index = ">=0.12.0"
 conda-package-streaming = ">=0.11"
 packaging = "*"
