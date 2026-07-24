@@ -86,12 +86,14 @@ def configure_parser(parser: _SubParsersAction) -> None:
         "--prefix",
         help="Full path to environment location (i.e. prefix).",
         required=False,
+        default=SUPPRESS,
     )
     target_env.add_argument(
         "-n",
         "--name",
         help="Name of the conda environment.",
         required=False,
+        default=SUPPRESS,
     )
     install.add_argument(
         "-e",
@@ -134,7 +136,7 @@ def execute(args: Namespace) -> int:
     if not editable_projects and not args.packages:
         raise SystemExit(2)
 
-    prefix_path = get_prefix()
+    prefix_path = get_prefix(args.prefix, args.name)
     json_output = context.json
     yes = bool(args.yes)
 

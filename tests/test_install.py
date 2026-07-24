@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from conda.exceptions import DryRunExit
 from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 
 
@@ -57,7 +58,7 @@ def test_conda_pypi_install_matchspec_parsing(tmp_env: TmpEnvFixture, conda_cli:
         ]
 
         for spec in test_specs:
-            out, err, rc = conda_cli(
+            _, _, exc_info = conda_cli(
                 "pypi",
                 "-p",
                 prefix,
@@ -65,8 +66,9 @@ def test_conda_pypi_install_matchspec_parsing(tmp_env: TmpEnvFixture, conda_cli:
                 "--dry-run",
                 "install",
                 spec,
+                raises=DryRunExit,
             )
-            assert rc == 0, f"Failed to parse spec '{spec}'"
+            assert exc_info.type is DryRunExit
 
 
 def test_conda_pypi_install_requires_package_without_editable(
