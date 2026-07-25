@@ -49,6 +49,10 @@ installs it into the environment while tracking it like any other conda
 package.
 
 :::{note}
+Note that the `conda-pypi` channel is currently name-mapped to `conda-forge`, not `defaults`. You may need to add `conda-forge` to your channels list for some solves to succeed.
+:::
+
+:::{note}
 During the beta, the `conda-pypi` channel might not appear in the Anaconda.org
 web UI and some commands such as `conda search` can fail because they request
 classic `repodata.json` metadata. This does not necessarily mean the channel is

@@ -60,6 +60,8 @@ def editable_args():
             "index_urls": None,
             "quiet": False,
             "verbosity": 0,
+            "prefix": None,
+            "name": None,
         }
         values.update(overrides)
         return Namespace(**values)
@@ -79,14 +81,20 @@ def test_install_editable_dry_run_reports_each_project(
     monkeypatch.setenv("CONDA_JSON", "false")
     reset_context()
     # monkeypatch.setattr("conda.base.context.context", SimpleNamespace(json=False, channels=()))
-    monkeypatch.setattr("conda_pypi.utils.get_prefix", lambda: prefix)
     build_editable = mocker.Mock()
     install_package = mocker.Mock()
     monkeypatch.setattr("conda_pypi.build.pypa_to_conda", build_editable)
     monkeypatch.setattr("conda_pypi.installer.install_ephemeral_conda", install_package)
 
     assert (
-        install_cli.execute(editable_args(first, editable=[str(first), str(second)], dry_run=True))
+        install_cli.execute(
+            editable_args(
+                first,
+                editable=[str(first), str(second)],
+                dry_run=True,
+                prefix=prefix,
+            )
+        )
         == 0
     )
 
@@ -148,13 +156,12 @@ def test_install_editable_passes_prompt_state_to_mutating_steps(
     monkeypatch.setenv("CONDA_JSON", "false")
     reset_context()
     # monkeypatch.setattr("conda.base.context.context", SimpleNamespace(json=False, channels=()))
-    monkeypatch.setattr("conda_pypi.utils.get_prefix", lambda: prefix)
     build_editable = mocker.Mock(return_value=package)
     install_package = mocker.Mock()
     monkeypatch.setattr("conda_pypi.build.pypa_to_conda", build_editable)
     monkeypatch.setattr("conda_pypi.installer.install_ephemeral_conda", install_package)
 
-    assert install_cli.execute(editable_args(project, yes=yes)) == 0
+    assert install_cli.execute(editable_args(project, yes=yes, prefix=prefix)) == 0
 
     build_editable.assert_called_once()
     assert build_editable.call_args.kwargs["yes"] is yes
@@ -172,7 +179,6 @@ def test_install_editable_installs_multiple_projects_in_order(
     first.mkdir()
     second.mkdir()
 
-    monkeypatch.setattr("conda_pypi.utils.get_prefix", lambda: prefix)
     monkeypatch.setenv("CONDA_JSON", "false")
     reset_context()
     # monkeypatch.setattr("conda.base.context.context", SimpleNamespace(json=False, channels=()))
@@ -186,7 +192,12 @@ def test_install_editable_installs_multiple_projects_in_order(
 
     assert (
         install_cli.execute(
-            editable_args(first, editable=[str(first), str(second)], ignore_channels=True)
+            editable_args(
+                first,
+                editable=[str(first), str(second)],
+                ignore_channels=True,
+                prefix=prefix,
+            )
         )
         == 0
     )
@@ -281,10 +292,20 @@ def test_install_requires_package_without_editable(conda_cli: CondaCLIFixture):
     assert exc.value.code == 2
 
 
-def test_install_editable_without_packages_succeeds(conda_cli: CondaCLIFixture):
+def test_install_editable_without_packages_succeeds(tmp_env, conda_cli: CondaCLIFixture):
     project = "tests/packages/has-build-dep"
-    out, err, rc = conda_cli("pypi", "--yes", "install", "-e", project)
-    assert rc == 0
+    with tmp_env("python=3.11") as prefix:
+        out, err, rc = conda_cli(
+            "pypi",
+            "--prefix",
+            prefix,
+            "--yes",
+            "install",
+            "-e",
+            project,
+        )
+        assert rc == 0
+        assert list((prefix / "conda-meta").glob("has-dep-*.json"))
 
 
 def test_json_output(tmp_env, monkeypatch, conda_cli):
@@ -347,7 +368,10 @@ def test_install_from_whl_augmented_repodata(
             prefix,
             "--channel",
             conda_local_channel,
+            "--channel",
+            "conda-forge",
             "--override-channels",
+            "--strict-channel-priority",
             "idna",
             "--yes",
         )
