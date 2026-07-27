@@ -143,13 +143,14 @@ def extract_marker_condition_and_extras(marker: Marker) -> tuple[str | None, lis
 
 
 def dependency_extras_suffix(requirement_extras: set[str] | frozenset[str]) -> str:
-    """Bracket suffix for conda `MatchSpec` optional dependency extras (PEP 508 extras).
+    """Bracket suffix for conda `MatchSpec` optional dependency extras.
 
-    Output order is sorted for stability.
+    Emits the `extras=[...]` MatchSpec syntax (CEP 44), not PEP 508 brackets.
+    Output order is sorted.
     """
     if not requirement_extras:
         return ""
-    return f"[{','.join(sorted(requirement_extras))}]"
+    return f"[extras=[{','.join(sorted(requirement_extras))}]]"
 
 
 def dependency_when(dependency: str, condition: str | None) -> str:
