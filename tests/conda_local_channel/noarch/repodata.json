@@ -2,8 +2,8 @@
   "info": {
     "repodata_revisions": [
       {
-        "n_packages": 31,
-        "newest": 1777519103000,
+        "n_packages": 30,
+        "newest": 1755549960000,
         "oldest": 1550110819000,
         "revision": 3
       }
@@ -27,7 +27,7 @@
           "eth-utils<2.0.0,>=1.2.0",
           "hexbytes<1.0.0,>=0.1.0",
           "lru-dict<2.0.0,>=1.1.6",
-          "eth-hash[pycryptodome]<1.0.0,>=0.2.0",
+          "eth-hash<1.0.0,>=0.2.0[extras=[pycryptodome]]",
           "requests<3.0.0,>=2.16.0",
           "websockets<7.0.0,>=6.0.0",
           "web3==4.8.2",
@@ -38,7 +38,7 @@
         ],
         "extra_depends": {
           "dev": [
-            "eth-tester[py-evm]==0.1.0-beta.33",
+            "eth-tester==0.1.0-beta.33[extras=[py-evm]]",
             "py-geth<3.0.0,>=2.0.1",
             "flake8==3.4.1",
             "isort<5,>=4.2.15",
@@ -91,7 +91,7 @@
             "isort<5,>=4.2.15"
           ],
           "tester": [
-            "eth-tester[py-evm]==0.1.0-beta.33",
+            "eth-tester==0.1.0-beta.33[extras=[py-evm]]",
             "py-geth<3.0.0,>=2.0.1"
           ],
           "testrpc": [
@@ -183,7 +183,7 @@
           "configparser",
           "sqlalchemy",
           "tabulate",
-          "tabulate[widechars]",
+          "tabulate[extras=[widechars]]",
           "python >=3.8"
         ],
         "extra_depends": {
@@ -326,9 +326,9 @@
             "sphinx-autodoc-typehints>=1.2.0"
           ],
           "test": [
-            "anyio[trio]",
+            "anyio[extras=[trio]]",
             "blockbuster>=1.5.23",
-            "coverage[toml]>=7",
+            "coverage>=7[extras=[toml]]",
             "exceptiongroup>=1.2.0",
             "hypothesis>=4.0",
             "psutil>=5.9",
@@ -459,7 +459,7 @@
         ],
         "extra_depends": {
           "all": [
-            "fastapi-cli[standard]>=0.0.8",
+            "fastapi-cli>=0.0.8[extras=[standard]]",
             "httpx>=0.23.0",
             "jinja2>=3.1.5",
             "python-multipart>=0.0.18",
@@ -468,25 +468,25 @@
             "ujson!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0,>=4.0.1",
             "orjson>=3.2.1",
             "email-validator>=2.0.0",
-            "uvicorn[standard]>=0.12.0",
+            "uvicorn>=0.12.0[extras=[standard]]",
             "pydantic-settings>=2.0.0",
             "pydantic-extra-types>=2.0.0"
           ],
           "standard": [
-            "fastapi-cli[standard]>=0.0.8",
+            "fastapi-cli>=0.0.8[extras=[standard]]",
             "httpx>=0.23.0",
             "jinja2>=3.1.5",
             "python-multipart>=0.0.18",
             "email-validator>=2.0.0",
-            "uvicorn[standard]>=0.12.0"
+            "uvicorn>=0.12.0[extras=[standard]]"
           ],
           "standard-no-fastapi-cloud-cli": [
-            "fastapi-cli[standard-no-fastapi-cloud-cli]>=0.0.8",
+            "fastapi-cli>=0.0.8[extras=[standard-no-fastapi-cloud-cli]]",
             "httpx>=0.23.0",
             "jinja2>=3.1.5",
             "python-multipart>=0.0.18",
             "email-validator>=2.0.0",
-            "uvicorn[standard]>=0.12.0"
+            "uvicorn>=0.12.0[extras=[standard]]"
           ]
         },
         "fn": "fastapi-0.116.1-py3-none-any.whl",
@@ -616,8 +616,8 @@
         ],
         "extra_depends": {
           "all": [
-            "ipython[black,doc,kernel,matplotlib,nbconvert,nbformat,notebook,parallel,qtconsole]",
-            "ipython[test,test_extra]"
+            "ipython[extras=[black,doc,kernel,matplotlib,nbconvert,nbformat,notebook,parallel,qtconsole]]",
+            "ipython[extras=[test,test_extra]]"
           ],
           "black": [
             "black"
@@ -627,7 +627,7 @@
             "exceptiongroup",
             "intersphinx-registry",
             "ipykernel",
-            "ipython[test]",
+            "ipython[extras=[test]]",
             "matplotlib-base",
             "setuptools>=18.5",
             "sphinx-rtd-theme",
@@ -666,7 +666,7 @@
             "packaging"
           ],
           "test-extra": [
-            "ipython[test]",
+            "ipython[extras=[test]]",
             "curio",
             "matplotlib-base!=3.2.0",
             "nbformat",
@@ -713,40 +713,6 @@
         "timestamp": 1737682930000,
         "url": "https://files.pythonhosted.org/packages/f4/3c/8cc1cc84deffa6e25d2d0c688ebb80635dfdbf1dbea3e30c541c8cf4d860/pydantic-2.10.6-py3-none-any.whl",
         "version": "2.10.6"
-      },
-      "python-build-1.5.0-py3_none_any_0": {
-        "build": "py3_none_any_0",
-        "build_number": 0,
-        "depends": [
-          "packaging>=24.0",
-          "pyproject_hooks",
-          "colorama[when=\"__win\"]",
-          "importlib-metadata>=4.6[when=\"python<3.10.2\"]",
-          "tomli>=1.1.0[when=\"python<3.11\"]",
-          "python >=3.10"
-        ],
-        "extra_depends": {
-          "keyring": [
-            "keyring"
-          ],
-          "uv": [
-            "uv>=0.1.18"
-          ],
-          "virtualenv": [
-            "virtualenv>=20.17[when=\"(python>=3.10 and python<3.14)\"]",
-            "virtualenv>=20.31[when=\"python>=3.14\"]"
-          ]
-        },
-        "fn": "build-1.5.0-py3-none-any.whl",
-        "md5": null,
-        "name": "python-build",
-        "noarch": "python",
-        "sha256": "13f3eecb844759ab66efec90ca17639bbf14dc06cb2fdf37a9010322d9c50a6f",
-        "size": 26018,
-        "subdir": "noarch",
-        "timestamp": 1777519103000,
-        "url": "https://files.pythonhosted.org/packages/0d/fe/6bea5c9162869c5beba5d9c8abbed835ec85bf1ec1fba05a3822325c45f3/build-1.5.0-py3-none-any.whl",
-        "version": "1.5.0"
       },
       "requests-2.32.5-py3_none_any_0": {
         "build": "py3_none_any_0",
@@ -856,9 +822,9 @@
             "jaraco.envs>=2.2",
             "pytest-xdist>=3",
             "jaraco.path>=3.7.2",
-            "python-build[virtualenv]>=1.0.3",
+            "python-build>=1.0.3[extras=[virtualenv]]",
             "filelock>=3.4.0",
-            "ini2toml[lite]>=0.14",
+            "ini2toml>=0.14[extras=[lite]]",
             "tomli-w>=1.0.0",
             "pytest-timeout",
             "pytest-perf[when=\"__unix\"]",
@@ -971,7 +937,7 @@
             "sphinx-rtd-theme>=1.3.0"
           ],
           "test": [
-            "coverage[toml]>=7",
+            "coverage>=7[extras=[toml]]",
             "pytest>=7",
             "mypy>=1.2.0"
           ]
