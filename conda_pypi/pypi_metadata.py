@@ -48,7 +48,7 @@ def pypi_to_repodata(
     for dep in pypi_info.get("requires_dist") or []:
         req = Requirement(dep)
         req.name = pypi_to_conda_name(req.name, pypi_to_conda_name_mapping)
-        # Preserve PEP 508 spelling (including optional dependency extras). Rattler-safe
+        # Use CEP 44 MatchSpec spelling (including optional dependency extras). Rattler-safe
         # normalization applies only to wheel → .conda :func:`conda_pypi.translate.requires_to_conda`.
         conda_dep = req.name + str(req.specifier) + dependency_extras_suffix(req.extras)
 
