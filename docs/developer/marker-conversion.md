@@ -4,8 +4,6 @@ This page documents how conda-pypi translates PEP 508 environment markers for re
 
 ## Context
 
-Conda does not yet support `[when="…"]` conditional syntax on dependency strings.
-
 PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) (`python_version`, `sys_platform`, `extra`, and related variables) are not valid conda `MatchSpec` syntax on their own. For wheel repodata from {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata`, conda-pypi does emit `[when="…"]` on dependency strings and `extra_depends` tables so that the Rattler solver can use them. The inner condition is JSON-encoded (`json.dumps`) so nested quotes are safe.
 
 When building `.conda` packages from wheel `METADATA` ({py:func}`conda_pypi.translate.requires_to_conda`), markers are not encoded as `[when="…"]` on `depends`. The PEP 508 marker `extra == "…"` is split into the per-extra requirement map. Other marker dimensions are omitted from `depends`.
@@ -41,7 +39,7 @@ The table is ordered by how often each variable appears in PyPI dependency metad
 | `platform_release` | 6,316 | No | Omitted. |
 | `platform_version` | 241 | No | Omitted. |
 | `implementation_version` | 44 | No | Omitted. |
-| `extra` | — | Yes | Drives `extra_depends` / extras map. In that repodata path, remaining conditions may attach as `[when="…"]` on that dependency (not a conda `MatchSpec` feature). |
+| `extra` | — | Yes | Drives `extra_depends` / extras map. In that repodata path, remaining conditions may attach as `[when="…"]` on that dependency. |
 
 Variables not listed produce no fragment. Boolean `and` / `or` use `_combine_conditions` to retain a usable branch when one side cannot be translated.
 
@@ -59,8 +57,8 @@ Omissions are mostly intentional, for example virtual-package coverage is bounde
 
 ## MatchSpec and `[when="…"]`
 
-Strings such as `pkg>=1[when="…"]` are not valid conda `MatchSpec` input, since `conda.models.match_spec.MatchSpec` does not yet expose a `when` field. Proposed standardization of conditional dependencies and a serialized `when` syntax lives in [CEP PR #111](https://github.com/conda/ceps/pull/111) (conditional dependencies, extras, and flags).
+conda >= 26.5.0 has support for the when field and `conda.models.match_spec.MatchSpec` can parse this syntax. For example, strings such as `pkg>=1[when="…"]` parse successfully. See [CEP 43](https://conda.org/learn/ceps/cep-0043) (conditional dependencies).
 
-conda-pypi may emit `[when="…"]` only in repodata for solvers that accept that shape (for example Rattler). Wheel → `.conda` `index.json` does not put `[when="…"]` on dependency strings, because conda does not support that syntax.
+conda-pypi emits `[when="…"]` in wheel repodata for solvers that honor that shape (for example Rattler). Wheel → `.conda` `index.json` still omits `[when="…"]` on dependency strings.
 
 If all marker conditions are untranslatable and there is no extra, the dependency is recorded without the `when`. For example, `cffi ; platform_machine == "x86_64"` becomes just `cffi` in the repodata, since `platform_machine` produces no fragment. Here we fallback to adding the dependency unconditionally, which is more cautious than dropping it.
