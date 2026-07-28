@@ -4,7 +4,7 @@ This page documents how conda-pypi translates PEP 508 environment markers for re
 
 ## Context
 
-Conda does not yet support `[when="…"]` conditional syntax on dependency strings, nor serialized optional-extras forms on `MatchSpec` (for example bracket spellings such as `[extras=[…]]`).
+Conda does not yet support `[when="…"]` conditional syntax on dependency strings.
 
 PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) (`python_version`, `sys_platform`, `extra`, and related variables) are not valid conda `MatchSpec` syntax on their own. For wheel repodata from {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata`, conda-pypi does emit `[when="…"]` on dependency strings and `extra_depends` tables so that the Rattler solver can use them. The inner condition is JSON-encoded (`json.dumps`) so nested quotes are safe.
 
@@ -22,7 +22,7 @@ Syntax such as `httpx[cli]` denotes PEP 508 optional extras on the dependency na
 
 When doing wheel to conda package conversion, the brackets are dropped, for example `httpx[cli]>=0.24` becomes `httpx>=0.24`. {py:func}`conda_pypi.translate.requires_to_conda` keeps only the base package name and version specifier.
 
-For creating repodata, PEP 508 name extras are translated to CEP 44 MatchSpec form. For example, httpx[cli]>=0.24 becomes httpx>=0.24[extras=[cli]] (multiple extras are sorted). This is done by {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata` which handles the bracket extras syntax (including {py:func}`conda_pypi.markers.dependency_extras_suffix` for optional dependency extras).
+For creating repodata, PEP 508 name extras are translated to CEP 44 MatchSpec form. For example, `httpx[cli]>=0.24` becomes `httpx>=0.24[extras=[cli]]` (multiple extras are sorted). This is done by {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata` which handles the bracket extras syntax (including {py:func}`conda_pypi.markers.dependency_extras_suffix` for optional dependency extras).
 
 ## PEP 508 variables
 
