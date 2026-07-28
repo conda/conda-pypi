@@ -57,7 +57,7 @@ Omissions are mostly intentional, for example virtual-package coverage is bounde
 
 ## MatchSpec and `[when="…"]`
 
-conda >= 26.5.0 has support for the when field and `conda.models.match_spec.MatchSpec` can parse this syntax. For example, strings such as `pkg>=1[when="…"]` parse successfully. See [CEP 43](https://conda.org/learn/ceps/cep-0043) (conditional dependencies).
+From conda 26.5.0, `conda.models.match_spec.MatchSpec` accepts a `when` field. For example, `pkg>=1[when="…"]` parses successfully. See [CEP 43](https://conda.org/learn/ceps/cep-0043) (conditional dependencies).
 
 conda-pypi emits `[when="…"]` in wheel repodata for solvers that honor that shape (for example Rattler). Wheel → `.conda` `index.json` still omits `[when="…"]` on dependency strings.
 
