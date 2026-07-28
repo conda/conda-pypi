@@ -245,7 +245,8 @@ def requires_to_conda(
         # Use parsed Requirement.name so unmapped conda names preserve dots (lookup still canonicalizes).
         requirement.name = pypi_to_conda_name(requirement.name, pypi_to_conda_name_mapping)
         # PEP 508 optional dependency extras (e.g. requests[security]) are intentionally
-        # omitted: conda MatchSpec does not support the name[extras] bracket syntax yet
+        # omitted here; wheel → .conda convert does not emit MatchSpec extras=[…] yet
+        # (see #468). Wheel repodata uses dependency_extras_suffix / pypi_to_repodata.
         as_conda = requirement.name + str(requirement.specifier)
 
         # Wheel METADATA → conda depends: do not emit ``[when=…]`` (conda MatchSpec does not

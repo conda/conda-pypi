@@ -119,7 +119,7 @@ def test_requires_to_conda_unmapped_dotted_name_preserves_dots():
 
 
 def test_requires_to_conda_omits_pep508_dependency_extras_for_rattler():
-    """PEP 508 optional dependency extras are omitted from depends (Rattler cannot parse them)."""
+    """PEP 508 optional dependency extras are omitted from depends on the convert path."""
     requires, extras_map = requires_to_conda(
         ["httpx[cli,http2]>=0.24.0", 'requests[socks]>=2.0; extra == "dev"'],
     )
