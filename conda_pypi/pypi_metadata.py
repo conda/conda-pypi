@@ -25,7 +25,7 @@ def pypi_to_repodata(
     Dependency and record names use ``pypi_to_conda_name`` (same default table and
     unmapped-name fallback as :func:`conda_pypi.translate.requires_to_conda`).
     ``depends`` / ``extra_depends`` strings follow CEP 44 MatchSpec optional extras and specifier
-    spelling (``extras=[…]``). ``.whl`` → ``.conda`` conversion uses :func:`conda_dep_string_from_pep508_requirement`
+    spelling (``extras=[…]``). ``.whl`` → ``.conda`` conversion uses :func:`conda_pypi.translate.requires_to_conda`
     instead. This repodata path may emit ``[when=…]``, wheel conversion does not until conda has
     support for `[when="…"]` syntax in MatchSpec.
     """
