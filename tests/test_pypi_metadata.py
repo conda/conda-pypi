@@ -19,7 +19,7 @@ def test_pypi_to_repodata_requires_none_any_wheel():
     assert pypi_to_repodata(pypi_data) is None
 
 
-def test_pypi_to_repodata_includes_pep508_dependency_extras():
+def test_pypi_to_repodata_includes_CEP44_dependency_extras():
     pypi_data = {
         "urls": [
             {
