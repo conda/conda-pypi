@@ -12,7 +12,7 @@
 
 ### Docs
 
-* Correct marker-conversion docs for MatchSpec `[when=…]` support and link CEP 43.
+* Correct marker-conversion docs for MatchSpec `[when=…]` support and link CEP 43. (#472)
 
 ### Other
 
