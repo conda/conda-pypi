@@ -20,7 +20,7 @@ In the context of environment markers above, one of them is called `extra`. For 
 
 Syntax such as `httpx[cli]` denotes PEP 508 optional extras on the dependency name. This syntax means that we want `httpx` with an optional group of dependencies called `cli`. The [dependency specifier grammar](https://packaging.python.org/en/latest/specifications/dependency-specifiers/) allows a comma-separated list of extra names.
 
-When doing wheel to conda package conversion, the brackets are dropped, for example `httpx[cli]>=0.24` becomes `httpx>=0.24`. {py:func}`conda_pypi.translate.requires_to_conda` keeps only the base package name and version specifier.
+When doing wheel to conda package conversion, PEP 508 name extras are translated to MatchSpec form, for example `httpx[cli]>=0.24` becomes `httpx>=0.24[extras=[cli]]`. {py:func}`conda_pypi.translate.requires_to_conda` emits the same `extras=[…]` spelling as wheel repodata.
 
 For creating repodata, PEP 508 name extras are translated to [CEP 44](https://conda.org/learn/ceps/cep-0044) MatchSpec form. For example, `httpx[cli]>=0.24` becomes `httpx>=0.24[extras=[cli]]` (multiple extras are sorted). This is done by {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata` which handles the bracket extras syntax (including {py:func}`conda_pypi.markers.dependency_extras_suffix` for optional dependency extras).
 
