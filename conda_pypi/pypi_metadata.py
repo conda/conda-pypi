@@ -50,7 +50,7 @@ def pypi_to_repodata(
         req.name = pypi_to_conda_name(req.name, pypi_to_conda_name_mapping)
         # Preserve PEP 508 spelling (including optional dependency extras). Rattler-safe
         # normalization applies only to wheel → .conda :func:`conda_pypi.translate.requires_to_conda`.
-        conda_dep = req.name + dependency_extras_suffix(req.extras) + str(req.specifier)
+        conda_dep = req.name + str(req.specifier) + dependency_extras_suffix(req.extras)
 
         non_extra_condition, extra_names = (
             extract_marker_condition_and_extras(req.marker) if req.marker else (None, [])
