@@ -208,7 +208,7 @@ def execute(args: Namespace) -> int:
             # Reconstruct properly using packaging's API
             extras = dependency_extras_suffix(req.extras)
             version_spec = str(req.specifier) if req.specifier else ""
-            pkg_spec = f"{conda_name}{extras}{version_spec}"
+            pkg_spec = f"{conda_name}{version_spec}{extras}"
             match_specs.append(MatchSpec(pkg_spec))
         except InvalidRequirement:
             # Not a valid PyPI requirement, treat as conda-style spec
