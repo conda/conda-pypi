@@ -16,6 +16,7 @@ from conda.models.match_spec import MatchSpec
 from packaging.requirements import Requirement
 
 from conda_pypi import __version__
+from conda_pypi.markers import dependency_extras_suffix
 from conda_pypi.name_mapping import conda_to_pypi_name, pypi_to_conda_name
 
 log = logging.getLogger(__name__)
@@ -244,10 +245,12 @@ def requires_to_conda(
     for requirement in [Requirement(dep) for dep in requires or []]:
         # Use parsed Requirement.name so unmapped conda names preserve dots (lookup still canonicalizes).
         requirement.name = pypi_to_conda_name(requirement.name, pypi_to_conda_name_mapping)
-        # PEP 508 optional dependency extras (e.g. requests[security]) are intentionally
-        # omitted here; wheel → .conda convert does not emit MatchSpec extras=[…] yet
-        # (see #468). Wheel repodata uses dependency_extras_suffix / pypi_to_repodata.
-        as_conda = requirement.name + str(requirement.specifier)
+        # PEP 508 name extras → MatchSpec extras=[…] (same as pypi_to_repodata).
+        as_conda = (
+            requirement.name
+            + str(requirement.specifier)
+            + dependency_extras_suffix(requirement.extras)
+        )
 
         # Wheel METADATA → conda depends: do not emit ``[when=…]`` (conda MatchSpec does not
         # parse it yet). Match main: only ``extra == …`` is routed to the extras map.
