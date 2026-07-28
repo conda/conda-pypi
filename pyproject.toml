@@ -149,7 +149,7 @@ zstandard = "*"  # Will be in stdlib as compression.zstd in Python 3.14+
 # Build backend for flit tests
 flit = "*"
 # Solver for wheel-augmented repodata tests
-conda-rattler-solver = ">=0.0.6"
+conda-rattler-solver = ">=0.1.0"
 
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
