@@ -1,5 +1,7 @@
 """Tests for conda_pypi.translate module."""
 
+import logging
+
 import pytest
 from conda.exceptions import ArgumentError
 
@@ -238,8 +240,7 @@ def test_to_index_json_uses_extra_depends_key():
 
 
 def test_invalid_requires_python_filtered(caplog):
-    import logging
-
+    """Ensure warnings are logged for malformed python requires"""
     dist = _distribution(requires_python=">='2.7'")
     with caplog.at_level(logging.WARNING):
         metadata = CondaMetadata.from_distribution(dist)
