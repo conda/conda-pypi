@@ -174,3 +174,26 @@ def test_python_depend_from_requires_python(caplog):
             == "python"
         )
     assert "Package demo has an invalid Requires-Python: Invalid specifier: >='2.7'" in caplog.text
+
+
+def test_pypi_to_repodata_appends_python_when_requires_python_invalid():
+    pypi_data = {
+        "urls": [
+            {
+                "packagetype": "bdist_wheel",
+                "filename": "pytz-2026.2-py2.py3-none-any.whl",
+                "url": "https://files.pythonhosted.org/packages/pytz-2026.2-py2.py3-none-any.whl",
+                "digests": {},
+                "size": 1,
+            }
+        ],
+        "info": {
+            "name": "pytz",
+            "version": "2026.2",
+            "requires_dist": [],
+            "requires_python": ">='2.7'",
+        },
+    }
+    entry = pypi_to_repodata(pypi_data)
+    assert entry is not None
+    assert entry["depends"] == ["python"]
