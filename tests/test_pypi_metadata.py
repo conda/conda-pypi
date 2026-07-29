@@ -165,7 +165,7 @@ def test_python_depend_from_requires_python(caplog):
         assert (
             python_depend_from_requires_python(">='2.7'", package_name="demo") == "python"
         )  # invalid specifier
-    assert "demo" not in caplog.text
+    assert "invalid Requires-Python" not in caplog.text
 
     # warning shows when warn=True
     with caplog.at_level(logging.WARNING):
