@@ -1,8 +1,9 @@
 """Tests for conda_pypi.pypi_metadata."""
 
 import json
+import logging
 
-from conda_pypi.pypi_metadata import pypi_to_repodata
+from conda_pypi.pypi_metadata import pypi_to_repodata, python_depend_from_requires_python
 
 
 def test_pypi_to_repodata_requires_none_any_wheel():
@@ -152,3 +153,16 @@ def test_pypi_to_repodata_when_condition_json_encoded():
     when_inner = when_part.rstrip("]")
     # json.loads verifies quoting matches json.dumps in markers.py
     assert json.loads(when_inner) == "python<3.11"
+
+
+def test_python_depend_from_requires_python(caplog):
+    """Test that invalid python specifiers are caught"""
+    assert python_depend_from_requires_python(">=3.6") == "python >=3.6"
+    assert python_depend_from_requires_python(None) == "python"
+    assert python_depend_from_requires_python(">='2.7'") == "python"  # invalid specifier
+    with caplog.at_level(logging.WARNING):
+        assert (
+            python_depend_from_requires_python(">='2.7'", warn=True, package_name="demo")
+            == "python"
+        )
+    assert "Package demo has an invalid Requires-Python: Invalid specifier: >='2.7'" in caplog.text
