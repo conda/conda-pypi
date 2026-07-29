@@ -1,10 +1,10 @@
 ### Enhancements
 
-* Ignore invalid Requires-Python values instead of emitting unparseable `python …` depends; warn during convert/install, stay silent for shard traversal.
+* <news item>
 
 ### Bug fixes
 
-* <news item>
+* Ignore invalid Requires-Python values instead of emitting unparseable `python …` depends; warn during convert/install, stay silent for shard traversal.
 
 ### Deprecations
 
