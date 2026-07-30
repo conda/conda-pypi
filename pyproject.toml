@@ -69,6 +69,10 @@ description = """Set up the environment for development
                     We also need to place it in _new_ environments created by conda. We do this by
                     implementing some extra plugin hooks."""
 
+[tool.pixi.tasks.news]
+cmd="python news/add_news.py"
+description="Create a news file."
+
 [tool.pixi.feature.build]
 dependencies = { anaconda-client = "*", conda-build = "*" }
 
