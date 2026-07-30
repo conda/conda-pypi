@@ -32,7 +32,7 @@ def python_depend_from_requires_python(
     except InvalidSpecifier:
         if warn:
             log.warning(
-                "Package %s has an invalid Requires-Python: Invalid specifier: %s",
+                "Package %r has an invalid Requires-Python: Invalid specifier: %s",
                 package_name,
                 requires_python,
             )
