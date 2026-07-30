@@ -173,7 +173,9 @@ def test_python_depend_from_requires_python(caplog):
             python_depend_from_requires_python(">='2.7'", warn=True, package_name="demo")
             == "python"
         )
-    assert "Package demo has an invalid Requires-Python: Invalid specifier: >='2.7'" in caplog.text
+    assert (
+        "Package 'demo' has an invalid Requires-Python: Invalid specifier: >='2.7'" in caplog.text
+    )
 
 
 def test_pypi_to_repodata_appends_python_when_requires_python_invalid():
