@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* Drop the legacy extras suffix from `console_scripts` entry points during conversion (e.g. `mod:func [extra]` → `mod:func`). Previously it was copied verbatim into `info/link.json`, making the resulting package fail to install with `ValueError: '<func> [<extra>]' is not a valid Python function identifier` at link time. (#477)
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

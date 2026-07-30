@@ -143,7 +143,24 @@ def test_requires_to_conda_marker_extra_and_platform():
     assert requires == []
 
 
-def _distribution(project_urls=(), description=None, requires_python=None):
+class _EntryPointDistribution(FileDistribution):
+    """FileDistribution that also serves an ``entry_points.txt``.
+
+    ``FileDistribution.read_text`` only answers for ``METADATA``, so
+    ``distribution.entry_points`` is otherwise always empty.
+    """
+
+    def __init__(self, raw_text, entry_points_txt):
+        super().__init__(raw_text)
+        self.entry_points_txt = entry_points_txt
+
+    def read_text(self, filename: str):
+        if filename == "entry_points.txt":
+            return self.entry_points_txt
+        return super().read_text(filename)
+
+
+def _distribution(project_urls=(), description=None, requires_python=None, console_scripts=None):
     """Build a FileDistribution with the given Project-URL labels."""
     header = [
         "Metadata-Version: 2.1\n",
@@ -156,7 +173,11 @@ def _distribution(project_urls=(), description=None, requires_python=None):
     if description is not None:
         header.append("Description: " + description.replace("\n", "\n        ") + "\n")
     urls = "".join(f"Project-URL: {label}, {url}\n" for label, url in project_urls)
-    return FileDistribution("".join(header) + urls + "\n")
+    metadata = "".join(header) + urls + "\n"
+    if console_scripts is None:
+        return FileDistribution(metadata)
+    body = "".join(f"{name} = {value}\n" for name, value in console_scripts.items())
+    return _EntryPointDistribution(metadata, f"[console_scripts]\n{body}")
 
 
 @pytest.mark.parametrize(
@@ -246,3 +267,34 @@ def test_invalid_requires_python_filtered(caplog):
         metadata = CondaMetadata.from_distribution(dist)
     assert metadata.package_record.depends[0] == "python"
     assert "invalid Requires-Python" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        # Legacy setuptools extras suffix must not reach info/link.json: conda's
+        # noarch entry-point parser rejects it at link time. Real-world cases:
+        # mcp 1.27.2 and google-auth-oauthlib 1.4.0.
+        ("mcp.cli:app [cli]", "demo-script = mcp.cli:app"),
+        ("pkg.tool.__main__:main [tool]", "demo-script = pkg.tool.__main__:main"),
+        ("pkg.mod:func [a,b]", "demo-script = pkg.mod:func"),
+        # No extras: unchanged.
+        ("pkg.mod:func", "demo-script = pkg.mod:func"),
+    ],
+)
+def test_console_scripts_drop_entry_point_extras(value, expected):
+    """Entry-point extras are parsed and dropped rather than passed through."""
+    dist = _distribution(console_scripts={"demo-script": value})
+    assert CondaMetadata.from_distribution(dist).console_scripts == [expected]
+
+
+def test_link_json_entry_points_are_parseable_by_conda():
+    """The emitted link.json entry point survives conda's own parser."""
+    from conda.common.path.python import parse_entry_point_def
+
+    dist = _distribution(console_scripts={"demo-script": "pkg.cli:app [cli]"})
+    link_json = CondaMetadata.from_distribution(dist).link_json()
+    for entry_point in link_json["noarch"]["entry_points"]:
+        # Raises ValueError for "app [cli]" before this fix.
+        command, module, func = parse_entry_point_def(entry_point)
+        assert (command, module, func) == ("demo-script", "pkg.cli", "app")
