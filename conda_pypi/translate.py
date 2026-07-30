@@ -17,6 +17,7 @@ from packaging.requirements import Requirement
 
 from conda_pypi import __version__
 from conda_pypi.name_mapping import conda_to_pypi_name, pypi_to_conda_name
+from conda_pypi.pypi_metadata import python_depend_from_requires_python
 
 log = logging.getLogger(__name__)
 
@@ -157,10 +158,11 @@ class CondaMetadata:
     ):
         metadata = distribution.metadata
 
-        python_version = metadata.get("requires-python")
-        requires_python = "python"
-        if python_version:
-            requires_python = f"python {python_version}"
+        requires_python = python_depend_from_requires_python(
+            metadata.get("requires-python"),
+            package_name=metadata.get("name"),
+            warn=True,
+        )
 
         requirements, extras = requires_to_conda(distribution.requires, pypi_to_conda_name_mapping)
 

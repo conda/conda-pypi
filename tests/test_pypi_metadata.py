@@ -1,8 +1,9 @@
 """Tests for conda_pypi.pypi_metadata."""
 
 import json
+import logging
 
-from conda_pypi.pypi_metadata import pypi_to_repodata
+from conda_pypi.pypi_metadata import pypi_to_repodata, python_depend_from_requires_python
 
 
 def test_pypi_to_repodata_requires_none_any_wheel():
@@ -152,3 +153,49 @@ def test_pypi_to_repodata_when_condition_json_encoded():
     when_inner = when_part.rstrip("]")
     # json.loads verifies quoting matches json.dumps in markers.py
     assert json.loads(when_inner) == "python<3.11"
+
+
+def test_python_depend_from_requires_python(caplog):
+    """Test that invalid python specifiers are caught"""
+    assert python_depend_from_requires_python(">=3.6") == "python >=3.6"
+    assert python_depend_from_requires_python(None) == "python"
+
+    # warning off by default
+    with caplog.at_level(logging.WARNING):
+        assert (
+            python_depend_from_requires_python(">='2.7'", package_name="demo") == "python"
+        )  # invalid specifier
+    assert "invalid Requires-Python" not in caplog.text
+
+    # warning shows when warn=True
+    with caplog.at_level(logging.WARNING):
+        assert (
+            python_depend_from_requires_python(">='2.7'", warn=True, package_name="demo")
+            == "python"
+        )
+    assert (
+        "Package 'demo' has an invalid Requires-Python: Invalid specifier: >='2.7'" in caplog.text
+    )
+
+
+def test_pypi_to_repodata_appends_python_when_requires_python_invalid():
+    pypi_data = {
+        "urls": [
+            {
+                "packagetype": "bdist_wheel",
+                "filename": "pytz-2026.2-py2.py3-none-any.whl",
+                "url": "https://files.pythonhosted.org/packages/pytz-2026.2-py2.py3-none-any.whl",
+                "digests": {},
+                "size": 1,
+            }
+        ],
+        "info": {
+            "name": "pytz",
+            "version": "2026.2",
+            "requires_dist": [],
+            "requires_python": ">='2.7'",
+        },
+    }
+    entry = pypi_to_repodata(pypi_data)
+    assert entry is not None
+    assert entry["depends"] == ["python"]

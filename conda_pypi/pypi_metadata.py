@@ -2,11 +2,13 @@
 Conversion from PyPI metadata to repodata.json v3.whl entries.
 """
 
+import logging
 import sys
 from datetime import datetime, timezone
 from typing import Any
 
 from packaging.requirements import Requirement
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 
 from conda_pypi.markers import (
     dependency_extras_suffix,
@@ -14,6 +16,29 @@ from conda_pypi.markers import (
     extract_marker_condition_and_extras,
 )
 from conda_pypi.name_mapping import pypi_to_conda_name
+
+log = logging.getLogger(__name__)
+
+
+def python_depend_from_requires_python(
+    requires_python: str | None, *, package_name: str | None = None, warn: bool = False
+) -> str:
+    """Filter malformed Requires-Python and optionally warn the user."""
+    requires_python = (requires_python or "").strip()
+    if not requires_python:
+        # Noarch python packages should still depend on python when PyPI omits requires_python
+        return "python"
+    try:
+        SpecifierSet(requires_python)
+    except InvalidSpecifier:
+        if warn:
+            log.warning(
+                "Package %r has an invalid Requires-Python: Invalid specifier: %s",
+                package_name,
+                requires_python,
+            )
+        return "python"
+    return f"python {requires_python}"
 
 
 def pypi_to_repodata(
@@ -64,11 +89,7 @@ def pypi_to_repodata(
             depends_list.append(full_dep)
 
     python_requires = pypi_info.get("requires_python")
-    if python_requires:
-        depends_list.append(f"python {python_requires}")
-    else:
-        # Noarch python packages should still depend on python when PyPI omits requires_python
-        depends_list.append("python")
+    depends_list.append(python_depend_from_requires_python(python_requires))
 
     # Build the repodata entry
     entry = {

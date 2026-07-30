@@ -1,5 +1,7 @@
 """Tests for conda_pypi.translate module."""
 
+import logging
+
 import pytest
 from conda.exceptions import ArgumentError
 
@@ -141,7 +143,7 @@ def test_requires_to_conda_marker_extra_and_platform():
     assert requires == []
 
 
-def _distribution(project_urls=(), description=None):
+def _distribution(project_urls=(), description=None, requires_python=None):
     """Build a FileDistribution with the given Project-URL labels."""
     header = [
         "Metadata-Version: 2.1\n",
@@ -149,6 +151,8 @@ def _distribution(project_urls=(), description=None):
         "Version: 1.0.0\n",
         "Summary: short summary\n",
     ]
+    if requires_python is not None:
+        header.append(f"Requires-Python:  {requires_python}\n")
     if description is not None:
         header.append("Description: " + description.replace("\n", "\n        ") + "\n")
     urls = "".join(f"Project-URL: {label}, {url}\n" for label, url in project_urls)
@@ -233,3 +237,12 @@ def test_to_index_json_uses_extra_depends_key():
     index_json = record.to_index_json()
     assert index_json["extra_depends"] == {"security": ["pyopenssl"]}
     assert "extras" not in index_json
+
+
+def test_invalid_requires_python_filtered(caplog):
+    """Ensure warnings are logged for malformed python requires"""
+    dist = _distribution(requires_python=">='2.7'")
+    with caplog.at_level(logging.WARNING):
+        metadata = CondaMetadata.from_distribution(dist)
+    assert metadata.package_record.depends[0] == "python"
+    assert "invalid Requires-Python" in caplog.text
