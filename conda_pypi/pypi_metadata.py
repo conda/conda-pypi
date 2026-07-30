@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 def python_depend_from_requires_python(
     requires_python: str | None, *, package_name: str | None = None, warn: bool = False
 ) -> str:
+    requires_python = (requires_python or "").strip()
     if not requires_python:
         # Noarch python packages should still depend on python when PyPI omits requires_python
         return "python"
