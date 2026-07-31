@@ -70,8 +70,8 @@ description = """Set up the environment for development
                     implementing some extra plugin hooks."""
 
 [tool.pixi.tasks.news]
-cmd="python news/add_news.py"
-description="Create a news file."
+cmd = "python news/add_news.py"
+description = "Create a news file."
 
 [tool.pixi.feature.build]
 dependencies = { anaconda-client = "*", conda-build = "*" }
