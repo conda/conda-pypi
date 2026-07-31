@@ -169,8 +169,13 @@ class CondaMetadata:
         # conda does support ~=3.0.0 "compatibility release" matches
         depends = [requires_python] + requirements
 
+        # Use module/attr rather than ep.value: value retains the legacy extras
+        # suffix (``mod:func [extra]``), which conda's noarch entry-point parser
+        # rejects at link time. The spec asks consumers to parse extras and allows
+        # ignoring them, which is what dropping them here does.
+        # https://packaging.python.org/en/latest/specifications/entry-points/#file-format
         console_scripts = [
-            f"{ep.name} = {ep.value}"
+            f"{ep.name} = {ep.module}:{ep.attr}"
             for ep in distribution.entry_points
             if ep.group == "console_scripts"
         ]
