@@ -8,7 +8,7 @@ SECTIONS_LIST = ["Bug fixes", "Docs", "Enhancements", "Deprecations", "Other"]
 
 def has_correct_format(filename: str):
     """New file name format must be followed"""
-    if filename.endswith(".md"):
+    if "/" in filename or "\\" in filename or filename.endswith(".md"):
         return False
     if "-" not in filename:
         return False
