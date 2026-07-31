@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Add `pixi run news` task to create news fragments via CLI
+* Add `pixi run news` task to create news fragments via CLI. (#476)
 
 ### Bug fixes
 
