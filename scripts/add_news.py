@@ -43,7 +43,8 @@ def news_cli():
         print("News file name must have correct format: <pr/issue_number-file-name>")
         return 1
 
-    news_dir = Path(__file__).resolve().parent
+    repo_root = Path(__file__).resolve().parent.parent
+    news_dir = repo_root / "news"
 
     dest = news_dir / args.filename
 
