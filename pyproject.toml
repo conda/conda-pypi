@@ -51,20 +51,21 @@ platforms = ["linux-64", "osx-arm64", "win-64", "linux-aarch64"]
 [tool.pixi.dependencies]
 # must match project.dependencies (sans python and conda)
 python = ">=3.10"
-conda = ">=26.1"
+conda = ">=26.5"
 conda-index = ">=0.12.0"
 conda-package-streaming = ">=0.11"
 packaging = "*"
 pip = "*"
 unearth = "*"
 
-[tool.pixi.pypi-dependencies]
-"conda-pypi" = { path  = ".", editable = true }
-
 [tool.pixi.tasks.dev]
-cmd = 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()"'
+cmd = '''
+python -m conda pypi install -e . -q -y
+python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()"
+'''
 description = """Set up the environment for development
-            This calls `conda_pypi.python_paths.ensure_externally_managed`:
+            Installs this checkout editable via `conda pypi install -e .`, then
+            calls `conda_pypi.python_paths.ensure_externally_managed`:
                     conda-pypi places its own EXTERNALLY-MANAGED file when it is installed in an environment.
                     We also need to place it in _new_ environments created by conda. We do this by
                     implementing some extra plugin hooks."""
@@ -140,6 +141,9 @@ fmt = "!=10.2.0"
 pytest-mock = "3.12.0.*"
 pytest-xprocess = "*"
 pytest-codspeed = ">=3.0.0,<5"
+# Build backend for local editable installs (dev task)
+hatchling = ">=1.26"
+hatch-vcs = "*"
 # Build system dependencies
 unearth = ">=0.17.2"
 python-build = "*"
@@ -153,7 +157,7 @@ zstandard = "*"  # Will be in stdlib as compression.zstd in Python 3.14+
 # Build backend for flit tests
 flit = "*"
 # Solver for wheel-augmented repodata tests
-conda-rattler-solver = ">=0.0.6"
+conda-rattler-solver = ">=0.1.0"
 
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
@@ -174,7 +178,7 @@ python = "3.14.*"
 channels = ["conda-forge", {channel = "conda-canary/label/dev", priority = -1}]
 
 [tool.pixi.feature.canary.dependencies]
-conda = { version = ">=26.1", channel = "conda-canary/label/dev" }
+conda = { version = ">=26.5", channel = "conda-canary/label/dev" }
 
 [tool.pixi.feature.release.dependencies]
 rever = "*"

@@ -1,0 +1,21 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* Raise the development conda floor to `>=26.5` and require
+  `conda-rattler-solver >=0.1.0` for tests. Install the local checkout
+  editable in the `dev` task instead of via a pixi path dependency.
