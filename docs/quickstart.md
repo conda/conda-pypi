@@ -134,7 +134,7 @@ it.
 These instructions assume that you have done the following:
 
 - Created and activated a conda environment
-- Installed `python` and `pip` into that conda environment
+- Installed `python` into that conda environment
 :::
 
 ```bash
