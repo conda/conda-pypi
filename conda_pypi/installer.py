@@ -10,8 +10,9 @@ import os
 import subprocess
 import tarfile
 import tempfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import BinaryIO, Iterable
+from typing import BinaryIO
 from unittest.mock import patch
 
 from conda.cli.install import confirm_yn

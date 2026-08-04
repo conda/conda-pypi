@@ -6,8 +6,8 @@ Python's in a subprocess.
 import importlib.resources
 import json
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from conda.cli.main import main_subshell
 

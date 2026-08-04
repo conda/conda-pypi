@@ -8,8 +8,9 @@ import logging
 import pathlib
 import re
 import tempfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from conda.core.solve import Solver
@@ -59,10 +60,10 @@ def parse_rattler_solver_error(message: str):
 class ConvertTree:
     def __init__(
         self,
-        prefix: Optional[Union[pathlib.Path, str]],
+        prefix: pathlib.Path | str | None,
         override_channels=False,
-        repo: Optional[pathlib.Path] = None,
-        finder: Optional[PackageFinder] = None,  # to change index_urls e.g.
+        repo: pathlib.Path | None = None,
+        finder: PackageFinder | None = None,  # to change index_urls e.g.
     ):
         # platformdirs location has a space in it; ok?
         # will be expanded to %20 in "as uri" output, conda understands that.
@@ -174,7 +175,7 @@ class ConvertTree:
         )
 
     def convert_tree(
-        self, requested: List[MatchSpec], max_attempts: int = 80
+        self, requested: list[MatchSpec], max_attempts: int = 80
     ) -> tuple[tuple[PrefixRecord, ...], tuple[PrefixRecord, ...]] | None:
         """
         Preform a solve on the list of requested packages and converts the full dependency

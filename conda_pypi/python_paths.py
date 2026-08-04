@@ -8,11 +8,11 @@ this module MUST only use the Python stdlib. No 3rd party allowed (except for im
 import os
 import sys
 import sysconfig
+from collections.abc import Iterator
 from importlib.resources import files as importlib_files
 from logging import getLogger
 from pathlib import Path
 from subprocess import check_output
-from typing import Iterator
 
 on_win = sys.platform == "win32"
 

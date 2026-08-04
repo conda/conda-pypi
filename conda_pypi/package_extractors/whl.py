@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from email.parser import HeaderParser
 from logging import getLogger
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO, Iterable, Literal, Tuple
+from typing import TYPE_CHECKING, BinaryIO, Literal
 
 import installer.utils  # noqa: TID253
 from installer.destinations import WheelDestination  # noqa: TID253
@@ -90,7 +91,7 @@ class MyWheelDestination(WheelDestination):
         self.source = source
 
     def write_script(
-        self, name: str, module: str, attr: str, section: Literal["console"] | Literal["gui"]
+        self, name: str, module: str, attr: str, section: Literal["console", "gui"]
     ) -> RecordEntry:
         # TODO check if console/gui
         entry_point = f"{name} = {module}:{attr}"
@@ -132,7 +133,7 @@ class MyWheelDestination(WheelDestination):
         )
 
     def _create_conda_metadata(
-        self, records: Iterable[Tuple[Scheme, RecordEntry]], source: WheelFile
+        self, records: Iterable[tuple[Scheme, RecordEntry]], source: WheelFile
     ) -> None:
         info_dir = self.target_full_path / "info"
         info_dir.mkdir(exist_ok=True)
@@ -198,7 +199,7 @@ class MyWheelDestination(WheelDestination):
         self,
         scheme: Scheme,
         record_file_path: str,
-        records: Iterable[Tuple[Scheme, RecordEntry]],
+        records: Iterable[tuple[Scheme, RecordEntry]],
     ) -> None:
         record_list = list(records)
         with installer.utils.construct_record_file(record_list, lambda x: None) as record_stream:
@@ -214,7 +215,6 @@ class MyWheelDestination(WheelDestination):
                 )
         record_list[-1] = ("purelib", record_file_record)
         self._create_conda_metadata(record_list, self.source)
-        return
 
 
 def extract_whl_as_conda_pkg(whl_full_path: str | Path, target_full_path: str | Path):

@@ -5,13 +5,14 @@ import json
 import os
 import shlex
 import sys
+from collections.abc import Iterable
 from csv import reader as csv_reader
 from email.parser import HeaderParser
 from logging import getLogger
 from pathlib import Path
 from subprocess import run
 from tempfile import NamedTemporaryFile
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 
 from conda.base.context import context
 from conda.cli.main import main_subshell
@@ -341,8 +342,7 @@ class PyPIDistribution:
     @classmethod
     def from_lockfile_line(cls, line: str | Iterable[str]):
         if isinstance(line, str):
-            if line.startswith(cls._line_prefix):
-                line = line[len(cls._line_prefix) :]
+            line = line.removeprefix(cls._line_prefix)
             line = shlex.split(line.strip())
         if cls._arg_parser is None:
             cls._arg_parser = cls._build_arg_parser()

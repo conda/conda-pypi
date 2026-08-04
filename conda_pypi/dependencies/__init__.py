@@ -7,7 +7,7 @@ from conda_pypi.dependencies.pypi import (
 )
 
 __all__ = [
+    "MissingDependencyError",
     "check_dependencies",
     "ensure_requirements",
-    "MissingDependencyError",
 ]

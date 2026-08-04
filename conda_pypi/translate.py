@@ -7,9 +7,10 @@ import logging
 import re
 import sys
 import time
+from collections.abc import Callable, Iterable
 from importlib.metadata import Distribution, PackageMetadata, PathDistribution
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any
 
 from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec
@@ -23,7 +24,7 @@ log = logging.getLogger(__name__)
 
 # Project-URL label (case-insensitive) → about.json field.
 # First matching label wins.
-URL_LABEL_MAP: Dict[str, tuple] = {
+URL_LABEL_MAP: dict[str, tuple] = {
     "home": ("homepage", "home", "home-page"),
     "dev_url": ("source", "repository", "source code", "development", "github"),
     "doc_url": ("documentation", "docs"),
@@ -42,7 +43,7 @@ def short_description(text: str) -> str:
         return ""
     # email.parser un-indents the continuation lines but may leave a leading
     # space on each line; strip uniformly.
-    lines: List[str] = []
+    lines: list[str] = []
     for raw in text.splitlines():
         line = raw.rstrip()
         stripped = line.lstrip()
@@ -58,7 +59,7 @@ def short_description(text: str) -> str:
     return "\n".join(lines).strip()
 
 
-def url_from_project_urls(metadata: PackageMetadata, labels: Iterable[str]) -> Optional[str]:
+def url_from_project_urls(metadata: PackageMetadata, labels: Iterable[str]) -> str | None:
     """Return the first Project-URL value whose label (case-insensitive) is in `labels`."""
     wanted = {label.lower() for label in labels}
     for entry in metadata.get_all("project-url") or ():
@@ -77,7 +78,7 @@ class FileDistribution(Distribution):
     def __init__(self, raw_text):
         self.raw_text = raw_text
 
-    def read_text(self, filename: str) -> Optional[str]:
+    def read_text(self, filename: str) -> str | None:
         if filename == "METADATA":
             return self.raw_text
         else:
@@ -88,7 +89,7 @@ class FileDistribution(Distribution):
         Given a path to a file in this distribution, return a path
         to it.
         """
-        return None
+        return
 
 
 @dataclasses.dataclass
@@ -97,8 +98,8 @@ class PackageRecord:
     name: str
     version: str
     subdir: str
-    depends: List[str]
-    extras: Dict[str, List[str]]
+    depends: list[str]
+    extras: dict[str, list[str]]
     build_number: int = 0
     build_text: str = "pypi"  # e.g. hash
     license_family: str = ""
@@ -133,11 +134,11 @@ class PackageRecord:
 @dataclasses.dataclass
 class CondaMetadata:
     metadata: PackageMetadata
-    console_scripts: List[str]
+    console_scripts: list[str]
     package_record: PackageRecord
-    about: Dict[str, Any]
+    about: dict[str, Any]
 
-    def link_json(self) -> Optional[dict]:
+    def link_json(self) -> dict | None:
         """
         info/link.json used for console scripts; None if empty.
 
@@ -188,7 +189,7 @@ class CondaMetadata:
         # 'keywords', 'license', 'license_family', 'license_file', 'root_pkgs',
         # 'summary', 'tags', 'conda_private', 'doc_source_url', 'license_url']
 
-        about: Dict[str, Any] = {
+        about: dict[str, Any] = {
             "summary": metadata.get("summary") or "",
             "description": short_description(metadata.get("description") or ""),
             # https://packaging.python.org/en/latest/specifications/core-metadata/#license-expression
@@ -241,12 +242,10 @@ class CondaMetadata:
         )
 
 
-def requires_to_conda(
-    requires: Optional[List[str]], pypi_to_conda_name_mapping: dict | None = None
-):
+def requires_to_conda(requires: list[str] | None, pypi_to_conda_name_mapping: dict | None = None):
     from collections import defaultdict
 
-    extras: Dict[str, List[str]] = defaultdict(list)
+    extras: dict[str, list[str]] = defaultdict(list)
     requirements = []
     for requirement in [Requirement(dep) for dep in requires or []]:
         # Use parsed Requirement.name so unmapped conda names preserve dots (lookup still canonicalizes).
@@ -288,8 +287,7 @@ def conda_to_requires(match_spec: MatchSpec) -> Requirement | None:
         version_str = str(version)
         if version_str == "*":
             return Requirement(name)
-        if version_str.endswith(".*"):
-            version_str = version_str[:-2]
+        version_str = version_str.removesuffix(".*")
         if version_str and version_str[0] not in "<>=!~":
             version_str = f"=={version_str}"
         return Requirement(f"{name}{version_str}")

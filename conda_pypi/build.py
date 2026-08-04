@@ -16,9 +16,9 @@ import sys
 import tarfile
 import tempfile
 import zipfile
+from collections.abc import Iterable
 from importlib.metadata import PathDistribution
 from pathlib import Path
-from typing import Iterable
 
 from build import ProjectBuilder  # noqa: TID253
 from conda.common.compat import on_win
