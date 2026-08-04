@@ -20,14 +20,14 @@ on_win = sys.platform == "win32"
 logger = getLogger(__name__)
 
 
-def get_env_python(prefix: os.PathLike = None) -> Path:
+def get_env_python(prefix: os.PathLike | None = None) -> Path:
     prefix = Path(prefix or sys.prefix)
     if on_win:
         return prefix / "python.exe"
     return prefix / "bin" / "python"
 
 
-def _get_env_sysconfig_path(key: str, prefix: os.PathLike = None) -> Path:
+def _get_env_sysconfig_path(key: str, prefix: os.PathLike | None = None) -> Path:
     prefix = Path(prefix or sys.prefix)
     if str(prefix) == sys.prefix or prefix.resolve() == Path(sys.prefix).resolve():
         return Path(sysconfig.get_path(key))
@@ -40,15 +40,17 @@ def _get_env_sysconfig_path(key: str, prefix: os.PathLike = None) -> Path:
     return Path(path)
 
 
-def get_env_stdlib(prefix: os.PathLike = None) -> Path:
+def get_env_stdlib(prefix: os.PathLike | None = None) -> Path:
     return _get_env_sysconfig_path("stdlib", prefix)
 
 
-def get_env_site_packages(prefix: os.PathLike = None) -> Path:
+def get_env_site_packages(prefix: os.PathLike | None = None) -> Path:
     return _get_env_sysconfig_path("purelib", prefix)
 
 
-def get_externally_managed_path(prefix: os.PathLike = None, python_version: str = None) -> Path:
+def get_externally_managed_path(
+    prefix: os.PathLike | None = None, python_version: str | None = None
+) -> Path:
     """
     Returns the path for EXTERNALLY-MANAGED for the given Python installation in 'prefix'.
     Not guaranteed to exist.
@@ -66,7 +68,7 @@ def get_externally_managed_path(prefix: os.PathLike = None, python_version: str 
         return prefix / "lib" / f"python{python_version}" / "EXTERNALLY-MANAGED"
 
 
-def get_current_externally_managed_path(prefix: os.PathLike = None) -> Path:
+def get_current_externally_managed_path(prefix: os.PathLike | None = None) -> Path:
     """
     Returns the path for EXTERNALLY-MANAGED for the given Python installation in 'prefix'.
     Not guaranteed to exist. There might be more EXTERNALLY-MANAGED files in 'prefix' for
@@ -78,7 +80,7 @@ def get_current_externally_managed_path(prefix: os.PathLike = None) -> Path:
     return get_env_stdlib(prefix) / "EXTERNALLY-MANAGED"
 
 
-def get_externally_managed_paths(prefix: os.PathLike = None) -> Iterator[Path]:
+def get_externally_managed_paths(prefix: os.PathLike | None = None) -> Iterator[Path]:
     """
     Returns all the possible EXTERNALLY-MANAGED paths in 'prefix', for all found
     Python (former) installations. The paths themselves are not guaranteed to exist.
@@ -94,7 +96,9 @@ def get_externally_managed_paths(prefix: os.PathLike = None) -> Iterator[Path]:
                 yield Path(python_dir, "EXTERNALLY-MANAGED")
 
 
-def ensure_externally_managed(prefix: os.PathLike = None, python_version: str = None) -> Path:
+def ensure_externally_managed(
+    prefix: os.PathLike | None = None, python_version: str | None = None
+) -> Path:
     """
     conda-pypi places its own EXTERNALLY-MANAGED file when it is installed in an environment.
     We also need to place it in _new_ environments created by conda. We do this by implementing

@@ -184,7 +184,7 @@ def install_pip(python_executable: str, whl: Path, build_path: Path):
         str(build_path / "site-packages"),
         whl,
     ]
-    subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(command, check=True, capture_output=True)
     log.debug(f"Installed to {build_path}")
 
 

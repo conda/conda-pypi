@@ -132,7 +132,7 @@ class ConvertTree:
                         is_editable=False,
                         channels=channels,
                     )
-                    log.debug("Conda at", package_conda)
+                    log.debug("Conda at %s", package_conda)
                 except FileExistsError:
                     log.debug(
                         f"Tried to convert wheel that is already conda-ized: {normal_wheel}",
@@ -237,13 +237,15 @@ class ConvertTree:
                 "CONDA_AUTO_UPDATE_CONDA": "false",
             }
 
-            with get_spinner(self._get_converting_spinner_message(channels)):
-                with fresh_context(env=context_env):
-                    changes = self._convert_loop(
-                        max_attempts=max_attempts,
-                        solver=solver,
-                        tmp_path=tmp_path,
-                        channels=build_channels,
-                    )
+            with (
+                get_spinner(self._get_converting_spinner_message(channels)),
+                fresh_context(env=context_env),
+            ):
+                changes = self._convert_loop(
+                    max_attempts=max_attempts,
+                    solver=solver,
+                    tmp_path=tmp_path,
+                    channels=build_channels,
+                )
 
             return changes

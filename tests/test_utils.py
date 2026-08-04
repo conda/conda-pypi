@@ -34,8 +34,8 @@ def test_pypi_spec_variants_generates_correct_count(input_spec: str, expected_co
 
 def test_pypi_spec_variants_preserves_original():
     """Test that the original specification is always the first variant."""
-    assert list(pypi_spec_variants("setuptools-scm"))[0] == "setuptools-scm"
-    assert list(pypi_spec_variants("setuptools_scm"))[0] == "setuptools_scm"
+    assert next(iter(pypi_spec_variants("setuptools-scm"))) == "setuptools-scm"
+    assert next(iter(pypi_spec_variants("setuptools_scm"))) == "setuptools_scm"
 
 
 def test_pypi_spec_variants_creates_name_variants():

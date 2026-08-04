@@ -98,7 +98,7 @@ def test_create_env_from_wheel_channel(
     """
     Ensure an environment can be created as expected using the conda_local_channel fixture.
     """
-    out, err, rc = conda_cli(
+    out, _err, _rc = conda_cli(
         "create",
         "--prefix",
         str(tmp_path / "env"),

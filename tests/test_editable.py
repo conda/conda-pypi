@@ -35,7 +35,7 @@ def pypa_build_packages():
     (Clone pypa/build into tests/)
     """
     here = Path(__file__).parent
-    return list(p.name for p in Path(here, "build", "tests", "packages").glob("*"))
+    return [p.name for p in Path(here, "build", "tests", "packages").glob("*")]
 
 
 @pytest.fixture

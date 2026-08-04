@@ -33,9 +33,11 @@ def test_downloader_detects_no_wheels(tmp_env: TmpEnvFixture, monkeypatch, tmp_p
         finder = get_package_finder(prefix)
 
         # Package "ach" only has source distributions
-        with pytest.raises(CondaPypiError) as exc_info:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                find_and_fetch(finder, Path(tmpdir), "ach")
+        with (
+            pytest.raises(CondaPypiError) as exc_info,
+            tempfile.TemporaryDirectory() as tmpdir,
+        ):
+            find_and_fetch(finder, Path(tmpdir), "ach")
 
         # Verify we get a meaningful error message
         error_msg = str(exc_info.value).lower()

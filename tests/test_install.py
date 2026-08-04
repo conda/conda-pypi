@@ -11,7 +11,7 @@ from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 def test_conda_pypi_install_basic(tmp_env: TmpEnvFixture, conda_cli: CondaCLIFixture):
     """Test basic conda pypi install functionality."""
     with tmp_env("python=3.11") as prefix:
-        out, err, rc = conda_cli(
+        _out, _err, rc = conda_cli(
             "pypi",
             "-p",
             prefix,
@@ -37,7 +37,7 @@ def test_conda_pypi_install_package_conversion(
 ):
     """Test that PyPI packages are correctly converted and installed."""
     with tmp_env("python=3.11") as prefix:
-        out, err, rc = conda_cli(
+        out, _err, rc = conda_cli(
             "pypi",
             "-p",
             prefix,
@@ -91,7 +91,7 @@ def test_conda_pypi_install_editable_without_packages_succeeds(
 ):
     """Test that conda pypi install -e succeeds without additional packages."""
     with tmp_env("python=3.11") as prefix:
-        out, err, rc = conda_cli(
+        _out, _err, rc = conda_cli(
             "pypi",
             "-p",
             prefix,

@@ -23,14 +23,14 @@ def test_cli(conda_cli):
     """
     # Test that install subcommand exists and help works
     # Help commands raise SystemExit, so we need to handle that
-    out, err, rc = conda_cli("pypi", "install", "--help", raises=SystemExit)
+    out, _err, rc = conda_cli("pypi", "install", "--help", raises=SystemExit)
     assert rc.value.code == 0  # SystemExit(0) means success
     assert "PyPI packages to install" in out
     assert "--dry-run" in out
     assert "--yes" in out
 
     # Test that convert subcommand exists and help works
-    out, err, rc = conda_cli("pypi", "convert", "--help", raises=SystemExit)
+    out, _err, rc = conda_cli("pypi", "convert", "--help", raises=SystemExit)
     assert rc.value.code == 0
     assert "Convert named path as conda package" in out
 
@@ -227,7 +227,7 @@ def test_install_editable_installs_multiple_projects_in_order(
 def test_index_urls(tmp_env, conda_cli, pypi_local_index):
     with tmp_env("python=3.10") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
-            out, err, rc = conda_cli(
+            out, _err, rc = conda_cli(
                 "pypi",
                 "--yes",
                 "install",
@@ -245,7 +245,7 @@ def test_index_urls(tmp_env, conda_cli, pypi_local_index):
 def test_install_output(tmp_env, conda_cli):
     with tmp_env("python=3.12") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
-            out, err, rc = conda_cli(
+            out, _err, rc = conda_cli(
                 "pypi",
                 "--yes",
                 "install",
@@ -274,7 +274,7 @@ def test_install_output(tmp_env, conda_cli):
 def test_install_jupyterlab_package(tmp_env, conda_cli):
     with tmp_env("python=3.10") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
-            out, err, rc = conda_cli(
+            _out, _err, rc = conda_cli(
                 "pypi",
                 "--yes",
                 "install",
@@ -295,7 +295,7 @@ def test_install_requires_package_without_editable(conda_cli: CondaCLIFixture):
 def test_install_editable_without_packages_succeeds(tmp_env, conda_cli: CondaCLIFixture):
     project = "tests/packages/has-build-dep"
     with tmp_env("python=3.11") as prefix:
-        out, err, rc = conda_cli(
+        _out, _err, rc = conda_cli(
             "pypi",
             "--prefix",
             prefix,
@@ -315,7 +315,7 @@ def test_json_output(tmp_env, monkeypatch, conda_cli):
 
     with tmp_env("python=3.10") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
-            out, err, rc = conda_cli(
+            out, _err, rc = conda_cli(
                 "pypi",
                 "--yes",
                 "install",
@@ -338,7 +338,7 @@ def test_install_package_with_hyphens(tmp_env, conda_cli):
     with tmp_env("python=3.10") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
             # Use a simple package with hyphens in the name
-            out, err, rc = conda_cli(
+            out, _err, rc = conda_cli(
                 "pypi",
                 "--yes",
                 "install",

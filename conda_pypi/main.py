@@ -11,7 +11,7 @@ from email.parser import HeaderParser
 from logging import getLogger
 from pathlib import Path
 from subprocess import run
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkstemp
 from typing import Any, Literal
 
 from conda.base.context import context
@@ -102,7 +102,7 @@ def ensure_target_env_has_externally_managed(command: str):
         base_prefix_data = PrefixData(base_prefix)
         if not list(base_prefix_data.query("conda-pypi")):
             return
-    except Exception:
+    except (OSError, CondaError):
         # If we can't determine conda-pypi availability, be conservative and return
         return
     prefix_data = PrefixData(target_prefix)
@@ -209,8 +209,8 @@ def dry_run_pip_json(
     # project descriptions (e.g. charset-normalizer, amusingly), which
     # makes pip crash internally. Probably a bug on their end.
     # So we use a temporary file instead to work with bytes.
-    json_output = NamedTemporaryFile(suffix=".json", delete=False)
-    json_output.close()  # Prevent access errors on Windows
+    fd, json_output_path = mkstemp(suffix=".json")
+    os.close(fd)  # Prevent access errors on Windows
 
     try:
         cmd = [
@@ -219,9 +219,9 @@ def dry_run_pip_json(
             "install",
             "--dry-run",
             "--report",
-            json_output.name,
+            json_output_path,
             "--target",
-            json_output.name + ".dir",  # This won't be created
+            json_output_path + ".dir",  # This won't be created
         ]
         if ignore_installed:
             cmd.append("--ignore-installed")
@@ -237,7 +237,7 @@ def dry_run_pip_json(
             cmd += ["--platform", tag]
         cmd += args
         logger.info("pip dry-run command: %s", cmd)
-        process = run(cmd, capture_output=True, text=True)
+        process = run(cmd, capture_output=True, text=True, check=False)
         if process.returncode != 0:
             raise CondaError(
                 f"Failed to dry-run pip:\n"
@@ -248,13 +248,13 @@ def dry_run_pip_json(
             )
         logger.debug("pip dry-run stdout:\n%s", process.stdout)
         logger.debug("pip dry-run stderr:\n%s", process.stderr)
-        with open(json_output.name, "rb") as f:
+        with open(json_output_path, "rb") as f:
             # We need binary mode because the JSON output might
             # contain weird unicode stuff (as part of the project
             # description or README).
             return json.loads(f.read())
     finally:
-        os.unlink(json_output.name)
+        os.unlink(json_output_path)
 
 
 class PyPIDistribution:
@@ -441,11 +441,14 @@ class PyPIDistribution:
             path = Path(path)
             if "__editable__" in path.stem:
                 return True
-            if path.name == "direct_url.json" and path.parent.suffix == ".dist-info":
-                if path.is_file():
-                    data = json.loads(path.read_text())
-                    if data.get("dir_info", {}).get("editable"):
-                        return True
+            if (
+                path.name == "direct_url.json"
+                and path.parent.suffix == ".dist-info"
+                and path.is_file()
+            ):
+                data = json.loads(path.read_text())
+                if data.get("dir_info", {}).get("editable"):
+                    return True
         return False
 
     @staticmethod

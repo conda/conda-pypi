@@ -39,7 +39,7 @@ def sha256_base64url_to_hex(value: str | None) -> str | None:
         return None
 
 
-def get_prefix(prefix: os.PathLike = None, name: str = None) -> Path:
+def get_prefix(prefix: os.PathLike | None = None, name: str | None = None) -> Path:
     if prefix:
         return Path(prefix)
     elif name:

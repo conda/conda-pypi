@@ -30,7 +30,7 @@ def test_install_demo_package_from_wheels_local_channel(
     Test that demo-package can be installed from the local wheel channel using Rattler.
     """
     with tmp_env("python=3.12") as prefix:
-        out, err, rc = conda_cli(
+        _out, err, rc = conda_cli(
             "install",
             "demo-package",
             "--prefix",

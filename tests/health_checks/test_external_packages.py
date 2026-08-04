@@ -28,8 +28,6 @@ from conda_pypi.health_checks.external_packages import (
 from tests import PYTHON_VERSION
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from conda.testing.fixtures import PipCLIFixture, TmpEnvFixture
     from pytest_mock import MockerFixture
 
@@ -42,7 +40,7 @@ def test_no_external_packages(tmp_env: TmpEnvFixture):
 def test_external_packages(tmp_env: TmpEnvFixture, pip_cli: PipCLIFixture):
     """Test detection of external packages after installing with pip."""
     with tmp_env(f"python={PYTHON_VERSION}", "pip") as prefix:
-        stdout, stderr, code = pip_cli(
+        _stdout, _stderr, code = pip_cli(
             "install",
             "tests/pypi_local_index/demo-package/demo_package-0.1.0-py3-none-any.whl",
             prefix=prefix,
@@ -75,7 +73,7 @@ def test_conda_has_package(conda_local_channel, monkeypatch: MonkeyPatch, packag
 def test_print_external_packages_output(tmp_env: TmpEnvFixture, pip_cli: PipCLIFixture, capsys):
     """Test the printed output format."""
     with tmp_env(f"python={PYTHON_VERSION}", "pip") as prefix:
-        stdout, stderr, code = pip_cli(
+        _stdout, _stderr, code = pip_cli(
             "install",
             "tests/pypi_local_index/demo-package/demo_package-0.1.0-py3-none-any.whl",
             prefix=prefix,

@@ -33,11 +33,13 @@ def test_externally_managed(
         run(
             [get_env_python(prefix), "-m", "pip", "uninstall", "--isolated", "certifi", "-y"],
             capture_output=True,
+            check=False,
         )
         p = run(
             [get_env_python(prefix), "-m", "pip", "install", "--isolated", "certifi"],
             capture_output=True,
             text=True,
+            check=False,
         )
         print(p.stdout)
         print(p.stderr, file=sys.stderr)
@@ -58,6 +60,7 @@ def test_externally_managed(
             ],
             capture_output=True,
             text=True,
+            check=False,
         )
         assert p.returncode == 0
         all_text = p.stderr + p.stdout

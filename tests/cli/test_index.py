@@ -20,7 +20,7 @@ def test_cli(conda_cli):
     """
     Test that index subcommands exist.
     """
-    out, err, rc = conda_cli("pypi", "index", "--help", raises=SystemExit)
+    out, _err, rc = conda_cli("pypi", "index", "--help", raises=SystemExit)
     assert rc.value.code == 0
     assert "DIRECTORY" in out
 
