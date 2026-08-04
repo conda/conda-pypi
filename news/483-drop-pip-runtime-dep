@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* Remove unused runtime dependency on `pip` and orphaned helpers that shelled out to pip for the old explicit lockfile and wheel-unpack paths. (#483)

@@ -7,7 +7,6 @@ from __future__ import annotations
 import base64
 import logging
 import os
-import subprocess
 import tarfile
 import tempfile
 from collections.abc import Iterable
@@ -170,22 +169,6 @@ def install_installer_to_tar(
         )
 
     return destination.package_paths
-
-
-def install_pip(python_executable: str, whl: Path, build_path: Path):
-    command = [
-        python_executable,
-        "-m",
-        "pip",
-        "install",
-        "--quiet",
-        "--no-deps",
-        "--target",
-        str(build_path / "site-packages"),
-        whl,
-    ]
-    subprocess.run(command, check=True, capture_output=True)
-    log.debug(f"Installed to {build_path}")
 
 
 def install_ephemeral_conda(

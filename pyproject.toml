@@ -32,7 +32,6 @@ dependencies = [
   "conda-package-streaming >=0.11",
   "installer >=1.0",
   "packaging",
-  "pip",
   "platformdirs",
   "unearth",
 ]
@@ -55,7 +54,6 @@ conda = ">=26.1"
 conda-index = ">=0.12.0"
 conda-package-streaming = ">=0.11"
 packaging = "*"
-pip = "*"
 unearth = "*"
 
 [tool.pixi.pypi-dependencies]

@@ -4,24 +4,18 @@ This guide covers the most common issues you may encounter when using `conda-pyp
 
 ## Environment Issues
 
-### Missing Python or pip requirements
+### Missing Python
 
-**Problem**: `conda-pypi` fails with an error about missing Python or pip.
+**Problem**: `conda-pypi` fails because the target environment has no Python interpreter.
 
-**Error messages**:
-```
-Target environment at /path/to/env requires python>=3.2
-Target environment at /path/to/env requires pip>=23.0.1
-```
-
-**Solution**: Ensure your target environment has the required dependencies:
+**Solution**: Ensure your target environment has Python installed:
 
 ```bash
-# Install required dependencies in your environment
-conda install -n myenv python>=3.9 pip>=23.0.1
+# Install Python in your environment
+conda install -n myenv python>=3.10
 
 # Or when creating a new environment
-conda create -n myenv python>=3.10 pip
+conda create -n myenv python>=3.10
 ```
 
 ### Invalid environment
@@ -30,7 +24,7 @@ conda create -n myenv python>=3.10 pip
 
 **Error messages**:
 - `environment does not exist`
-- `python>=3.2 not found`
+- `python not found`
 
 **Solution**:
 ```bash
@@ -38,7 +32,7 @@ conda create -n myenv python>=3.10 pip
 conda env list
 
 # Create the environment if it doesn't exist
-conda create -n myenv python=3.10 pip
+conda create -n myenv python=3.10
 
 # Use correct environment name or path
 conda pypi install -n myenv package-name

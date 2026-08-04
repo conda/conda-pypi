@@ -25,12 +25,9 @@ requirements:
     - pip
     - hatchling >=1.12.2
     - hatch-vcs >=0.2.0
-    - importlib_resources  # [py<39]
   run:
     - python
     - conda >=26.1.0
-    - pip >=23.0.1
-    - importlib_resources  # [py<39]
     - packaging
     - unearth
     - python-build
@@ -40,6 +37,8 @@ requirements:
     - conda-package-streaming
 
 test:
+  requires:
+    - pip
   imports:
     - conda_pypi
     - conda_pypi.main
