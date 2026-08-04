@@ -12,7 +12,7 @@ exclude: |
 repos:
   # generic verification and formatting
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
     hooks:
       # standard end of line/end of file cleanup
       - id: mixed-line-ending
@@ -28,12 +28,12 @@ repos:
       # catch git merge/rebase problems
       - id: check-merge-conflict
   - repo: https://github.com/adamchainz/blacken-docs
-    rev: 1.20.0
+    rev: fda77690955e9b63c6687d8806bafd56a526e45f  # frozen: 1.20.0
     hooks:
       # auto format Python codes within docstrings
       - id: blacken-docs
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.0
+    rev: 39d9ac5938dadb73df0564a45f163e25ff9fa6e2  # frozen: v0.16.1
     hooks:
       # lint & attempt to correct failures (e.g. pyupgrade)
       - id: ruff
