@@ -8,6 +8,7 @@ from pathlib import Path
 from conda.base.context import context
 from conda.cli.main import main_subshell
 from conda.core.prefix_data import PrefixData
+from conda.exceptions import CondaError
 from conda.models.match_spec import MatchSpec
 from packaging.version import Version
 
@@ -84,7 +85,7 @@ def ensure_target_env_has_externally_managed(command: str):
         base_prefix_data = PrefixData(base_prefix)
         if not list(base_prefix_data.query("conda-pypi")):
             return
-    except Exception:
+    except (OSError, CondaError):
         # If we can't determine conda-pypi availability, be conservative and return
         return
     prefix_data = PrefixData(target_prefix)
