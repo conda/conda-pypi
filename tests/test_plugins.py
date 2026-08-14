@@ -126,7 +126,10 @@ def test_notify_skips_base_prefix(mocker: MockerFixture, tmp_path: Path):
 
 
 def test_notify_skips_when_pip_not_in_transaction(mocker: MockerFixture, tmp_path: Path):
-    mock_logger = _notify(mocker, tmp_path, link=("python", "numpy"))  # pip already present
+    mock_logger = _notify(
+        mocker, tmp_path, link=("python", "numpy")
+    )  # this transaction did not link pip
+
     mock_logger.warning.assert_not_called()
 
 
