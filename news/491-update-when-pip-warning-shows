@@ -1,0 +1,19 @@
+### Enhancements
+
+* Update plugin so that the `conda_pypi_pip_warning` tip is triggered by a new `pip` install, not by `pip` merely being present. (#484)
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>
