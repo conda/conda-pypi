@@ -126,6 +126,7 @@ def test_notify_skips_base_prefix(mocker: MockerFixture, tmp_path: Path):
 
 
 def test_notify_skips_when_pip_not_in_transaction(mocker: MockerFixture, tmp_path: Path):
+    """no pip linked, no tip shown"""
     mock_logger = _notify(
         mocker, tmp_path, link=("python", "numpy")
     )  # this transaction did not link pip
@@ -134,6 +135,7 @@ def test_notify_skips_when_pip_not_in_transaction(mocker: MockerFixture, tmp_pat
 
 
 def test_notify_skips_pip_upgrade(mocker: MockerFixture, tmp_path: Path):
+    """pip was upgraded, not newly installed, no tip shown"""
     mock_logger = _notify(mocker, tmp_path, link=("pip",), unlink=("pip",))
     mock_logger.warning.assert_not_called()
 
