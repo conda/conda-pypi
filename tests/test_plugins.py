@@ -3,11 +3,12 @@ from types import SimpleNamespace
 
 import pytest
 from conda.base.context import context, reset_context
+from conda.core.prefix_data import PrefixData
 from conda.plugins.types import CondaSetting
 from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 from pytest_mock import MockerFixture
 
-from conda_pypi.main import NotifyPipBetaAction, notify_externally_managed_future, pip_newly_linked
+from conda_pypi.main import notify_externally_managed_future, pip_newly_linked
 from conda_pypi.package_extractors import whl
 from conda_pypi.plugin import conda_settings
 
@@ -157,22 +158,20 @@ def test_notify_skips_when_pip_warning_disabled(mocker: MockerFixture, tmp_path:
     mock_logger.warning.assert_not_called()
 
 
-def test_notify_action_does_not_raise_on_tip_failure(mocker: MockerFixture, tmp_path: Path):
-    mocker.patch("conda_pypi.main.context")
+def test_tip_failure_does_not_block_install(
+    conda_cli: CondaCLIFixture,
+    mocker: MockerFixture,
+    tmp_path: Path,
+):
+    """A failure while emitting the tip must not roll back the conda transaction."""
     mocker.patch(
         "conda_pypi.main.notify_externally_managed_future",
         side_effect=RuntimeError("boom"),
     )
-    mock_logger = mocker.patch("conda_pypi.main.logger")
-
-    action = NotifyPipBetaAction(
-        target_prefix=str(tmp_path / "env"),
-        link_precs=[_prec("pip")],
-        unlink_precs=[],
-    )
-    action.execute()
-
-    mock_logger.debug.assert_called_once()
+    prefix = tmp_path / "env"
+    _, _, rc = conda_cli("create", "--prefix", str(prefix), "--yes", "python", "pip")
+    assert rc == 0
+    assert list(PrefixData(prefix).query("pip"))
 
 
 def test_pip_beta_tip_visible_at_default_verbosity(
