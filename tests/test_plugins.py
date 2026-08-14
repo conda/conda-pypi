@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from conda.base.context import context, reset_context
@@ -6,7 +7,7 @@ from conda.plugins.types import CondaSetting
 from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 from pytest_mock import MockerFixture
 
-from conda_pypi.main import notify_externally_managed_future
+from conda_pypi.main import NotifyPipBetaAction, notify_externally_managed_future, pip_newly_linked
 from conda_pypi.package_extractors import whl
 from conda_pypi.plugin import conda_settings
 
@@ -63,94 +64,113 @@ def test_extract_whl_as_conda_pkg(
     assert (tmp_path / "info" / "index.json").is_file()
 
 
-@pytest.mark.parametrize("command", ["install", "create", "env_create"])
-def test_notify_logs_tip_when_pip_installed(
+def _prec(name: str) -> SimpleNamespace:
+    return SimpleNamespace(name=name)
+
+
+def _notify(
     mocker: MockerFixture,
     tmp_path: Path,
-    command: str,
+    *,
+    link: tuple[str, ...] = ("pip",),
+    unlink: tuple[str, ...] = (),
+    target: str = "env",
 ):
     ctx = mocker.patch("conda_pypi.main.context")
     ctx.conda_prefix = str(tmp_path / "base")
-    ctx.target_prefix = str(tmp_path / "env")
-    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
-        mocker.MagicMock()
-    ]
+    ctx.target_prefix = str(tmp_path / target)
     mock_logger = mocker.patch("conda_pypi.main.logger")
+    notify_externally_managed_future(
+        target_prefix=str(tmp_path / target),
+        link_precs=[_prec(name) for name in link],
+        unlink_precs=[_prec(name) for name in unlink],
+    )
+    return mock_logger
 
-    notify_externally_managed_future(command)
+
+@pytest.mark.parametrize(
+    "link,unlink,expected",
+    [
+        (("pip",), (), True),
+        (("pip", "python"), (), True),
+        (("pip",), ("pip",), False),
+        (("python",), (), False),
+        ((), (), False),
+        (("python",), ("pip",), False),
+    ],
+)
+def test_pip_newly_linked(link, unlink, expected):
+    assert (
+        pip_newly_linked([_prec(name) for name in link], [_prec(name) for name in unlink])
+        is expected
+    )
+
+
+def test_notify_logs_tip_when_pip_newly_linked(mocker: MockerFixture, tmp_path: Path):
+    mock_logger = _notify(mocker, tmp_path)
 
     mock_logger.warning.assert_called_once()
     mock_logger.info.assert_not_called()
 
 
-def test_notify_skips_build_env(
-    mocker: MockerFixture,
-    monkeypatch,
-    tmp_path: Path,
-):
+def test_notify_skips_build_env(mocker: MockerFixture, monkeypatch, tmp_path: Path):
     monkeypatch.setenv("CONDA_BUILD_STATE", "BUILD")
-    ctx = mocker.patch("conda_pypi.main.context")
-    ctx.conda_prefix = str(tmp_path / "base")
-    ctx.target_prefix = str(tmp_path / "env")
-    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
-        mocker.MagicMock()
-    ]
-    mock_logger = mocker.patch("conda_pypi.main.logger")
-
-    notify_externally_managed_future("install")
+    mock_logger = _notify(mocker, tmp_path)
 
     mock_logger.warning.assert_not_called()
 
 
-def test_notify_skips_base_prefix(
-    mocker: MockerFixture,
-    tmp_path: Path,
-):
-    ctx = mocker.patch("conda_pypi.main.context")
-    ctx.conda_prefix = str(tmp_path / "base")
-    ctx.target_prefix = str(tmp_path / "base")
-    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
-        mocker.MagicMock()
-    ]
-    mock_logger = mocker.patch("conda_pypi.main.logger")
-
-    notify_externally_managed_future("install")
+def test_notify_skips_base_prefix(mocker: MockerFixture, tmp_path: Path):
+    mock_logger = _notify(mocker, tmp_path, target="base")
 
     mock_logger.warning.assert_not_called()
 
 
-def test_notify_skips_no_pip(
-    mocker: MockerFixture,
-    tmp_path: Path,
-):
-    ctx = mocker.patch("conda_pypi.main.context")
-    ctx.conda_prefix = str(tmp_path / "base")
-    ctx.target_prefix = str(tmp_path / "env")
-    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = []
-    mock_logger = mocker.patch("conda_pypi.main.logger")
-
-    notify_externally_managed_future("install")
+def test_notify_skips_when_pip_not_in_transaction(mocker: MockerFixture, tmp_path: Path):
+    mock_logger = _notify(mocker, tmp_path, link=("python", "numpy"))
 
     mock_logger.warning.assert_not_called()
 
 
-def test_notify_skips_when_pip_warning_disabled(
-    mocker: MockerFixture,
-    tmp_path: Path,
-):
+def test_notify_skips_pip_upgrade(mocker: MockerFixture, tmp_path: Path):
+    mock_logger = _notify(mocker, tmp_path, link=("pip",), unlink=("pip",))
+
+    mock_logger.warning.assert_not_called()
+
+
+def test_notify_skips_when_pip_warning_disabled(mocker: MockerFixture, tmp_path: Path):
     """When conda_pypi_pip_warning is False the tip must not be emitted."""
     ctx = mocker.patch("conda_pypi.main.context")
     ctx.conda_prefix = str(tmp_path / "base")
     ctx.target_prefix = str(tmp_path / "env")
     ctx.plugins.conda_pypi_pip_warning = False
-    mocker.patch("conda_pypi.main.PrefixData").return_value.query.return_value = [
-        mocker.MagicMock()
-    ]
     mock_logger = mocker.patch("conda_pypi.main.logger")
 
-    notify_externally_managed_future("install")
+    notify_externally_managed_future(
+        target_prefix=str(tmp_path / "env"),
+        link_precs=[_prec("pip")],
+        unlink_precs=[],
+    )
 
     mock_logger.warning.assert_not_called()
+
+
+def test_notify_action_does_not_raise_on_tip_failure(mocker: MockerFixture, tmp_path: Path):
+    mocker.patch("conda_pypi.main.context")
+    mocker.patch(
+        "conda_pypi.main.notify_externally_managed_future",
+        side_effect=RuntimeError("boom"),
+    )
+    mock_logger = mocker.patch("conda_pypi.main.logger")
+
+    action = NotifyPipBetaAction(
+        target_prefix=str(tmp_path / "env"),
+        link_precs=[_prec("pip")],
+        unlink_precs=[],
+    )
+    action.execute()
+
+    mock_logger.debug.assert_called_once()
 
 
 def test_pip_beta_tip_visible_at_default_verbosity(
@@ -162,6 +182,21 @@ def test_pip_beta_tip_visible_at_default_verbosity(
     _, err, rc = conda_cli("create", "--prefix", str(prefix), "--yes", "python", "pip")
     assert rc == 0
     assert "Did you know?" in err
+
+
+def test_pip_beta_tip_not_repeated_after_pip_is_present(
+    conda_cli: CondaCLIFixture,
+    tmp_path: Path,
+):
+    """Later pip upgrades must not show the tip again."""
+    prefix = tmp_path / "env"
+    _, err, rc = conda_cli("create", "--prefix", str(prefix), "--yes", "python", "pip")
+    assert rc == 0
+    assert "Did you know?" in err
+
+    _, err, rc = conda_cli("install", "--prefix", str(prefix), "--yes", "--force-reinstall", "pip")
+    assert rc == 0
+    assert "Did you know?" not in err
 
 
 def test_pip_warning_setting_defaults_to_true():

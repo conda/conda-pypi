@@ -4,7 +4,7 @@ from conda.plugins import hookimpl
 from conda.plugins.types import (
     CondaHealthCheck,
     CondaPackageExtractor,
-    CondaPostCommand,
+    CondaPostTransactionAction,
     CondaSetting,
     CondaSubcommand,
 )
@@ -23,13 +23,12 @@ def conda_subcommands():
 
 
 @hookimpl
-def conda_post_commands():
-    from conda_pypi.main import notify_externally_managed_future
+def conda_post_transaction_actions():
+    from conda_pypi.main import NotifyPipBetaAction
 
-    yield CondaPostCommand(
-        name="conda-pypi-notify-externally-managed-future",
-        action=notify_externally_managed_future,
-        run_for={"install", "create", "env_create"},
+    yield CondaPostTransactionAction(
+        name="conda-pypi-notify-pip-beta",
+        action=NotifyPipBetaAction,
     )
 
 
@@ -65,6 +64,6 @@ def conda_settings():
 
     yield CondaSetting(
         name="conda_pypi_pip_warning",
-        description="Enable or disable the conda-pypi beta tip shown when pip is present",
+        description="Enable or disable the conda-pypi beta tip shown when pip is newly installed",
         parameter=PrimitiveParameter(True),
     )

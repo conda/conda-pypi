@@ -134,7 +134,7 @@ it.
 These instructions assume that you have done the following:
 
 - Created and activated a conda environment
-- Installed `python` into that conda environment
+- Installed `python` and `pip` into that conda environment
 :::
 
 ```bash
@@ -237,9 +237,10 @@ More details about this protection mechanism can be found at
 
 #### `conda_pypi_pip_warning`
 
-By default, `conda-pypi` displays a short beta tip when `pip` is detected in a
-conda environment. The tip points to the conda-pypi beta docs for installing
-PyPI packages with conda.
+By default, `conda-pypi` displays a short beta tip when a conda transaction
+newly installs `pip` into an environment. The tip is not shown on `pip`
+upgrades, or on later installs into an environment that already has `pip`.
+It points to the conda-pypi beta docs for installing PyPI packages with conda.
 
 To disable this tip:
 
