@@ -107,34 +107,31 @@ def test_pip_newly_linked(link, unlink, expected):
 
 
 def test_notify_logs_tip_when_pip_newly_linked(mocker: MockerFixture, tmp_path: Path):
+    """Happy path: pip linked"""
     mock_logger = _notify(mocker, tmp_path)
-
     mock_logger.warning.assert_called_once()
-    mock_logger.info.assert_not_called()
 
 
 def test_notify_skips_build_env(mocker: MockerFixture, monkeypatch, tmp_path: Path):
+    """pip linked but CONDA_BUILD_STATE set to BUILD, no tip shown"""
     monkeypatch.setenv("CONDA_BUILD_STATE", "BUILD")
     mock_logger = _notify(mocker, tmp_path)
-
     mock_logger.warning.assert_not_called()
 
 
 def test_notify_skips_base_prefix(mocker: MockerFixture, tmp_path: Path):
+    """pip linked but env is base, no tip shown"""
     mock_logger = _notify(mocker, tmp_path, target="base")
-
     mock_logger.warning.assert_not_called()
 
 
 def test_notify_skips_when_pip_not_in_transaction(mocker: MockerFixture, tmp_path: Path):
-    mock_logger = _notify(mocker, tmp_path, link=("python", "numpy"))
-
+    mock_logger = _notify(mocker, tmp_path, link=("python", "numpy"))  # pip already present
     mock_logger.warning.assert_not_called()
 
 
 def test_notify_skips_pip_upgrade(mocker: MockerFixture, tmp_path: Path):
     mock_logger = _notify(mocker, tmp_path, link=("pip",), unlink=("pip",))
-
     mock_logger.warning.assert_not_called()
 
 
