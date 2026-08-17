@@ -137,7 +137,7 @@ def notify_conda_pypi_tip(
     unlink_precs: Iterable[PackageRecord] | None = None,
 ) -> None:
     """
-    Beta-period notice that points users to conda-pypi when pip is newly installed.
+    Notice that points users to conda-pypi when pip is newly installed.
     """
     # Build environments are ephemeral; never show user-facing notices.
     if os.environ.get("CONDA_BUILD_STATE") == "BUILD":
