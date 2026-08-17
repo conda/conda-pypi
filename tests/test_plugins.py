@@ -8,7 +8,7 @@ from conda.plugins.types import CondaSetting
 from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 from pytest_mock import MockerFixture
 
-from conda_pypi.main import notify_externally_managed_future, pip_newly_linked
+from conda_pypi.main import notify_conda_pypi_tip, pip_newly_linked
 from conda_pypi.package_extractors import whl
 from conda_pypi.plugin import conda_settings
 
@@ -81,7 +81,7 @@ def _notify(
     ctx.conda_prefix = str(tmp_path / "base")
     ctx.target_prefix = str(tmp_path / target)
     mock_logger = mocker.patch("conda_pypi.main.logger")
-    notify_externally_managed_future(
+    notify_conda_pypi_tip(
         target_prefix=str(tmp_path / target),
         link_precs=[_prec(name) for name in link],
         unlink_precs=[_prec(name) for name in unlink],
@@ -149,7 +149,7 @@ def test_notify_skips_when_pip_warning_disabled(mocker: MockerFixture, tmp_path:
     ctx.plugins.conda_pypi_pip_warning = False
     mock_logger = mocker.patch("conda_pypi.main.logger")
 
-    notify_externally_managed_future(
+    notify_conda_pypi_tip(
         target_prefix=str(tmp_path / "env"),
         link_precs=[_prec("pip")],
         unlink_precs=[],
@@ -165,7 +165,7 @@ def test_tip_failure_does_not_block_install(
 ):
     """A failure while emitting the tip must not roll back the conda transaction."""
     mocker.patch(
-        "conda_pypi.main.notify_externally_managed_future",
+        "conda_pypi.main.notify_conda_pypi_tip",
         side_effect=RuntimeError("boom"),
     )
     prefix = tmp_path / "env"
