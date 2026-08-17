@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Show the conda-pypi beta tip only when a conda transaction newly installs `pip`, not when `pip` is already present or is being upgraded. (#484)
+* Show the conda-pypi tip only when a conda transaction newly installs `pip`, not when `pip` is already present or is being upgraded. (#484)
 
 ### Bug fixes
 

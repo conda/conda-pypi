@@ -120,24 +120,24 @@ def ensure_target_env_has_externally_managed(command: str):
         raise ValueError(f"command {command} not recognized.")
 
 
-def _package_names(precs: Iterable | None) -> set[str]:
+def _package_names(precs: Iterable[PackageRecord] | None) -> set[str]:
     if not precs:
         return set()
     return {prec.name for prec in precs}
 
 
-def pip_newly_linked(link_precs: Iterable | None, unlink_precs: Iterable | None) -> bool:
+def pip_newly_linked(link_precs: Iterable[PackageRecord] | None, unlink_precs: Iterable[PackageRecord] | None) -> bool:
     """True when this transaction links pip without unlinking an existing pip."""
     return "pip" in _package_names(link_precs) and "pip" not in _package_names(unlink_precs)
 
 
-def notify_externally_managed_future(
+def notify_conda_pypi_tip(
     target_prefix: str | None = None,
-    link_precs: Iterable | None = None,
-    unlink_precs: Iterable | None = None,
+    link_precs: Iterable[PackageRecord] | None = None,
+    unlink_precs: Iterable[PackageRecord] | None = None,
 ) -> None:
     """
-    Beta-period notice that points users to conda-pypi when pip is newly installed.
+    Notice that points users to conda-pypi when pip is newly installed.
     """
     # Build environments are ephemeral; never show user-facing notices.
     if os.environ.get("CONDA_BUILD_STATE") == "BUILD":
@@ -160,8 +160,8 @@ def notify_externally_managed_future(
         )
 
 
-class NotifyPipBetaAction(Action):
-    """Post-transaction action that shows the conda-pypi beta tip."""
+class NotifyCondaPypiTipAction(Action):
+    """Post-transaction action that shows the conda-pypi usage tip."""
 
     def verify(self):
         self._verified = True
