@@ -161,7 +161,7 @@ def notify_conda_pypi_tip(
 
 
 class NotifyPipBetaAction(Action):
-    """Post-transaction action that shows the conda-pypi beta tip."""
+    """Post-transaction action that shows the conda-pypi usage tip."""
 
     def verify(self):
         self._verified = True
