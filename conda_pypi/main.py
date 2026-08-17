@@ -126,7 +126,7 @@ def _package_names(precs: Iterable[PackageRecord] | None) -> set[str]:
     return {prec.name for prec in precs}
 
 
-def pip_newly_linked(link_precs: Iterable | None, unlink_precs: Iterable | None) -> bool:
+def pip_newly_linked(link_precs: Iterable[PackageRecord] | None, unlink_precs: Iterable[PackageRecord] | None) -> bool:
     """True when this transaction links pip without unlinking an existing pip."""
     return "pip" in _package_names(link_precs) and "pip" not in _package_names(unlink_precs)
 
