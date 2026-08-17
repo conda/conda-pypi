@@ -160,7 +160,7 @@ def notify_conda_pypi_tip(
         )
 
 
-class NotifyPipBetaAction(Action):
+class NotifyCondaPypiTipAction(Action):
     """Post-transaction action that shows the conda-pypi usage tip."""
 
     def verify(self):
