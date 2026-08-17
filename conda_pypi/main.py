@@ -133,8 +133,8 @@ def pip_newly_linked(link_precs: Iterable | None, unlink_precs: Iterable | None)
 
 def notify_externally_managed_future(
     target_prefix: str | None = None,
-    link_precs: Iterable | None = None,
-    unlink_precs: Iterable | None = None,
+    link_precs: Iterable[PackageRecord] | None = None,
+    unlink_precs: Iterable[PackageRecord] | None = None,
 ) -> None:
     """
     Beta-period notice that points users to conda-pypi when pip is newly installed.
