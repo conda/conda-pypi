@@ -240,7 +240,7 @@ More details about this protection mechanism can be found at
 By default, `conda-pypi` displays a short tip when a conda transaction
 newly installs `pip` into an environment. The tip is not shown on `pip`
 upgrades, or on later installs into an environment that already has `pip`.
-It points to the conda-pypi beta docs for installing PyPI packages with conda.
+It points to the conda-pypi docs for installing PyPI packages with conda.
 
 To disable this tip:
 
