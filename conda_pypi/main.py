@@ -120,7 +120,7 @@ def ensure_target_env_has_externally_managed(command: str):
         raise ValueError(f"command {command} not recognized.")
 
 
-def _package_names(precs: Iterable | None) -> set[str]:
+def _package_names(precs: Iterable[PackageRecord] | None) -> set[str]:
     if not precs:
         return set()
     return {prec.name for prec in precs}
