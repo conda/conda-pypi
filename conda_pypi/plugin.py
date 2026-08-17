@@ -24,11 +24,11 @@ def conda_subcommands():
 
 @hookimpl
 def conda_post_transaction_actions():
-    from conda_pypi.main import NotifyPipBetaAction
+    from conda_pypi.main import NotifyCondaPypiTipAction
 
     yield CondaPostTransactionAction(
         name="conda-pypi-notify-pip-beta",
-        action=NotifyPipBetaAction,
+        action=NotifyCondaPypiTipAction,
     )
 
 
