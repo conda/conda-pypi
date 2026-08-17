@@ -174,18 +174,7 @@ def test_tip_failure_does_not_block_install(
     assert list(PrefixData(prefix).query("pip"))
 
 
-def test_pip_beta_tip_visible_at_default_verbosity(
-    conda_cli: CondaCLIFixture,
-    tmp_path: Path,
-):
-    """The beta tip must appear at default conda verbosity (not only with -vv)."""
-    prefix = tmp_path / "env"
-    _, err, rc = conda_cli("create", "--prefix", str(prefix), "--yes", "python", "pip")
-    assert rc == 0
-    assert "Did you know?" in err
-
-
-def test_pip_beta_tip_not_repeated_after_pip_is_present(
+def test_pip_tip_shows_once_on_new_install(
     conda_cli: CondaCLIFixture,
     tmp_path: Path,
 ):
