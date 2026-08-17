@@ -11,6 +11,7 @@ from conda.core.path_actions import Action
 from conda.core.prefix_data import PrefixData
 from conda.exceptions import CondaError
 from conda.models.match_spec import MatchSpec
+from conda.models.records import PackageRecord
 from packaging.version import Version
 
 from conda_pypi.python_paths import (
@@ -126,7 +127,9 @@ def _package_names(precs: Iterable[PackageRecord] | None) -> set[str]:
     return {prec.name for prec in precs}
 
 
-def pip_newly_linked(link_precs: Iterable[PackageRecord] | None, unlink_precs: Iterable[PackageRecord] | None) -> bool:
+def pip_newly_linked(
+    link_precs: Iterable[PackageRecord] | None, unlink_precs: Iterable[PackageRecord] | None
+) -> bool:
     """True when this transaction links pip without unlinking an existing pip."""
     return "pip" in _package_names(link_precs) and "pip" not in _package_names(unlink_precs)
 
@@ -169,7 +172,7 @@ class NotifyCondaPypiTipAction(Action):
     def execute(self):
         # A notice must never fail or reverse a successful install.
         try:
-            notify_externally_managed_future(
+            notify_conda_pypi_tip(
                 target_prefix=self.target_prefix,
                 link_precs=self.link_precs,
                 unlink_precs=self.unlink_precs,
