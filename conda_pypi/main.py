@@ -131,7 +131,7 @@ def pip_newly_linked(link_precs: Iterable | None, unlink_precs: Iterable | None)
     return "pip" in _package_names(link_precs) and "pip" not in _package_names(unlink_precs)
 
 
-def notify_externally_managed_future(
+def notify_conda_pypi_tip(
     target_prefix: str | None = None,
     link_precs: Iterable[PackageRecord] | None = None,
     unlink_precs: Iterable[PackageRecord] | None = None,
