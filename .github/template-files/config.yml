@@ -12,6 +12,24 @@ conda/infrastructure:
   - .github/workflows/labels.yml
   - .github/workflows/project.yml
 
+  # [optional] news fragment validation on PRs
+  - src: templates/workflows/check-news.yml
+    dst: .github/workflows/check-news.yml
+
+  # [optional] aggregate news fragments into CHANGELOG on release branches
+  - src: templates/workflows/prepare-release.yml
+    dst: .github/workflows/prepare-release.yml
+    with:
+      tests_workflow: Test
+
+  # [optional] validate .authors.yml on PRs
+  - src: templates/workflows/check-authors.yml
+    dst: .github/workflows/check-authors.yml
+
+  # [optional] keep .authors.yml current (weekly PR)
+  - src: templates/workflows/prepare-authors.yml
+    dst: .github/workflows/prepare-authors.yml
+
   # [optional] stale bot workflows
   # - .github/workflows/stale.yml
   # - .github/workflows/lock.yml
