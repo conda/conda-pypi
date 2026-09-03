@@ -22,10 +22,6 @@ conda/infrastructure:
     with:
       tests_workflow: Test
 
-  # remove check-authors workflow if it has already been synced
-  - dst: .github/workflows/check-authors.yml
-    remove: true
-
   # [optional] keep .authors.yml current (weekly PR)
   - src: templates/workflows/prepare-authors.yml
     dst: .github/workflows/prepare-authors.yml
