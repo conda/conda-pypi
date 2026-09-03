@@ -27,11 +27,6 @@ repos:
           )
       # catch git merge/rebase problems
       - id: check-merge-conflict
-  - repo: https://github.com/adamchainz/blacken-docs
-    rev: fda77690955e9b63c6687d8806bafd56a526e45f  # frozen: 1.20.0
-    hooks:
-      # auto format Python codes within docstrings
-      - id: blacken-docs
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: 321478e58f4938179c6b86e4ddfa923d1547a49b  # frozen: v0.16.6
     hooks:
@@ -40,6 +35,7 @@ repos:
         args: [--fix]
       # compatible replacement for black
       - id: ruff-format
+        types_or: [ python ]
   - repo: meta
     # see https://pre-commit.com/#meta-hooks
     hooks:
