@@ -35,7 +35,6 @@ repos:
         args: [--fix]
       # compatible replacement for black
       - id: ruff-format
-        types_or: [ python ]
   - repo: meta
     # see https://pre-commit.com/#meta-hooks
     hooks:

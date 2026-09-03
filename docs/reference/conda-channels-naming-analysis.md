@@ -36,9 +36,7 @@ for x in not_found_df.conda_name:
 
 # Find any than are also found in main (these were noted belov)
 found_on_main = [
-    k
-    for k, v in conda_search_results.items()
-    if not any("PackagesNotFoundError" in l for l in v)
+    k for k, v in conda_search_results.items() if not any("PackagesNotFoundError" in l for l in v)
 ]
 ```
 
