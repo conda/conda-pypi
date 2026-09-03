@@ -2,6 +2,36 @@
 
 [//]: # (current developments)
 
+## 0.12.0 (2026-09-03)
+
+### Enhancements
+
+* In `conda pypi index`, store wheel files in the 'md' stage of the conda-index database, avoiding potential conflict with the non-wheel parts of conda-index. (#403)
+* Defer imports of heavy dependencies (`unearth`, `build`, `installer`, `conda_index`) in `conda_pypi.plugin`, the `install`/`convert`/`index` CLI subcommands, and the `external-packages` health check until they are actually needed. (#446)
+* Add a Ruff `TID253` rule banning module-level imports of `unearth`, `build`, `installer`, and `conda_index` to prevent this class of startup-time regression from being reintroduced. Files whose sole purpose is wrapping these libraries are annotated with `# noqa: TID253`; files under `tests/` are exempted via `per-file-ignores`. (#446)
+* Mark `conda pypi install` as `PendingDeprecation`. (#463)
+* Translate PEP 508 dependency extras in wheel repodata to MatchSpec `extras=[…]` form (CEP 44). (#469)
+* Add `pixi run news` task to create news fragments via CLI. (#476)
+* Show the conda-pypi tip only when a conda transaction newly installs `pip`, not when `pip` is already present or is being upgraded. (#484)
+
+### Bug fixes
+
+* Fixed `.conda` package metadata to emit `extra_depends` instead of `extras` in `info/index.json`, matching CEP 44 and the conda-pypi channel. (#453)
+* Ignore invalid Requires-Python values instead of emitting unparseable `python …` depends; warn during convert/install, stay silent for shard traversal. (#474)
+* Drop the legacy extras suffix from `console_scripts` entry points during conversion (e.g. `mod:func [extra]` → `mod:func`). Previously it was copied verbatim into `info/link.json`, making the resulting package fail to install with `ValueError: '<func> [<extra>]' is not a valid Python function identifier` at link time. (#477)
+* Respect `--prefix` and `--name` when selecting the environment for `conda pypi install`. (#465)
+
+### Docs
+
+* Correct marker-conversion docs for MatchSpec `[when=…]` support and link CEP 43. (#472)
+* Document that the `conda_pypi_pip_warning` tip is triggered by a new `pip` install, not by `pip` merely being present. (#484)
+
+### Other
+
+* Remove unused runtime dependency on `pip` and orphaned helpers that shelled out to pip for the old explicit lockfile and wheel-unpack paths. (#483)
+* Upgrade the test suite to pytest 9 and isolate tests from collection order. (#465)
+
+
 ## 0.11.0 (2026-07-03)
 
 ### Enhancements
