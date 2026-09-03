@@ -31,6 +31,17 @@
 * Remove unused runtime dependency on `pip` and orphaned helpers that shelled out to pip for the old explicit lockfile and wheel-unpack paths. (#483)
 * Upgrade the test suite to pytest 9 and isolate tests from collection order. (#465)
 
+### Contributors
+
+* abdul-050 made their first commit in https://github.com/conda/conda-pypi/pull/479
+* @danyeaw
+* @dholth
+* @jezdez
+* @kenodegard
+* @ForgottenProgramme
+* @conda-bot
+* @dependabot[bot]
+* @pre-commit-ci[bot]
 
 ## 0.11.0 (2026-07-03)
 
