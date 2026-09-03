@@ -5,7 +5,7 @@
 ### Bug fixes
 
 * Respect `--prefix` and `--name` when selecting the environment for
-  `conda pypi install`.
+  `conda pypi install`. (#465)
 
 ### Deprecations
 
@@ -17,4 +17,4 @@
 
 ### Other
 
-* Upgrade the test suite to pytest 9 and isolate tests from collection order.
+* Upgrade the test suite to pytest 9 and isolate tests from collection order. (#465)

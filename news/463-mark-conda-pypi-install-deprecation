@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Mark `conda pypi install` as `PendingDeprecation`.
+* Mark `conda pypi install` as `PendingDeprecation`. (#463)
 
 ### Bug fixes
 

@@ -1,6 +1,6 @@
 ### Enhancements
 
-* Translate PEP 508 dependency extras in wheel repodata to MatchSpec `extras=[…]` form (CEP 44).
+* Translate PEP 508 dependency extras in wheel repodata to MatchSpec `extras=[…]` form (CEP 44). (#469)
 
 ### Bug fixes
 
