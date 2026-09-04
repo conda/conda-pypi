@@ -33,7 +33,7 @@
 
 ### Contributors
 
-* abdul-050 made their first commit in https://github.com/conda/conda-pypi/pull/479
+* @abdul-050 made their first commit in https://github.com/conda/conda-pypi/pull/479
 * @danyeaw
 * @dholth
 * @jezdez
