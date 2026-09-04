@@ -1,6 +1,7 @@
 All of the people who have made at least one contribution to conda-pypi.
 Authors are sorted alphabetically.
 
+* Abdul Rehman Alvi
 * Agriya Khetarpal
 * Dan Yeaw
 * Daniel Holth
