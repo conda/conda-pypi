@@ -1,11 +1,11 @@
 # Features
 
 `conda-pypi` uses the `conda` plugin system to implement several features
-that better improve the `conda` integration with the PyPI ecosystem. This
+that better improve the `conda` integration with Python packaging tools. This
 page is divided into basic and advanced sections to help you discover
 which features are best for you.
 
-- **Basic**: For users who just want to use conda and wheels packages
+- **Basic**: For users who just want to use conda packages and wheels
   together with no changes to their overall workflow.
 - **Advanced**: For users who want to experiment with conda and wheels
   and work with cutting-edge plugin features.
@@ -51,9 +51,9 @@ pypi.org.
 
 ### The `conda pypi` subcommand
 
-This subcommand provides a safer way to install PyPI packages in conda
+This subcommand provides a safer way to install Python distribution packages in conda
 environments by converting them to `.conda` format when possible. It offers three
-main subcommands that handle different aspects of PyPI integration.
+main subcommands that handle different aspects of Python packaging integration.
 
 #### `conda pypi install`
 
@@ -63,15 +63,20 @@ main subcommands that handle different aspects of PyPI integration.
 The `conda pypi install` command is pending deprecation and will be removed in version 27.9. Use `conda install` with `conda-pypi` channel configuration instead.
 :::
 
-The install command takes PyPI packages and converts them to `.conda` format.
-Explicitly requested packages are always installed from PyPI and converted
-to `.conda` format to ensure you get exactly what you asked for. For
+The install command fetches missing wheels from PyPI and other package indexes and
+converts them to `.conda` format. It resolves the requested packages using
+the configured conda channels and the local conversion cache. For
 dependencies, `conda-pypi` chooses the best source using a
 conda-first approach. If a dependency is available on conda channels, it will
 be installed with `conda` directly. If not available on conda channels, the
-dependency is converted from PyPI to `.conda` format.
+dependency is fetched from the configured package indexes and converted to `.conda` format.
 
-PyPI names are mapped to conda names with a bundled Grayskull table, plus a
+PyPI is the default package index. Use `--index-url` to select another
+index for wheel downloads, including missing dependencies. Repeat the option
+to search multiple indexes. Providing this option replaces the default PyPI
+index list. It does not configure editable builds or local conversion.
+
+Project names on PyPI are mapped to conda package names with a bundled Grayskull table, plus a
 simple normalization rule when a package is not listed. `conda pypi convert` can
 load a replacement table from a JSON file via `--name-mapping`. With `-e` /
 `--editable`, a `.conda` package containing a link to the local project
@@ -80,13 +85,13 @@ directory is built and installed using [PEP
 
 You can preview what would be installed without making changes using
 `--dry-run`, install packages in editable development mode with `--editable`
-or `-e`, and force dependency resolution from PyPI without using conda
-channels using `--ignore-channels`.
+or `-e`, and search the configured package indexes without searching
+configured conda channels using `--ignore-channels`.
 
 #### `conda pypi convert`
 
-The convert command transforms PyPI packages to `.conda` format without
-installing them, which is useful for creating conda packages from PyPI
+The convert command transforms Python projects to `.conda` format without
+installing them, which is useful for creating conda packages from Python
 distributions or preparing packages for offline installation. You can specify
 where to save the converted packages using `-d`, `--dest`, or `--output-dir`.
 The command supports converting multiple packages at once and can skip conda
@@ -123,12 +128,14 @@ conda pypi index path/to/my_wheels/
 conda install -c file:///path/to/my_wheels some-package
 ```
 
-### PyPI-to-conda conversion engine
+(pypi-to-conda-conversion-engine)=
+
+### Wheel-to-conda conversion engine
 
 `conda-pypi` includes a powerful conversion engine that enables direct
 conversion of pure Python wheels to `.conda` packages with proper translation of
 Python package metadata to conda format. The system includes name
-mapping of PyPI dependencies to conda equivalents and provides cross-platform
+mapping of Python distribution names to conda equivalents and provides cross-platform
 support for package conversion, ensuring that converted packages work
 across different operating systems and architectures.
 
@@ -141,7 +148,7 @@ checks `.dist-info/<path>` (pre-PEP 639 wheels) and `.dist-info/licenses/<path>`
 
 #### Dependency environment markers (PEP 508)
 
-PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) are translated for the solver where possible. When building installable .conda packages from wheels, `[when="…"]` is not attached to dependency strings. The `extra == "…"` marker is split into per-extra tables, and other marker conditions are omitted from depends. See {doc}`developer/marker-conversion`.
+PEP 508 [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) are translated for the solver where possible. When building installable .conda packages from wheels, `[when="…"]` is not attached to dependency strings. The `extra == "…"` marker is split into per-extra tables, and other marker conditions are omitted from depends. See {doc}`developer/marker-conversion`.
 
 ### Wheel channels
 
@@ -178,7 +185,7 @@ Wheels served this way behave like any other conda package.
 When a wheel is installed directly (from a wheel channel or a `.whl` file),
 conda-pypi writes `info/index.json` with:
 
-- `fn` — the wheel basename on disk (the PyPI upload filename), for example
+- `fn` — the wheel basename on disk, for example
   `requests-2.32.5-py3-none-any.whl`
 - `build` — from WHEEL `Tag` / `Build` headers (prefer `py3-none-any`, else highest
   tag). Noarch tags other than `py3-none-any` are normalized to `py3_none_any_0` to
@@ -223,7 +230,7 @@ conda pypi install -e ./package1/ -e ./package2/
 `conda-pypi` adds support for
 [PEP-668](https://peps.python.org/pep-0668/)'s
 [`EXTERNALLY-MANAGED`](https://packaging.python.org/en/latest/specifications/externally-managed-environments/)
-environment marker files. These files tell `pip` and other PyPI installers
+environment marker files. These files tell `pip` and other Python package installers
 not to install or remove any packages in that environment, guiding users
 towards safer alternatives.
 

@@ -15,7 +15,7 @@ the conda package name and the pypi name, the following analysis was done:
 # main_df: Pandas Dataframe from main channel
 # cf_df: Pandas Dataframe from conda-forge channel
 
-# Merging data by PyPi Name
+# Merging data by PyPI project name
 # main_df stores the package name as name and cf_df as conda_name so there is no collision
 mdf = pd.merge(main_df, cf_df, left_on="pypi_name", right_on="pypi_name")
 

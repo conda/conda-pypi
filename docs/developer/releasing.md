@@ -27,7 +27,7 @@ the release number from earlier. Ensure that this workflow completes successfull
 
 ### 1.c Ensure the package is available on PyPI
 
-Check that the PyPI package has been updated at https://pypi.org/project/conda-pypi/.
+Check that the release has been published at https://pypi.org/project/conda-pypi/.
 You should see that version matches the release version and that the wheel is available
 in the [download files](https://pypi.org/project/conda-pypi/#files) section.
 

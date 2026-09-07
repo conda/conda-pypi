@@ -21,9 +21,9 @@ This is a **community-maintained** project under the [conda](https://github.com/
 
 ## What is this?
 
-The `conda-pypi` plugin improves conda's integration with the PyPI ecosystem. The most
+The `conda-pypi` plugin improves conda's integration with Python packaging tools. The most
 important feature is the `conda-pypi` channel, hosted by Anaconda, which makes pure
-Python pacakges from PyPi available to users natively through `conda install`.
+Python wheels from PyPI available to users natively through `conda install`.
 
 ## Using `conda-pypi`
 
@@ -45,38 +45,38 @@ Anaconda.org web UI and some commands such as `conda search` can fail because
 they request classic `repodata.json` metadata. Use `conda install` or
 `conda create --dry-run` to check whether the solver can use the channel.
 
-After configuring, you can use PyPI packages alongside conda packages in
-your normal conda workflows, without needing to convert PyPI's wheel files
+After configuring, you can use packages from PyPI alongside conda packages in
+your normal conda workflows, without needing to convert the wheel files
 to conda files.
 
 ## Advanced options
 
-`conda-pypi` includes more advanced subcommand controls for working with PyPI
+`conda-pypi` includes more advanced subcommand controls for working with Python
 packages. These options are recommended for users who want to experiment with
 conda and wheels and work with cutting-edge plugin features.
 
 You can use the following commands with the `conda pypi` subcommand to do more
 with the `conda-pypi` plugin:
 
-- `conda pypi install`: Converts PyPI packages to `.conda` format for safer installation.
+- `conda pypi install`: Converts wheels from PyPI and other package indexes to `.conda` format for safer installation. PyPI is the default index. Use `--index-url` to select another index.
 - `conda pypi install -e .`: Converts a path to an editable `.conda` format package.
-- `conda pypi convert`: Convert PyPI packages to `.conda` format without installing them.
+- `conda pypi convert`: Convert Python projects to `.conda` format without installing them.
 - `conda pypi index`: Index a local directory of `.whl` files to create a local conda channel.
 - `conda install` from wheel channels (experimental): channels can serve pure Python wheels directly in `repodata.json`.
 - A warning when running `conda create` or `conda install` with `pip` in the environment.
 
 ## Why?
 
-Mixing conda and PyPI is often discouraged in the conda ecosystem.
+Mixing conda packages and packages installed with pip is often discouraged in the conda ecosystem.
 There are only a handful patterns that are safe to run. This tool
 aims to provide a safer way of keeping your conda environments functional
-while mixing it with PyPI dependencies. Refer to the [documentation](docs/)
+while adding Python distribution packages. Refer to the [documentation](docs/)
 for more details.
 
 ## Attribution
 
 - This project now incorporates [conda-pupa](https://github.com/dholth/conda-pupa)
-by Daniel Holth, which provides the core PyPI-to-conda conversion functionality.
+by Daniel Holth, which provides the core wheel-to-conda conversion functionality.
 - The conda-pypi platypus logo is by [James Turner](http://www.eruditebaboon.co.uk/).
 
 ## Contributing

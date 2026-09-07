@@ -13,7 +13,7 @@ Custom Name Mapping
 ===================
 
 The ``--name-mapping`` option allows you to provide a custom JSON file that maps
-PyPI package names to conda package names. This is useful when you need to
+Python distribution package names to conda package names. This is useful when you need to
 replace the built-in grayskull mapping with your own mapping file.
 
 When ``--name-mapping`` is provided, the built-in mapping is not used for that
@@ -21,7 +21,7 @@ conversion. The JSON file is treated as the complete mapping source.
 
 The mapping file should be a JSON object where:
 
-- Keys are PyPI package names (canonicalized, lowercase)
+- Keys are Python distribution package names (canonicalized, lowercase)
 - Values are dictionaries with at least a ``conda_name`` key (string)
 - Optionally can include ``pypi_name``, ``import_name``, and ``mapping_source`` keys
 

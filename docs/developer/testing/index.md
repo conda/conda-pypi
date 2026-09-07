@@ -91,7 +91,7 @@ Tests are organized in the `tests/` directory:
 tests/
 ├── conftest.py              # Shared fixtures and configuration
 ├── cli/                     # CLI-specific tests
-├── pypi_local_index/        # Local PyPI server data
+├── pypi_local_index/        # Local package index data
 ├── conda_local_channel/     # Local conda channel data
 └── test_*.py                # Test modules
 ```
@@ -129,13 +129,15 @@ def test_build_conda_package(tmp_path):
 
 Common fixtures are defined in `tests/conftest.py`:
 
-#### PyPI Local Index
+(pypi-local-index)=
 
-The `pypi_local_index` fixture provides a local PyPI server for testing without network access:
+#### Local package index
+
+The `pypi_local_index` fixture provides a local package index for testing without network access:
 
 ```python
 def test_with_local_pypi(pypi_local_index):
-    """Test using the local PyPI index."""
+    """Test using the local package index."""
     # pypi_local_index is a URL like "http://localhost:8035"
     # Use this in place of real PyPI for offline testing
     pass
@@ -224,7 +226,7 @@ def test_conda_pypi_install(conda_cli, tmp_env):
 
 The test suite uses local HTTP servers to avoid network dependencies:
 
-- **PyPI Server**: Serves packages from `tests/pypi_local_index/`
+- **Package index**: Serves packages from `tests/pypi_local_index/`
 - **Conda Channel Server**: Serves packages from `tests/conda_local_channel/`
 
 For more information on the conda channel server, see the [Mock Channel Server Guide](mock-channel-server.md).

@@ -20,18 +20,22 @@ no local conversion to the `.conda` format is needed.
 
 For setup instructions for the `conda-pypi` channel, see the {doc}`../quickstart`.
 
-## On-the-fly conversion of PyPI wheels to conda packages
+(on-the-fly-conversion-of-pypi-wheels-to-conda-packages)=
+
+## On-the-fly conversion of wheels to conda packages
 
 The inspiration for this approach initially started with the [conda-pupa](https://github.com/dholth/conda-pupa)
-project. The philosophy used here is that we can simply convert a wheel from PyPI into a conda
+project. The philosophy used here is that we can simply convert a wheel into a conda
 package and cache it on the host locally. In conda, it's straightforward to configure multiple channels
 to be used when installing packages, and by default, a "local" channel is included. As `conda-pypi`
-is run, it will begin transforming and caching wheels from PyPI into the conda packages which
+is run, it will begin transforming and caching wheels into the conda packages which
 are then saved in this local channel.
 
 This is the approach we currently feel most confident with implementing.
 
-## Analyze the dependency tree of your PyPI package
+(analyze-the-dependency-tree-of-your-pypi-package)=
+
+## Analyze the dependency tree of your Python distribution package
 
 In this approach, we run `pip` with the `--dry-run` option and analyze the proposed solution. Of those packages,
 we see which ones are already available on the configured conda channels and install them with `conda` proper.
