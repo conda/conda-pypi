@@ -25,7 +25,7 @@ def test_cli(conda_cli):
     # Help commands raise SystemExit, so we need to handle that
     out, _err, rc = conda_cli("pypi", "install", "--help", raises=SystemExit)
     assert rc.value.code == 0  # SystemExit(0) means success
-    assert "PyPI packages to install" in out
+    assert "Python distribution packages to install" in out
     assert "--dry-run" in out
     assert "--yes" in out
 
