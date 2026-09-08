@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* Switch the recipe back to Python noarch since the `EXTERNALLY_MANAGED` file isn't currently being used. (#518)
