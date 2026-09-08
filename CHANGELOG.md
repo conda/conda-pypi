@@ -25,6 +25,7 @@
 
 * Correct marker-conversion docs for MatchSpec `[when=…]` support and link CEP 43. (#472)
 * Document that the `conda_pypi_pip_warning` tip is triggered by a new `pip` install, not by `pip` merely being present. (#484)
+* Clarify terminology for distribution packages, package indexes, distribution formats, and package installers. (#516)
 
 ### Other
 
