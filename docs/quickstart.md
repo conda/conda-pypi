@@ -130,7 +130,8 @@ packages without using the `conda-pypi` channel. This method downloads missing
 wheels from PyPI and other package indexes and converts them to `.conda` format, then
 installs them. PyPI is the default index. Use `--index-url` to select another
 index for wheel downloads, including missing dependencies. Repeat the option
-to search multiple indexes. These replace the default PyPI index list.
+to search multiple indexes. Providing this option replaces the default PyPI
+index list.
 
 :::{note}
 These instructions assume that you have done the following:
