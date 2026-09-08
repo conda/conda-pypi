@@ -12,6 +12,8 @@ source:
 
 build:
   # can't be noarch because we can't place EXTERNALLY-MANAGED in stdlib (first level is site-packages)
+  # However, EXTERNALLY-MANAGED is temporarily disabled, so go back to noarch
+  noarch: python
   number: 0
   script:
     - set -x  # [unix]
@@ -44,10 +46,6 @@ test:
     - conda_pypi.main
   commands:
     - python -m conda pypi --help
-    - python -c "from conda_pypi.python_paths import get_env_stdlib; assert (get_env_stdlib() / 'EXTERNALLY-MANAGED').exists()"
-    - python -c "from conda_pypi.python_paths import get_env_stdlib; content = (get_env_stdlib() / 'EXTERNALLY-MANAGED').read_text(); assert '[externally-managed]' in content"
-    - python -c "from conda_pypi.python_paths import get_env_stdlib; content = (get_env_stdlib() / 'EXTERNALLY-MANAGED').read_text(); assert 'conda pypi' in content"
-    - python -m pip install requests && exit 1 || exit 0
 
 about:
   home: https://github.com/conda/conda-pypi
