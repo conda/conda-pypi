@@ -9,7 +9,7 @@
 Welcome to the `conda-pypi` documentation!
 
 `conda-pypi` provides better PyPI interoperability for the conda ecosystem.
-It allows you to safely install PyPI packages in conda environments by
+It allows you to safely install Python distribution packages in conda environments by
 converting them to conda format when possible, while falling back to
 traditional pip installation when needed.
 
@@ -19,11 +19,12 @@ the tool makes pure Python packages from PyPI available through
 the `conda install` command, with no extra conversion needed.
 
 The tool also offers three commands for more advanced usage: `conda pypi install`
-for safer PyPI package installation with an intelligent hybrid approach,
-and `conda pypi convert` for converting PyPI packages to `.conda` format
-without installing them. The smart installation strategy ensures that
-explicitly requested packages come from PyPI while dependencies are sourced
-from conda channels when available. The `conda pypi index` command is provided
+for safer installation of Python distribution packages with an intelligent hybrid approach,
+and `conda pypi convert` for converting Python projects to `.conda` format
+without installing them. The installation strategy fetches missing wheels from
+PyPI and other package indexes while using packages from conda channels when available.
+PyPI is the default index, and `--index-url` selects an alternative for
+`conda pypi install`. The `conda pypi index` command is provided
 for indexing a local directory of `.whl` files to create a local conda channel.
 
 `conda-pypi` includes support for development workflows through editable

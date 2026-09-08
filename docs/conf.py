@@ -117,4 +117,6 @@ sitemap_url_scheme = "{link}"
 
 # -- For sphinx_reredirects ------------------------------------------------
 
-redirects = {}
+redirects = {
+    "why/conda-vs-pypi": "../conda-packages-and-wheels/",
+}

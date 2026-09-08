@@ -125,10 +125,13 @@ dependencies will be installed from conda rather than PyPI.
 The `conda pypi install` command is pending deprecation and will be removed in version 27.9. Use `conda install` with `conda-pypi` channel configuration instead.
 :::
 
-You can also use the `conda pypi` command to install packages from
-PyPI without using the `conda-pypi` channel. This method downloads
-the package from PyPI and converts it to `.conda` format, then installs
-it.
+You can also use the `conda pypi install` command to install Python distribution
+packages without using the `conda-pypi` channel. This method downloads missing
+wheels from PyPI and other package indexes and converts them to `.conda` format, then
+installs them. PyPI is the default index. Use `--index-url` to select another
+index for wheel downloads, including missing dependencies. Repeat the option
+to search multiple indexes. Providing this option replaces the default PyPI
+index list.
 
 :::{note}
 These instructions assume that you have done the following:
@@ -142,34 +145,34 @@ conda pypi install build
 ```
 
 This will download and convert the `build` package from PyPI to `.conda`
-format. Even though `python-build` exists on conda, the explicitly requested
-package always comes from PyPI to ensure you get exactly what you asked for.
-However, its dependencies will preferentially come from conda channels when
+format if it is not already available from the configured conda channels or
+the local conversion cache.
+Its dependencies will preferentially come from conda channels when
 available.
 
 ```bash
 conda pypi install some-package-with-many-deps
 ```
 
-Here's where the hybrid approach really shines:
-`some-package-with-many-deps` itself will be converted from PyPI, but
-conda-pypi will analyze its dependency tree and:
+If `some-package-with-many-deps` is unavailable from the configured conda
+channels and the local conversion cache, it will be fetched from the configured
+package indexes and converted. For its dependencies, conda-pypi will:
+
 - Install dependencies like `numpy`, `pandas`, etc. from the conda channel (if
   available)
-- Convert only the dependencies that aren't available on conda channels from
-  PyPI
+- Fetch and convert missing wheels from the configured package indexes
 
 ```bash
 conda pypi install --ignore-channels some-package
 ```
 
-This command forces dependency resolution to use only PyPI, bypassing conda channel
-checks for dependencies. The requested package is always converted from PyPI
-regardless of this flag.
+This command bypasses the configured conda channels. Missing wheels are fetched
+from the configured package indexes, which default to PyPI. The local
+conversion cache remains available regardless of this flag.
 
 ### Converting packages without installing
 
-You can also convert PyPI packages to `.conda` format without installing
+You can also convert Python projects to `.conda` format without installing
 them:
 
 ```bash
@@ -180,7 +183,7 @@ conda pypi convert niquests rope
 conda pypi convert -d ./my_packages niquests rope
 ```
 
-This is useful for creating conda packages from PyPI distributions or
+This is useful for creating conda packages from Python distributions or
 preparing packages for offline installation.
 
 ### Indexing a local wheel directory
@@ -240,7 +243,7 @@ More details about this protection mechanism can be found at
 By default, `conda-pypi` displays a short tip when a conda transaction
 newly installs `pip` into an environment. The tip is not shown on `pip`
 upgrades, or on later installs into an environment that already has `pip`.
-It points to the conda-pypi docs for installing PyPI packages with conda.
+It points to the conda-pypi docs for installing packages from PyPI with conda.
 
 To disable this tip:
 

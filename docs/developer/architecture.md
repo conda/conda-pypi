@@ -12,8 +12,8 @@ workflows without requiring modifications to conda itself.
 The plugin registers several hooks with `conda`'s plugin system. The
 subcommand hook adds the `conda pypi` subcommand to conda through
 `conda_pypi.plugin.conda_subcommands()`, providing `conda pypi install`
-for installing PyPI packages with conversion (pending deprecation), `conda pypi convert` for
-converting PyPI packages without installing them, and `conda pypi index` for indexing a local directory of `.whl` files to create a local conda channel.
+for installing Python distribution packages with conversion (pending deprecation), `conda pypi convert` for
+converting Python projects without installing them, and `conda pypi index` for indexing a local directory of `.whl` files to create a local conda channel.
 
 The plugin also registers two post-command hooks that extend conda's
 existing commands. The environment protection hook triggers after `install`,
@@ -40,7 +40,7 @@ Dependency Resolution
          ↓
 Channel Search for Dependencies
          ↓
-Convert Missing from PyPI
+Convert Missing Wheels from Package Indexes
          ↓
 Install via conda
          ↓
@@ -88,30 +88,30 @@ install/      install/create/
 create        update/remove
     ↓           ↓
 Process       Deploy
-PyPI          EXTERNALLY-
-lines         MANAGED
+requirements  EXTERNALLY-
+from indexes  MANAGED
     ↓           ↓
 Install       Create marker
-PyPI          files
-packages
+packages      files
+from indexes
 ```
 
 ## Key Design Principles
 
 The architecture of `conda-pypi` is built around several key design
-principles that ensure effective integration between conda and PyPI
-ecosystems.
+principles that ensure effective integration between conda and Python
+packaging tools.
 
 Conda-native integration is achieved by using `conda`'s official plugin
 system and leveraging `conda`'s existing infrastructure including solvers,
 channels, and metadata systems. This approach maintains full compatibility
 with existing conda workflows.
 
-This hybrid approach ensures that explicit packages always come
-from PyPI to respect user intent, while dependencies prefer conda channels
-for ecosystem compatibility. The system falls back to PyPI conversion only
+This hybrid approach resolves packages from conda channels and the local
+conversion cache, then fetches missing wheels from package indexes
+(PyPI by default). The system falls back to wheel conversion only
 when needed.
 
 This architecture enables conda-pypi to provide a seamless bridge between
-the conda and PyPI ecosystems while maintaining the integrity and benefits of
+conda and Python packaging tools while maintaining the integrity and benefits of
 both package management systems.

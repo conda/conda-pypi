@@ -15,7 +15,7 @@ def configure_parser(parser: _SubParsersAction) -> None:
         """
         Examples:
 
-        Convert a PyPI package to conda format without installing::
+        Convert a local wheel to conda format without installing::
 
             conda pypi convert ./requests-2.32.5-py3-none-any.whl
 

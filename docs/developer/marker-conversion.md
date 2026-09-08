@@ -4,7 +4,7 @@ This page documents how conda-pypi translates PEP 508 environment markers for re
 
 ## Context
 
-PyPI [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) (`python_version`, `sys_platform`, `extra`, and related variables) are not valid conda `MatchSpec` syntax on their own. For wheel repodata from {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata`, conda-pypi does emit `[when="…"]` on dependency strings and `extra_depends` tables so that the Rattler solver can use them. The inner condition is JSON-encoded (`json.dumps`) so nested quotes are safe.
+PEP 508 [environment markers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers) (`python_version`, `sys_platform`, `extra`, and related variables) are not valid conda `MatchSpec` syntax on their own. For wheel repodata from {py:func}`conda_pypi.pypi_metadata.pypi_to_repodata`, conda-pypi does emit `[when="…"]` on dependency strings and `extra_depends` tables so that the Rattler solver can use them. The inner condition is JSON-encoded (`json.dumps`) so nested quotes are safe.
 
 When building `.conda` packages from wheel `METADATA` ({py:func}`conda_pypi.translate.requires_to_conda`), markers are not encoded as `[when="…"]` on `depends`. The PEP 508 marker `extra == "…"` is split into the per-extra requirement map. Other marker dimensions are omitted from `depends`.
 

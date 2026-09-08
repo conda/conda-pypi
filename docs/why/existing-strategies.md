@@ -1,7 +1,7 @@
 # Existing strategies
 
 There are currently only a handful of patterns that are considered safe
-when installing PyPI packages inside a conda environment. We list these
+when installing Python distribution packages inside a conda environment. We list these
 scenarios below:
 
 ## Only install Python & pip inside conda environments
@@ -31,7 +31,9 @@ $ conda activate editable-install
 $ pip install -e . --no-deps
 ```
 
-## Package your PyPI dependencies as conda packages
+(package-your-pypi-dependencies-as-conda-packages)=
+
+## Package your Python dependencies as conda packages
 
 This is the safest option in terms of ensuring maximum stability, but it is
 also the most time-consuming. Maintaining a separate conda package can be a cumbersome

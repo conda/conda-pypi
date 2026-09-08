@@ -18,7 +18,7 @@ def conda_subcommands():
         name="pypi",
         action=cli.main.execute,
         configure_parser=cli.main.configure_parser,
-        summary="Install PyPI packages as conda packages",
+        summary="Install Python distribution packages as conda packages",
     )
 
 

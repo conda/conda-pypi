@@ -1,41 +1,48 @@
-# Key differences between conda and PyPI
+(key-differences-between-conda-and-pypi)=
 
-Below, we'll go over the two key differences between conda and PyPI packaging and why
+# Key differences between conda packages and wheels
+
+Below, we'll go over the two key differences between conda packages and wheels and why
 this leads to issues for users. The first problem is related to how binary distributions
 are packaged and distributed and the second problem is related to the package index
 and how each tool tracks what is currently installed.
 
+Wheels and source distributions are formats for
+[Python distribution packages](https://packaging.python.org/en/latest/discussions/distribution-package-vs-import-package/).
+PyPI is a package index that hosts these files. Tools such as pip install them.
+
 ## Summary
 
-- Conda and PyPI use different strategies for building binary distributions; when
+- Conda packages and wheels use different strategies for distributing binaries. When
   using these packaging formats together, it can lead to difficult to debug issues.
-- PyPI tools are aware of what is installed in a conda environment but when these
+- Python package installers such as pip are aware of what is installed in a conda environment but when these
   tools make changes to the environment conda loses track of what is installed.
 - conda relies on all packaging metadata (available packages, their dependencies, etc)
   being available upfront. PyPI only lists the available packages, but their dependencies
   need to be fetched on a package-per-package basis. This means that the solvers are
-  designed to work differently; a conda solver won't easily take the PyPI metadata
+  designed to work differently. A conda solver won't easily take the metadata from PyPI
   because it is not designed to work iteratively.
-- PyPI names are not always the same in a conda channel. They might have a different name,
+- Project names on PyPI are not always the same in a conda channel. They might have a different name,
   or use a different packaging approach altogether.
 
 ## Differences in binary distributions
 
-Conda and PyPI are separate packaging ecosystems with different packaging
-formats and philosophies. Conda distributes packages as .conda and .tar.bz2
+Conda packages and Python wheels have different formats and dependency
+conventions. Conda distributes packages as .conda and .tar.bz2
 files, which can include Python libraries and pre-compiled binaries with dynamic
-links to other dependencies. In contrast, PyPI provides .whl files (as defined
+links to other dependencies. In contrast, PyPI hosts wheel (.whl) files (as defined
 in [PEP 427](https://peps.python.org/pep-0427/)), which typically bundle all
-required binaries or rely on system-level dependencies, as it lacks support for
-non-Python dependency declarations [^1]. PyPI also supports source distributions,
+required binaries or rely on system-level dependencies. The `Requires-External`
+metadata field provides hints for downstream maintainers, rather than conda-style
+dependency resolution [^1]. PyPI also hosts source distributions,
 though these require building during installation.
 
 With that in mind, what are some potential ways this could break when combining the two
 ecosystems together? Because wheels typically include all of their pre-compiled binaries inside
 the wheel itself, this can lead to incompatibilities when used with conda packages containing
 pre-compiled binaries. In the conda ecosystem, these dependencies are normally tested with
-each other before being published during the build process, but the PyPI ecosystem does not test
-its wheels with conda packages and therefore users are typically the first to encounter these
+each other before being published during the build process, but wheels published on PyPI are not generally tested
+with conda packages and therefore users are typically the first to encounter these
 errors.
 
 Some examples of these incompatibilities include symbol errors, segfaults and other difficult to debug
@@ -73,7 +80,7 @@ and prone to errors this environment becomes.
 
 ## Package metadata differences
 
-PyPI and conda expose their packaging metadata in different ways, which results in their
+PyPI and other package indexes expose metadata differently from conda channels, which results in their
 solvers working differently too:
 
 In the conda ecosystem, packages are published to a *channel*. The metadata in
@@ -82,13 +89,13 @@ each package is extracted and aggregated into a per-platform JSON file
 packaging metadata needed for the solver to operate, and it's typically fetched
 and updated every time the user tries to install something.
 
-In PyPI, packages are published to an *index* following the Simple Repository
-API standard ([PEP 503](https://peps.python.org/pep-0503/)). The index provides
+Package indexes such as PyPI expose distribution files through the Simple
+Repository API standard ([PEP 503](https://peps.python.org/pep-0503/)). The index provides
 a list of all the available wheel files, with their filenames encoding some
 packaging metadata (like Python version and platform compatibility). Other
 metadata like the dependencies for that package need to be fetched on a
 per-wheel basis. As a result, the solver fetches metadata as it goes. Modern
-PyPI implementations can serve this index data in either HTML (the original PEP
+package indexes can serve this index data in either HTML (the original PEP
 503 format) or JSON ([PEP 691](https://peps.python.org/pep-0691/)) using HTTP
 content negotiation.
 
@@ -102,7 +109,7 @@ In a nutshell:
   ([PEP 691](https://peps.python.org/pep-0691/)) now provides more structured
   metadata access that reduces this need.
 - The conda solvers can work entirely from the aggregated metadata, while
-  PyPI-focused solvers have typically needed to fetch additional metadata as
+  solvers using package indexes have typically needed to fetch additional metadata as
   solutions are explored, though this pattern is evolving with newer API
   capabilities.
 
@@ -134,4 +141,4 @@ For an excellent overview of what a conda package actually is:
 
 - [What is a conda package? - prefix.dev](https://prefix.dev/blog/what-is-a-conda-package)
 
-[^1]: At least as of August 2025. Check [PEP 725](https://peps.python.org/pep-0725/) for a proposal external dependency metadata.
+[^1]: See [Requires-External](https://packaging.python.org/en/latest/specifications/core-metadata/#requires-external-multiple-use) and [PEP 725](https://peps.python.org/pep-0725/) for work on external dependency metadata.

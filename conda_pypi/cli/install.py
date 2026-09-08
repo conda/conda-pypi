@@ -10,22 +10,23 @@ def configure_parser(parser: _SubParsersAction) -> None:
     """
     Configure all subcommand arguments and options via argparse
     """
-    summary = "Install PyPI packages as conda packages"
+    summary = "Install Python distribution packages as conda packages"
     description = summary
     epilog = dals(
         """
 
-        Install PyPI packages as conda packages.  Any dependencies that are
+        Install Python distribution packages as conda packages.  Dependencies that are
         available on the configured conda channels will be installed with `conda`,
-        while the rest will be converted to conda packages from PyPI.
+        while missing wheels will be fetched from the configured package indexes
+        and converted to conda packages. PyPI is the default index.
 
         Examples:
 
-        Install a single PyPI package into the current conda environment::
+        Install a single Python distribution package into the current conda environment::
 
             conda pypi install requests
 
-        Install multiple PyPI packages with specific versions::
+        Install multiple packages with specific versions::
 
             conda pypi install "numpy>=1.20" "pandas==1.5.0"
 
@@ -33,7 +34,7 @@ def configure_parser(parser: _SubParsersAction) -> None:
 
             conda pypi install -n myenv flask django
 
-        Install packages using only PyPI (skip configured conda channels)::
+        Install packages without searching configured conda channels::
 
             conda pypi install --ignore-channels fastapi
 
@@ -60,14 +61,14 @@ def configure_parser(parser: _SubParsersAction) -> None:
     install.add_argument(
         "--ignore-channels",
         action="store_true",
-        help="Do not search default or .condarc channels. Will search PyPI.",
+        help="Do not search default or .condarc channels. Will search the configured package indexes.",
     )
     install.add_argument(
         "-i",
         "--index-url",
         dest="index_urls",
         action="append",
-        help="Add a PyPI index URL (can be used multiple times).",
+        help="Package index URL to use instead of PyPI (can be used multiple times).",
     )
     output_and_prompt_options = add_output_and_prompt_options(install)
     # These options also exist on the parent parser. Suppressing subparser
@@ -78,7 +79,7 @@ def configure_parser(parser: _SubParsersAction) -> None:
         "packages",
         metavar="PACKAGE",
         nargs="*",
-        help="PyPI packages to install",
+        help="Python distribution packages to install",
     )
     target_env = install.add_mutually_exclusive_group()
     target_env.add_argument(
