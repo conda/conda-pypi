@@ -8,10 +8,12 @@ than looping until max attempts (20).
 
 import os
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 from conda.testing.fixtures import TmpEnvFixture
 
+from conda_pypi.downloader import fetch_pep658_wheel_metadata
 from conda_pypi.exceptions import CondaPypiError
 
 REPO = Path(__file__).parents[1] / "synthetic_repo"
@@ -45,3 +47,50 @@ def test_downloader_detects_no_wheels(tmp_env: TmpEnvFixture, monkeypatch, tmp_p
         assert "source distributions" in error_msg or "only source" in error_msg, (
             f"Expected error message to mention source distributions, got: {error_msg}"
         )
+
+
+def test_fetch_pep658_wheel_metadata_returns_text_on_success():
+    mock_response = MagicMock()
+    mock_response.ok = True
+    mock_response.text = "Metadata-Version: 2.5\nName: mypkg\nVersion: 1.0\n"
+
+    mock_session = MagicMock()
+    mock_session.__enter__ = lambda s: s
+    mock_session.__exit__ = MagicMock(return_value=False)
+    mock_session.get.return_value = mock_response
+
+    with patch("conda.gateways.connection.Session", return_value=mock_session):
+        result = fetch_pep658_wheel_metadata("https://example.com/mypkg-1.0-py3-none-any.whl")
+
+    assert result == mock_response.text
+    mock_session.get.assert_called_once_with(
+        "https://example.com/mypkg-1.0-py3-none-any.whl.metadata", timeout=10
+    )
+
+
+def test_fetch_pep658_wheel_metadata_returns_none_on_404():
+    mock_response = MagicMock()
+    mock_response.ok = False
+    mock_response.status_code = 404
+
+    mock_session = MagicMock()
+    mock_session.__enter__ = lambda s: s
+    mock_session.__exit__ = MagicMock(return_value=False)
+    mock_session.get.return_value = mock_response
+
+    with patch("conda.gateways.connection.Session", return_value=mock_session):
+        result = fetch_pep658_wheel_metadata("https://example.com/legacy-1.0-py3-none-any.whl")
+
+    assert result is None
+
+
+def test_fetch_pep658_wheel_metadata_returns_none_on_exception():
+    mock_session = MagicMock()
+    mock_session.__enter__ = lambda s: s
+    mock_session.__exit__ = MagicMock(return_value=False)
+    mock_session.get.side_effect = ConnectionError("network failure")
+
+    with patch("conda.gateways.connection.Session", return_value=mock_session):
+        result = fetch_pep658_wheel_metadata("https://example.com/mypkg-1.0-py3-none-any.whl")
+
+    assert result is None
