@@ -120,14 +120,14 @@ def test_requires_to_conda_unmapped_dotted_name_preserves_dots():
     assert requires[0] == "jaraco.tidelift>=1"
 
 
-def test_requires_to_conda_omits_pep508_dependency_extras_for_rattler():
-    """PEP 508 optional dependency extras are omitted from depends on the convert path."""
+def test_requires_to_conda_emits_matchspec_dependency_extras():
+    """PEP 508 name extras become MatchSpec extras=[…] on the convert path."""
     requires, extras_map = requires_to_conda(
         ["httpx[cli,http2]>=0.24.0", 'requests[socks]>=2.0; extra == "dev"'],
     )
-    assert requires == ["httpx>=0.24.0"]
+    assert requires == ["httpx>=0.24.0[extras=[cli,http2]]"]
     assert "dev" in extras_map
-    assert extras_map["dev"] == ["requests>=2.0"]
+    assert extras_map["dev"] == ["requests>=2.0[extras=[socks]]"]
 
 
 def test_requires_to_conda_marker_extra_and_platform():

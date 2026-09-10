@@ -1,0 +1,19 @@
+### Enhancements
+
+* Emit MatchSpec `extras=[…]` for optional dependency extras when converting wheels to `.conda` packages (`requires_to_conda`).
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>
