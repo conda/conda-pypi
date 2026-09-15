@@ -87,15 +87,15 @@ pixi run --locked -e test-py312 benchmark --benchmark-json benchmark_results.jso
 
 Benchmarks are marked with `@pytest.mark.benchmark` and are excluded from the regular test suite by default.
 
-The `Test` workflow produces the results, and `Track Benchmarks` uploads them to Bencher. Testbeds use the operating system, architecture, Python major/minor version, and CPU model recorded in the benchmark results. This keeps different CPUs assigned to the same GitHub runner label in separate histories. Pull request results use a `pr-N` branch and compare against the base branch's available history on the same testbed.
+The `Test` workflow measures benchmarks on Ubuntu 24.04. Each case uses fixed local wheel fixtures, one warmup round, and five measured rounds with fresh prefixes and output directories. Environment creation happens outside the measured work. When changing the workload or fixture data, use a new benchmark name so historical timings remain comparable.
 
-Maintainers enable uploads by creating the `conda-pypi` project in Bencher and setting the `BENCHER_API_KEY` repository secret to its project API key. Base branch uploads build a separate history for each testbed. Local runs do not require Bencher credentials.
+For pull requests, the workflow runs the base and head production code sequentially on the same runner with the same PR-head tests, fixtures, and resolved dependencies. This roughly doubles benchmark execution time. The reporter compares matching benchmark names using a fresh baseline branch for that workflow run, without changing the base branch's history. The initial alert tolerance is a 25% latency increase, following [Bencher's relative benchmarking example](https://bencher.dev/docs/how-to/track-benchmarks/#relative-continuous-benchmarking). Tune this tolerance as measurements accumulate. An incompatible baseline or no matching cases produces a neutral comparison check, with the head measurements retained as an artifact.
 
-A green Bencher check means no alert was raised. [Regression detection](https://bencher.dev/docs/explanation/thresholds/) requires a threshold and enough matching history for each benchmark. A new testbed can therefore have a green check before regression detection is possible.
+The separate `Track Benchmarks` workflow uploads results to Bencher. Testbeds combine the producer's Ubuntu version, architecture, Python major/minor version, and CPU model. These names separate environments but do not guarantee identical hardware or load. Artifacts record the runner image version, benchmark harness revision, dependency versions, and a best-effort [Bencher noise diagnostic](https://bencher.dev/docs/reference/bencher-noise/). Noise measurements are diagnostic only and do not adjust timings or decide whether a run passes.
 
-Matching CPU models do not eliminate variation from runner load, runner-image updates, or dependency changes. Investigate these alongside code changes when interpreting an alert.
+Base branch uploads build a history for each testbed. Historical [regression detection](https://bencher.dev/docs/explanation/thresholds/) uses a t-test with a 0.99 probability setting and at least 10 historical measurements, up to 64. The 0.99 setting is not a 1% slowdown tolerance. A green historical check means no alert was raised, which can also happen before enough history exists.
 
-Each benchmark currently measures one iteration. `test_convert_tree` includes package downloads in the measured work, so network conditions and package index changes can affect timings. Repeat unexpected results before treating them as regressions.
+Maintainers enable uploads by creating the `conda-pypi` project in Bencher and setting the `BENCHER_API_KEY` repository secret to its project API key. Local runs do not require Bencher credentials. Shared runner load, cache state, and dependency changes can still affect timings. Repeat unexpected results before treating them as regressions.
 
 ## Writing Tests
 
