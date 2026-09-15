@@ -87,9 +87,13 @@ pixi run --locked -e test-py312 benchmark --benchmark-json benchmark_results.jso
 
 Benchmarks are marked with `@pytest.mark.benchmark` and are excluded from the regular test suite by default.
 
-The `Test` workflow produces the results, and `Track Benchmarks` uploads them to Bencher. Results are grouped by operating system, architecture, Python version, and CPU model in separate testbeds. Pull request results use a `pr-N` branch and are compared with their base branch on the same testbed.
+The `Test` workflow produces the results, and `Track Benchmarks` uploads them to Bencher. Testbeds use the operating system, architecture, Python major/minor version, and CPU model recorded in the benchmark results. This keeps different CPUs assigned to the same GitHub runner label in separate histories. Pull request results use a `pr-N` branch and compare against the base branch's available history on the same testbed.
 
-Maintainers enable uploads by creating the `conda-pypi` project in Bencher and setting the `BENCHER_API_KEY` repository secret to its project API key. The first successful upload from `main` establishes the baseline for each testbed. Local runs do not require Bencher credentials.
+Maintainers enable uploads by creating the `conda-pypi` project in Bencher and setting the `BENCHER_API_KEY` repository secret to its project API key. Base branch uploads build a separate history for each testbed. Local runs do not require Bencher credentials.
+
+A green Bencher check means no alert was raised. [Regression detection](https://bencher.dev/docs/explanation/thresholds/) requires a threshold and enough matching history for each benchmark. A new testbed can therefore have a green check before regression detection is possible.
+
+Matching CPU models do not eliminate variation from runner load, runner-image updates, or dependency changes. Investigate these alongside code changes when interpreting an alert.
 
 Each benchmark currently measures one iteration. `test_convert_tree` includes package downloads in the measured work, so network conditions and package index changes can affect timings. Repeat unexpected results before treating them as regressions.
 
