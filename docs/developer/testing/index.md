@@ -50,7 +50,7 @@ Tests are organized using pytest markers:
 
 ```bash
 # Run only benchmark tests
-pixi run test -m benchmark
+pixi run benchmark
 
 # Skip benchmark tests (default behavior)
 pixi run test -m "not benchmark"
@@ -73,13 +73,25 @@ pixi run test -vv
 
 ## Running Benchmarks
 
-Performance benchmarks are tracked using [codspeed](https://codspeed.io/):
+Performance benchmarks use [pytest-benchmark](https://pytest-benchmark.readthedocs.io/) and are tracked in [Bencher](https://bencher.dev/). Run them locally with the Python 3.12 environment used in CI:
 
 ```bash
-pixi run benchmark
+pixi run --locked -e test-py312 benchmark
+```
+
+To save the results in the JSON format uploaded by CI:
+
+```bash
+pixi run --locked -e test-py312 benchmark --benchmark-json benchmark_results.json
 ```
 
 Benchmarks are marked with `@pytest.mark.benchmark` and are excluded from the regular test suite by default.
+
+The `Test` workflow produces the results, and `Track Benchmarks` uploads them to Bencher. Results are grouped by operating system, architecture, Python version, and CPU model in separate testbeds. Pull request results use a `pr-N` branch and are compared with their base branch on the same testbed.
+
+Maintainers enable uploads by creating the `conda-pypi` project in Bencher and setting the `BENCHER_API_KEY` repository secret to its project API key. The first successful upload from `main` establishes the baseline for each testbed. Local runs do not require Bencher credentials.
+
+Each benchmark currently measures one iteration. `test_convert_tree` includes package downloads in the measured work, so network conditions and package index changes can affect timings. Repeat unexpected results before treating them as regressions.
 
 ## Writing Tests
 
