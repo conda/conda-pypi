@@ -100,6 +100,7 @@ jobs:
     env:
       PIXI_ENV_NAME: test-py${{ matrix.python-version }}
       PYTHONHASHSEED: '0'
+      CONDA_QUIET: 'true'
       CONDA_CHANNELS: conda-forge
       HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:

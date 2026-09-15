@@ -122,6 +122,13 @@ jobs:
                   print(reason, file=summary)
                   print("No performance comparison was made. Head measurements remain available in the producing workflow's benchmark-results artifact.", file=summary)
 
+          def suppress_conversion_alerts(data):
+              # Bencher strips this suffix before storing the benchmark name.
+              # Keep noisy conversion timings visible without generating alerts.
+              for benchmark in data["benchmarks"]:
+                  if "::test_convert_local_tree[" in benchmark["fullname"]:
+                      benchmark["fullname"] += "_bencher_ignore"
+
           results = json.loads(Path(os.environ["BENCHMARK_RESULTS"]).read_text())
           if results["commit_info"]["id"] != os.environ["COMMIT_SHA"]:
               raise ValueError("Head benchmark revision does not match the producing workflow")
@@ -169,6 +176,7 @@ jobs:
                   unmatched = len(results["benchmarks"]) - len(common)
                   for label, data in (("baseline", baseline), ("head", results)):
                       data["benchmarks"] = [item for item in data["benchmarks"] if item["fullname"] in common]
+                      suppress_conversion_alerts(data)
                       Path(f"benchmark-results/{label}_comparison.json").write_text(json.dumps(data))
                   with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as outputs:
                       print("comparison=true", file=outputs)
@@ -176,6 +184,11 @@ jobs:
                       print(f"unmatched_count={unmatched}", file=outputs)
               else:
                   unavailable("The base run has no benchmark results or no matching benchmark names.")
+          else:
+              suppress_conversion_alerts(results)
+              Path("benchmark-results/head_tracking.json").write_text(json.dumps(results))
+              with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
+                  print("BENCHMARK_RESULTS=benchmark-results/head_tracking.json", file=env_file)
 
       - name: Report unavailable PR comparison
         if: steps.pr.outputs.current == 'true' && steps.results.outputs.comparison == 'false'
@@ -254,6 +267,7 @@ jobs:
             --err \
             --adapter python_pytest \
             --github-actions "$GH_TOKEN" \
+            --ci-id "conda-pypi wheel builds" \
             "${options[@]}" \
             --file "$BENCHMARK_RESULTS"
 
@@ -266,5 +280,10 @@ jobs:
           {
             echo "Measured $COMMON_BENCHMARKS matching benchmarks at the base and PR revisions on the same runner."
             echo "Head benchmarks without matching base measurements: $UNMATCHED_BENCHMARKS."
-            echo "The initial alert tolerance is a 25% latency increase. Runner load and cache state can still vary."
+            echo "The initial wheel-build alert tolerance is a 25% latency increase. Runner load and cache state can still vary."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Explain conversion measurements
+        if: ${{ !cancelled() && steps.artifacts.outputs.found == 'true' && (github.event.workflow_run.event != 'pull_request' || steps.results.outputs.comparison == 'true') }}
+        run: |
+          echo "Conversion benchmarks are informational because unchanged-code runs showed substantial timing variation. Bencher retains their measurements and suppresses their alerts. Only wheel-build benchmarks contribute to the performance check." >> "$GITHUB_STEP_SUMMARY"

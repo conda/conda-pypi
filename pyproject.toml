@@ -135,6 +135,7 @@ default-environment = "test-py312"
 [tool.pixi.feature.test.tasks.benchmark.env]
 CONDA_CHANNELS = "conda-forge"
 PYTHONHASHSEED = "0"
+CONDA_QUIET = "true"
 
 
 [tool.pixi.feature.test.dependencies]
