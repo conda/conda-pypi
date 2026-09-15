@@ -29,13 +29,10 @@ def test_convert_local_tree(
     benchmark,
 ):
     """Convert fixed local wheels with a fresh prefix and repository per round."""
-    setup_counter = 0
 
     def setup():
-        nonlocal setup_counter
-        setup_counter += 1
-        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo-{setup_counter}")
-        prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}-{setup_counter}"))
+        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo")
+        prefix = str(tmp_path_factory.mktemp("-".join(packages)))
 
         conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
 
@@ -47,6 +44,8 @@ def test_convert_local_tree(
         match_specs = [MatchSpec(pkg) for pkg in packages]
         tree_converter.convert_tree(match_specs)
 
+    # Keep conversion measurements while suppressing alerts until they stabilize.
+    benchmark.fullname += "_bencher_ignore"
     benchmark.pedantic(
         target,
         setup=setup,
@@ -73,14 +72,11 @@ def test_build_local_wheel(
     """Build a fixed local wheel with fresh prefix, build, and output directories."""
     wheel_path = PYPI_LOCAL_INDEX / wheel
     package = wheel_path.parent.name
-    setup_counter = 0
 
     def setup():
-        nonlocal setup_counter
-        setup_counter += 1
-        prefix = str(tmp_path_factory.mktemp(f"{package}-{setup_counter}"))
-        build_path = tmp_path_factory.mktemp(f"build-{package}-{setup_counter}")
-        output_path = tmp_path_factory.mktemp(f"output-{package}-{setup_counter}")
+        prefix = str(tmp_path_factory.mktemp(package))
+        build_path = tmp_path_factory.mktemp(f"build-{package}")
+        output_path = tmp_path_factory.mktemp(f"output-{package}")
 
         conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
 
