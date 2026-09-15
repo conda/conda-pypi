@@ -41,6 +41,7 @@ jobs:
           filters: |
             code:
               - '.github/workflows/test.yml'
+              - '.github/workflows/benchmarks.yml'
               - 'conda_pypi/**'
               - 'tests/**'
               - 'pyproject.toml'
@@ -89,37 +90,122 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true' && !github.event.repository.fork
     name: benchmarks py${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
         python-version: ["312"]
     env:
       PIXI_ENV_NAME: test-py${{ matrix.python-version }}
+      PYTHONHASHSEED: '0'
+      CONDA_QUIET: 'true'
+      CONDA_CHANNELS: conda-forge
+      HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
         with:
           environments: ${{ env.PIXI_ENV_NAME }}
+          locked: true
       - name: Fix Ubuntu configuration
         run:
           # Remove global pip config that interferes with isolated testing
           # See: https://github.com/actions/runner-images/blob/6d025759810a/images/ubuntu/scripts/build/install-python.sh#L15-L21
-          sudo rm /etc/pip.conf
+          sudo rm -f /etc/pip.conf
       - name: Setup project
         run: |
           pixi reinstall --environment ${{ env.PIXI_ENV_NAME }} conda-pypi
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
           echo "channels: [conda-forge]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
-      - name: Run benchmarks
-        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+      - name: Keep the resolved benchmark environment
+        run: |
+          pixi run --locked --environment "$PIXI_ENV_NAME" python - <<'PY'
+          import os
+          import sys
+          from pathlib import Path
+
+          with open(os.environ["GITHUB_ENV"], "a") as env_file:
+              print(f"BENCHMARK_PYTHON={sys.executable}", file=env_file)
+          with open(os.environ["GITHUB_PATH"], "a") as path_file:
+              print(Path(sys.executable).parent, file=path_file)
+          PY
+          pixi run --locked --environment "$PIXI_ENV_NAME" conda list --show-channel-urls > "$RUNNER_TEMP/benchmark_dependencies.txt"
+
+      - name: Record runner and benchmark harness
+        shell: python
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          metadata = {
+              "runner": "ubuntu-24.04",
+              "image_os": os.environ.get("ImageOS"),
+              "image_version": os.environ.get("ImageVersion"),
+              "harness_sha": os.environ["HEAD_SHA"],
+          }
+          Path(os.environ["RUNNER_TEMP"], "runner_metadata.json").write_text(json.dumps(metadata))
+          Path(os.environ["RUNNER_TEMP"], "event.json").write_bytes(
+              Path(os.environ["GITHUB_EVENT_PATH"]).read_bytes()
+          )
+
+      - name: Install Bencher diagnostics
+        id: bencher
+        continue-on-error: true
+        uses: bencherdev/bencher@8d75325c3bc59403a2186a056b472c4f49d42838 # v0.6.12
         with:
-          mode: instrumentation
-          token: ${{ secrets.CODSPEED_TOKEN }}
-          run: pixi run --environment ${{ env.PIXI_ENV_NAME }} benchmark
+          version: '0.6.12'
+
+      - name: Record runner noise
+        if: steps.bencher.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          bencher noise --duration 30 --quiet | tee "$RUNNER_TEMP/noise.txt"
+
+      - name: Run base benchmarks on the same runner
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          trap 'rm -f "$RUNNER_TEMP/baseline_results.json"' ERR
+          git checkout --detach "$BASE_SHA"
+          # Use identical benchmark cases, fixtures, and pytest settings while
+          # measuring the production code at the actual base revision.
+          git restore --source "$HEAD_SHA" --worktree -- tests pyproject.toml
+          "$BENCHMARK_PYTHON" -m pytest tests/test_benchmarks.py \
+            -m benchmark --benchmark-only \
+            --benchmark-json "$RUNNER_TEMP/baseline_results.json"
+
+      - name: Run benchmarks
+        run: |
+          # Discard only the harness overlay in this disposable CI checkout.
+          git checkout --detach --force "$HEAD_SHA"
+          "$BENCHMARK_PYTHON" -m pytest tests/test_benchmarks.py \
+            -m benchmark --benchmark-only \
+            --benchmark-json "$RUNNER_TEMP/benchmark_results.json"
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: benchmark-results-v3
+          path: |
+            ${{ runner.temp }}/benchmark_results.json
+            ${{ runner.temp }}/baseline_results.json
+            ${{ runner.temp }}/benchmark_dependencies.txt
+            ${{ runner.temp }}/noise.txt
+            ${{ runner.temp }}/runner_metadata.json
+            ${{ runner.temp }}/event.json
+          if-no-files-found: error
+          retention-days: 7
 
   # required check
   analyze:

@@ -50,7 +50,7 @@ Tests are organized using pytest markers:
 
 ```bash
 # Run only benchmark tests
-pixi run test -m benchmark
+pixi run benchmark
 
 # Skip benchmark tests (default behavior)
 pixi run test -m "not benchmark"
@@ -73,13 +73,31 @@ pixi run test -vv
 
 ## Running Benchmarks
 
-Performance benchmarks are tracked using [codspeed](https://codspeed.io/):
+Performance benchmarks use [pytest-benchmark](https://pytest-benchmark.readthedocs.io/) and are tracked in [Bencher](https://bencher.dev/). Run them locally with the Python 3.12 environment used in CI:
 
 ```bash
-pixi run benchmark
+pixi run --locked -e test-py312 benchmark
+```
+
+To save the results in the JSON format uploaded by CI:
+
+```bash
+pixi run --locked -e test-py312 benchmark --benchmark-json benchmark_results.json
 ```
 
 Benchmarks are marked with `@pytest.mark.benchmark` and are excluded from the regular test suite by default.
+
+The `Test` workflow measures benchmarks on Ubuntu 24.04. Each case uses fixed local wheel fixtures, one warmup round, and five measured rounds with fresh prefixes and output directories. Environment creation happens outside the measured work. Quiet mode disables progress-animation threads. When changing the workload or fixture data, use a new benchmark name so historical timings remain comparable.
+
+For pull requests, the workflow runs the base and head production code sequentially on the same runner with the same PR-head tests, fixtures, and resolved dependencies. This roughly doubles benchmark execution time. The reporter requires both runs to contain the same benchmark names and compares them using a fresh baseline branch for that workflow run, without changing the base branch's history. The initial wheel-build alert tolerance is a 25% latency increase, following [Bencher's relative benchmarking example](https://bencher.dev/docs/how-to/track-benchmarks/#relative-continuous-benchmarking). Tune this tolerance as measurements accumulate. An incompatible baseline or differing benchmark names produces a neutral comparison check, with the head measurements retained as an artifact.
+
+Conversion benchmarks remain informational because repeated measurements of unchanged code showed substantial variation. Their tests append `_bencher_ignore` to the benchmark name for [Bencher's native alert suppression](https://bencher.dev/docs/explanation/thresholds/#suppressing-alerts). Bencher removes the suffix when storing the results. The `Bencher Report (conda-pypi wheel builds)` check covers wheel-build alerts. Enable conversion alerts once control runs demonstrate stable measurements.
+
+The separate `Track Benchmarks` workflow uses the shared [`conda/actions/bencher`](https://github.com/conda/actions/tree/main/bencher) action to upload results. Testbeds combine the producer's Ubuntu version, architecture, Python major/minor version, and CPU model. These names separate environments but do not guarantee identical hardware or load. The `benchmark-results-v3` artifact records the results, producing event, runner image version, benchmark harness revision, dependency versions, and a best-effort [Bencher noise diagnostic](https://bencher.dev/docs/reference/bencher-noise/). Noise measurements are diagnostic only and do not adjust timings or decide whether a run passes.
+
+Base branch uploads build a history for each testbed. Historical [regression detection](https://bencher.dev/docs/explanation/thresholds/) uses a t-test with a 0.99 probability setting and at least 10 historical measurements, up to 64. The 0.99 setting is not a 1% slowdown tolerance. A green historical check means no alert was raised, which can also happen before enough history exists.
+
+Maintainers enable uploads by creating the `conda-pypi` project in Bencher and setting the `BENCHER_API_KEY` repository secret to its project API key. Local runs do not require Bencher credentials. Shared runner load, cache state, and dependency changes can still affect timings. Repeat unexpected results before treating them as regressions.
 
 ## Writing Tests
 

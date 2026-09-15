@@ -127,9 +127,15 @@ description = "Run the test suite using pytest, excluding benchmarks. This calls
 depends-on = ["dev"]
 
 [tool.pixi.feature.test.tasks.benchmark]
-cmd = "python -mpytest --codspeed"
-description = "Run the benchmark tests using pytest-codspeed. This calls task `dev` first to ensure the environment is set up correctly for testing."
+cmd = "python -m pytest -m benchmark --benchmark-only"
+description = "Run the benchmark tests using pytest-benchmark. This calls task `dev` first to ensure the environment is set up correctly for testing."
 depends-on = ["dev"]
+default-environment = "test-py312"
+
+[tool.pixi.feature.test.tasks.benchmark.env]
+CONDA_CHANNELS = "conda-forge"
+PYTHONHASHSEED = "0"
+CONDA_QUIET = "true"
 
 
 [tool.pixi.feature.test.dependencies]
@@ -137,7 +143,7 @@ pytest = "9.0.*"
 fmt = "!=10.2.0"
 pytest-mock = "3.12.0.*"
 pytest-xprocess = "*"
-pytest-codspeed = ">=3.0.0,<5"
+pytest-benchmark = ">=5.1.0"
 # Build system dependencies
 unearth = ">=0.17.2"
 python-build = "*"
