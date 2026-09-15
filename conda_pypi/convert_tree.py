@@ -28,11 +28,56 @@ from conda_index.index import ChannelIndex  # noqa: TID253
 from unearth import PackageFinder  # noqa: TID253
 
 from conda_pypi.build import build_conda
-from conda_pypi.downloader import find_and_fetch, get_package_finder
+from conda_pypi.downloader import (
+    _download_wheel,
+    _find_wheel_link,
+    fetch_pep658_wheel_metadata,
+    get_package_finder,
+)
 from conda_pypi.index import update_index
+from conda_pypi.translate import FileDistribution, check_import_name_conflicts
 from conda_pypi.utils import SuppressOutput
 
 log = logging.getLogger(__name__)
+
+
+def _format_conflict_line(conflict: tuple, new_pkgs: set | None = None) -> str:
+    """
+    Return a human-readable description of a single PEP 794 conflict tuple
+    """
+    name, pkg1, pkg2, kind = conflict
+    if new_pkgs is not None:
+        # In a cross-install context: identify which party is new vs already installed.
+        incoming = pkg2 if pkg2 in new_pkgs else pkg1
+        existing = pkg1 if pkg2 in new_pkgs else pkg2
+        if kind == "exclusive":
+            return f"  '{name}': incoming '{incoming}' would shadow already-installed '{existing}' (both claim it exclusively)"
+        # exclusive-vs-namespace: incoming exclusive name shadows existing namespace
+        return f"  '{name}': incoming '{incoming}' exclusively claims a name that already-installed '{existing}' uses as a namespace"
+    if kind == "exclusive":
+        return f"  '{name}': '{pkg1}' and '{pkg2}' both claim it exclusively (Import-Name)"
+    # exclusive-vs-namespace: pkg2 exclusively claims a name that pkg1 uses as a namespace
+    return f"  '{name}': '{pkg2}' claims it exclusively (Import-Name) but '{pkg1}' uses it as a namespace (Import-Namespace)"
+
+
+def _parse_pep794_from_metadata_text(
+    metadata_text: str,
+) -> tuple[str, list[str], list[str]]:
+    """Parse Import-Name and Import-Namespace from a raw METADATA string.
+
+    Returns ``(pkg_name, import_names, import_namespaces)`` where *pkg_name* is
+    the conda-normalised package name. Both lists are already filtered of empty
+    entries. ``; private`` suffixes are preserved so that stripping happens
+    centrally inside :func:`check_import_name_conflicts`.
+    """
+    from conda_pypi.name_mapping import pypi_to_conda_name
+
+    dist = FileDistribution(metadata_text)
+    pkg_name = pypi_to_conda_name(dist.metadata.get("name"))
+    import_names = [n for n in (dist.metadata.get_all("import-name") or []) if n.strip()]
+    import_namespaces = [n for n in (dist.metadata.get_all("import-namespace") or []) if n.strip()]
+    return pkg_name, import_names, import_namespaces
+
 
 NOTHING_PROVIDES_RE = re.compile(r"nothing provides (.*) needed by")
 RATTLER_NOTHING_PROVIDES_RE = re.compile(r"\b(.*), (.)* (n|N)o candidates were found(.*)")
@@ -110,8 +155,18 @@ class ConvertTree:
                 missing_packages.update(parse_libmamba_solver_error(e.message))
                 missing_packages.update(parse_rattler_solver_error(e.message))
 
+            # Phase 1: resolve links (no download yet)
+            pending: dict[str, object] = {}
             for package in sorted(missing_packages - fetched_packages):
-                find_and_fetch(self.finder, wheel_dir, package)
+                pending[package] = _find_wheel_link(self.finder, package)
+
+            # Phase 2: check PEP 794 conflicts before touching the network further
+            if pending:
+                self._check_pep794_conflicts_pre_download(pending, wheel_dir)
+
+            # Phase 3: download wheels
+            for package, link in pending.items():
+                _download_wheel(link, wheel_dir)
                 fetched_packages.add(package)
 
             for normal_wheel in wheel_dir.glob("*.whl"):
@@ -154,6 +209,202 @@ class ConvertTree:
             log.debug(f"Exceeded maximum of {max_attempts} attempts")
             return None
         return changes
+
+    def _collect_import_names_from_wheels(
+        self, wheel_dir: pathlib.Path
+    ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+        """Return a tuple of ``(names, namespaces)`` dicts from wheels in *wheel_dir*.
+
+        Each key is the PyPI package name. The values are the raw Import-Name/Import-Namespace
+        entries. The ``; private`` suffixes are preserved. Their stripping happens inside
+        :func:`check_import_name_conflicts`.
+        """
+        from installer.sources import WheelFile
+
+        names: dict[str, list[str]] = {}
+        namespaces: dict[str, list[str]] = {}
+
+        for wheel in wheel_dir.glob("*.whl"):
+            try:
+                with WheelFile.open(wheel) as source:
+                    metadata_text = source.read_dist_info("METADATA")
+                pkg_name, import_names, import_namespaces = _parse_pep794_from_metadata_text(
+                    metadata_text
+                )
+                if import_names:
+                    names[pkg_name] = import_names
+                if import_namespaces:
+                    namespaces[pkg_name] = import_namespaces
+            except Exception:
+                log.debug("Could not read Import-Name from %s", wheel, exc_info=True)
+
+        return names, namespaces
+
+    def _check_pep794_conflicts_pre_download(
+        self,
+        pending: dict,
+        wheel_dir: pathlib.Path,
+    ) -> None:
+        """Check PEP 794 Import-Name conflicts before downloading wheels.
+
+        Fetches each wheel's METADATA file via the PEP 658 ``.whl.metadata``
+        endpoint.
+        Raises a ``CondaError`` if any two pending packages share an Import-Name
+        or if one's Import-Name overlaps another's Import-Namespace.
+
+        PyPI has served PEP 658 metadata for newly uploaded wheels since May 2023.
+        Older wheels may not have the endpoint. In that case a None result is
+        returned and those packages fall through to the post-download check in
+        :func:`_check_import_name_conflicts`.
+        """
+        from conda.exceptions import CondaError
+
+        new_names: dict[str, list[str]] = {}
+        new_namespaces: dict[str, list[str]] = {}
+
+        for _, link in pending.items():
+            metadata_text = fetch_pep658_wheel_metadata(link.url_without_fragment)
+            if metadata_text is None:
+                continue
+            pkg_name, import_names, import_namespaces = _parse_pep794_from_metadata_text(
+                metadata_text
+            )
+            if import_names:
+                new_names[pkg_name] = import_names
+            if import_namespaces:
+                new_namespaces[pkg_name] = import_namespaces
+
+        if not new_names and not new_namespaces:
+            return
+
+        # Include any wheels already downloaded earlier in this session so that
+        # multi-iteration solves (where the solver requests packages in batches)
+        # still catch conflicts between earlier and later batches.
+        existing_names, existing_namespaces = self._collect_import_names_from_wheels(wheel_dir)
+        combined_names = {**existing_names, **new_names}
+        combined_namespaces = {**existing_namespaces, **new_namespaces}
+
+        conflicts = check_import_name_conflicts(combined_names, combined_namespaces)
+        if conflicts:
+            lines = "\n".join(_format_conflict_line(c) for c in conflicts)
+            raise CondaError(
+                f"Import name conflicts detected (PEP 794):\n{lines}\n"
+                "Installing these packages together would cause one to shadow the "
+                "other's modules at runtime. Install them separately or choose "
+                "non-conflicting packages."
+            )
+
+    def _collect_import_names_from_prefix(
+        self,
+    ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+        """Return a tuple of ``(names, namespaces)`` dicts for packages that are
+        already installed in the prefix.
+
+        Reads the ``info/about.json`` files from each package's extracted cache
+        directory made available via ``PrefixRecord.extracted_package_dir``.
+        Packages that predate PEP 794 and carry no ``import_names`` field are
+        silently skipped as there is no data to check.
+
+        Note: conda-forge packages never carry ``import_names`` because the conda
+        package format has no equivalent of PEP 794 ``Import-Name`` metadata.
+        Only packages previously installed via conda-pypi (which write
+        ``import_names`` to ``info/about.json``) will appear here.
+        """
+        import json
+
+        from conda.core.prefix_data import PrefixData
+
+        names: dict[str, list[str]] = {}
+        namespaces: dict[str, list[str]] = {}
+
+        try:
+            for record in PrefixData(self.prefix).iter_records():
+                epd = getattr(record, "extracted_package_dir", None)
+                if not epd:
+                    continue
+                about_path = pathlib.Path(epd) / "info" / "about.json"
+                if not about_path.exists():
+                    continue
+                try:
+                    about = json.loads(about_path.read_text(encoding="utf-8"))
+                    if n := about.get("import_names"):
+                        names[record.name] = n
+                    if ns := about.get("import_namespaces"):
+                        namespaces[record.name] = ns
+                except Exception:
+                    log.debug("Could not read import names from %s", about_path, exc_info=True)
+        except Exception:
+            log.debug("Could not scan prefix for already-installed import names", exc_info=True)
+
+        return names, namespaces
+
+    def _check_import_name_conflicts(self, wheel_dir: pathlib.Path) -> None:
+        """Check for Import-Name conflicts among wheels being installed (PEP 794).
+
+        Two conflict levels are handled here:
+
+        1. Batch conflicts (SHOULD error per PEP 794): Two or more packages in
+        *wheel_dir* share the same exclusive ``Import-Name``, or one package's
+        ``Import-Name`` overlaps another's ``Import-Namespace``. Either case
+        raises a ``CondaError``.
+
+        2. Cross-install conflicts (MAY warn per PEP 794): A package being
+        installed now shares an ``Import-Name`` or ``Import-Namespace``/
+        ``Import-Name`` with a package that is already installed. This is logged
+        as a warning rather than an error because some workflows intentionally
+        replace a package's modules (e.g. multi-step installs with different
+        tools). Only packages that carry PEP 794 metadata (i.e., installed
+        previously via conda-pypi) are checked. conda-forge packages have no
+        ``Import-Name`` metadata and are therefore invisible to this check.
+        """
+        from conda.exceptions import CondaError
+
+        new_names, new_namespaces = self._collect_import_names_from_wheels(wheel_dir)
+
+        if not new_names and not new_namespaces:
+            return
+
+        # Batch conflict check (SHOULD error)
+        batch_conflicts = check_import_name_conflicts(new_names, new_namespaces)
+        if batch_conflicts:
+            lines = "\n".join(_format_conflict_line(c) for c in batch_conflicts)
+            raise CondaError(
+                f"Import name conflicts detected (PEP 794):\n{lines}\n"
+                "Installing these packages together would cause one to shadow the other's "
+                "modules at runtime.  Install them separately or choose non-conflicting packages."
+            )
+
+        # Cross-install conflict check (MAY warn)
+        installed_names, installed_namespaces = self._collect_import_names_from_prefix()
+
+        if not installed_names and not installed_namespaces:
+            return
+
+        # Merge: installed entries first so that new packages appear as the "second"
+        # party in any returned conflict tuple, making messages easier to read.
+        combined_names = {**installed_names, **new_names}
+        combined_namespaces = {**installed_namespaces, **new_namespaces}
+        all_conflicts = check_import_name_conflicts(combined_names, combined_namespaces)
+
+        new_pkgs = set(new_names) | set(new_namespaces)
+
+        cross_conflicts = [
+            c
+            for c in all_conflicts
+            # Involves at least one newly-arriving package
+            if (c[1] in new_pkgs or c[2] in new_pkgs)
+            # but is not purely within the batch (already checked above)
+            and not (c[1] in new_pkgs and c[2] in new_pkgs)
+        ]
+
+        if cross_conflicts:
+            lines = "\n".join(_format_conflict_line(c, new_pkgs=new_pkgs) for c in cross_conflicts)
+            log.warning(
+                "Import name overlap with already-installed packages detected (PEP 794):\n%s\n"
+                "This may cause one package's modules to shadow the other's at runtime. "
+                "If this is intentional, you may ignore this warning.",
+                lines,
+            )
 
     def default_package_finder(self):
         return get_package_finder(self.prefix)
@@ -247,5 +498,11 @@ class ConvertTree:
                     tmp_path=tmp_path,
                     channels=build_channels,
                 )
+
+            # PEP 794: raise an error if any two packages to be installed share an
+            # Import-Name entry (as exclusive import names would shadow each other).
+            wheel_dir = tmp_path / "wheels"
+            if wheel_dir.exists():
+                self._check_import_name_conflicts(wheel_dir)
 
             return changes
