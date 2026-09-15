@@ -113,7 +113,7 @@ jobs:
         run:
           # Remove global pip config that interferes with isolated testing
           # See: https://github.com/actions/runner-images/blob/6d025759810a/images/ubuntu/scripts/build/install-python.sh#L15-L21
-          sudo rm /etc/pip.conf
+          sudo rm -f /etc/pip.conf
       - name: Setup project
         run: |
           pixi reinstall --environment ${{ env.PIXI_ENV_NAME }} conda-pypi
