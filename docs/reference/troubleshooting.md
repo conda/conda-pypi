@@ -42,7 +42,8 @@ conda pypi install -n myenv package-name
 
 ### `conda search` reports missing `repodata.json`
 
-**Problem**: Checking the `conda-pypi` channel with `conda search` fails.
+**Problem**: Checking the `conda-pypi` channel with `conda search` fails on
+conda versions older than 26.7.0.
 
 **Error messages**:
 ```
@@ -51,13 +52,14 @@ UnavailableInvalidChannel: HTTP 404 Not Found for channel conda-pypi
 Artifact noarch/repodata.json not found
 ```
 
-**Cause**: During the beta, the `conda-pypi` channel is served through wheel
-metadata for solver/install workflows. It might not appear in the Anaconda.org
-web UI, and commands such as `conda search` can still request classic
-`repodata.json` metadata. Search support for sharded repodata is tracked in
-[`conda/conda#16134`](https://github.com/conda/conda/issues/16134).
+**Cause**: `conda search` gained support for sharded repodata in conda 26.7.0
+([`conda/conda#16134`](https://github.com/conda/conda/issues/16134)). Earlier
+versions request classic `repodata.json` metadata, which the `conda-pypi`
+channel does not serve.
 
-**Solutions**:
+**Solutions**: Upgrade to conda 26.7.0 or later. On earlier versions, use a
+dry-run solve to check the channel instead:
+
 ```bash
 # Make sure the supported solver path is enabled
 conda config --set solver rattler
@@ -67,7 +69,7 @@ conda config --append channels conda-pypi
 conda create --dry-run -n conda-pypi-test django-modern-rest
 ```
 
-If a dry-run solve or install also fails while using conda 26.5 or newer and
+If a dry-run solve or install also fails while using conda 26.7 or newer and
 the Rattler solver, report the full error in the GitHub issue tracker.
 
 ### Package not found on PyPI

@@ -158,7 +158,7 @@ def notify_conda_pypi_tip(
         logger.warning(
             "\n"
             "  Did you know? You can install many PyPI packages with conda\n"
-            "  using the conda-pypi beta. Get started:\n"
+            "  using conda-pypi. Get started:\n"
             "    https://docs.conda.io/projects/conda/en/stable/new-features.html\n"
         )
 
@@ -178,7 +178,7 @@ class NotifyCondaPypiTipAction(Action):
                 unlink_precs=self.unlink_precs,
             )
         except Exception:
-            logger.debug("Failed to emit conda-pypi pip beta tip", exc_info=True)
+            logger.debug("Failed to emit conda-pypi tip", exc_info=True)
 
     def reverse(self):
         return None

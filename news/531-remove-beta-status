@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* <news item>
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Remove beta status from the conda-pypi documentation. The `conda search` troubleshooting entry is reframed as a conda 26.7.0 version requirement, and the note on `EXTERNALLY-MANAGED` placement now describes it as intended behavior rather than a beta limitation. (#531 via #534)
+
+### Other
+
+* Rename the pip notification from the "conda-pypi beta tip" to the "conda-pypi tip" in user-facing strings and in the post-transaction action name. (#531 via #534)

@@ -27,7 +27,7 @@ def conda_post_transaction_actions():
     from conda_pypi.main import NotifyCondaPypiTipAction
 
     yield CondaPostTransactionAction(
-        name="conda-pypi-notify-pip-beta",
+        name="conda-pypi-notify-pip-tip",
         action=NotifyCondaPypiTipAction,
     )
 
@@ -64,6 +64,6 @@ def conda_settings():
 
     yield CondaSetting(
         name="conda_pypi_pip_warning",
-        description="Enable or disable the conda-pypi beta tip shown when pip is newly installed",
+        description="Enable or disable the conda-pypi tip shown when pip is newly installed",
         parameter=PrimitiveParameter(True),
     )
