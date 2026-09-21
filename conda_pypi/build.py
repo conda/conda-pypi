@@ -108,10 +108,13 @@ def build_pypa(
     prefix: Path,
     distribution="editable",
     yes: bool = True,
+    install_build_dependencies: bool = True,
 ):
     """
     Args:
         distribution: "editable" or "wheel"
+        install_build_dependencies: Install missing build requirements into the target
+            prefix. If false, raise MissingDependencyError without changing dependencies.
     """
     python_executable = str(paths.get_python_executable(prefix))
 
@@ -125,10 +128,14 @@ def build_pypa(
             try:
                 missing = dependencies.check_dependencies(requirements, prefix=prefix)
                 if missing:
+                    if not install_build_dependencies:
+                        raise dependencies.MissingDependencyError(missing)
                     dependencies.ensure_requirements(missing, prefix=prefix, yes=yes)
                     continue
                 break
             except dependencies.MissingDependencyError as e:
+                if not install_build_dependencies:
+                    raise
                 dependencies.ensure_requirements(e.dependencies, prefix=prefix, yes=yes)
 
     build_system_requires = builder.build_system_requires
@@ -283,7 +290,9 @@ def pypa_to_conda(
     pypi_to_conda_name_mapping: dict | None = None,
     channels: Iterable[str] = (),
     yes: bool = True,
+    install_build_dependencies: bool = True,
 ):
+    """Build and convert a project, optionally requiring preinstalled build dependencies."""
     project = Path(project)
 
     # Should this logic be moved to the caller?
@@ -301,6 +310,7 @@ def pypa_to_conda(
             prefix=prefix,
             distribution=distribution,
             yes=yes,
+            install_build_dependencies=install_build_dependencies,
         )
 
         build_path = tmp_path / "build"

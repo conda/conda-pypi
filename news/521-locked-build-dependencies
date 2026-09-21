@@ -1,0 +1,3 @@
+### Enhancements
+
+* Add `install_build_dependencies=False` to `build_pypa()` and `pypa_to_conda()` so callers can require existing build dependencies without installing or resolving additional packages.
