@@ -12,7 +12,7 @@
 
 ### Docs
 
-* Remove beta status from the conda-pypi documentation. The `conda search` troubleshooting entry is reframed as a conda 26.7.0 version requirement, and the note on `EXTERNALLY-MANAGED` placement now describes it as intended behavior rather than a beta limitation. (#531 via #534)
+* Remove beta status from the conda-pypi documentation. Drop the Anaconda.org web UI limitation notes now that the channel is listed there, recommend conda 26.9 or later via `conda self update`, reframe the `conda search` troubleshooting entry as a conda 26.7.0 version requirement, and describe the `EXTERNALLY-MANAGED` placement as intended behavior rather than a beta limitation. (#531 via #534)
 
 ### Other
 

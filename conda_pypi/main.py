@@ -159,7 +159,7 @@ def notify_conda_pypi_tip(
             "\n"
             "  Did you know? You can install many PyPI packages with conda\n"
             "  using conda-pypi. Get started:\n"
-            "    https://docs.conda.io/projects/conda/en/stable/new-features.html\n"
+            "    https://bit.ly/4xXYt0B\n"
         )
 
 

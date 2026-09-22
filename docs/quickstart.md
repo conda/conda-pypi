@@ -8,17 +8,8 @@ environment in conda versions 26.5 and newer.
 Update your conda installation to get `conda-pypi`:
 
 ```bash
-conda install --name base "conda>=26.5"
+conda self update
 ```
-
-You can also install the plugin directly into your `base` environment:
-
-```bash
-conda install --name base conda-pypi
-```
-
-Once installed, the `conda pypi` subcommand becomes available across all your
-conda environments.
 
 ## Set up the `conda-pypi` channel
 
@@ -50,13 +41,6 @@ package.
 
 :::{note}
 Note that the `conda-pypi` channel is currently name-mapped to `conda-forge`, not `defaults`. You may need to add `conda-forge` to your channels list for some solves to succeed.
-:::
-
-:::{note}
-The `conda-pypi` channel might not appear in the Anaconda.org web UI, which
-requests classic `repodata.json` metadata. This does not necessarily mean the
-channel is down. To test the channel, use `conda install` or
-`conda create --dry-run` with the Rattler solver enabled.
 :::
 
 :::{admonition} Limitations

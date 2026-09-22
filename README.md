@@ -27,10 +27,16 @@ Python wheels from PyPI available to users natively through `conda install`.
 
 ## Using `conda-pypi`
 
-`conda-pypi` is available in conda 26.5 or later. To update:
+For the best experience with `conda-pypi`, update to conda 26.9 or later. To update:
 
 ```bash
-conda install --name base "conda>=26.5"
+conda self update
+```
+
+or if updating from older versions of conda without `conda-self` you can also run:
+
+```bash
+conda install --name base "conda>=26.9"
 ```
 
 To opt in, enable the Rattler solver and add the `conda-pypi` channel:
@@ -39,10 +45,6 @@ To opt in, enable the Rattler solver and add the `conda-pypi` channel:
 conda config --set solver rattler
 conda config --append channels conda-pypi
 ```
-
-The `conda-pypi` channel might not appear in the Anaconda.org web UI, which
-requests classic `repodata.json` metadata. Use `conda install` or
-`conda create --dry-run` to check whether the solver can use the channel.
 
 After configuring, you can use packages from PyPI alongside conda packages in
 your normal conda workflows, without needing to convert the wheel files
