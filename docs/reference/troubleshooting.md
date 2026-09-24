@@ -38,6 +38,27 @@ conda create -n myenv python=3.10
 conda pypi install -n myenv package-name
 ```
 
+### Restored environment shows `<unknown>` for wheel packages
+
+**Problem**: After `conda export --format explicit` (or `conda list --explicit`)
+and `conda create --file`, packages that came from the `conda-pypi` channel show
+up as `<unknown>` during installation or in `conda list`.
+
+**Cause**: Explicit files only contain package URLs. A wheel's URL points at
+PyPI and not at a channel. Therefore, there is no channel information to restore.
+
+**Solution**: Use a lockfile format that stores channels. With the
+[conda-lockfiles](https://github.com/conda-incubator/conda-lockfiles) plugin
+installed, `pixi.lock` files map wheels back to the `conda-pypi` channel:
+
+```bash
+conda install --name base conda-forge::conda-lockfiles
+conda export --name myenv --format rattler-lock-v6 --file pixi.lock
+conda create --name myenv-copy --file pixi.lock
+```
+
+See {ref}`wheel-lockfiles` for details.
+
 ## Package Resolution Issues
 
 ### `conda search` reports missing `repodata.json`
