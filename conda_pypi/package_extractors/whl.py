@@ -195,6 +195,27 @@ class MyWheelDestination(WheelDestination):
             wheel_metadata = package_metadata_from_metadata_body(source.read_dist_info("METADATA"))
             copy_into_info_licenses(dist_infos[0], info_dir, wheel_metadata)
 
+            # We persist PEP 794 Import-Name / Import-Namespace into about.json on
+            # disk so that conflict-detection and index tools can read them from the
+            # extracted package dir without having to reopen wheel archives further.
+            about_json_data = {}
+            import_names = wheel_metadata.get_all("import-name")
+            import_namespaces = wheel_metadata.get_all("import-namespace")
+            if import_names is not None:
+                about_json_data["import_names"] = [name for name in import_names if name.strip()]
+            if import_namespaces is not None:
+                about_json_data["import_namespaces"] = [
+                    name for name in import_namespaces if name.strip()
+                ]
+            if about_json_data:
+                about_path = info_dir / "about.json"
+                existing = (
+                    json.loads(about_path.read_text(encoding="utf-8"))
+                    if about_path.exists()
+                    else {}
+                )
+                write_as_json_to_file(about_path, {**existing, **about_json_data})
+
     def finalize_installation(
         self,
         scheme: Scheme,
