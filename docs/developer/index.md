@@ -44,6 +44,22 @@ Complete guide to running tests, writing tests, and using test infrastructure
 
 This project uses [pixi](https://pixi.sh) for environment management. All development commands should be run through pixi.
 
+The `dev` task installs the checkout in editable mode with pip after Pixi resolves
+and installs the dependencies. Conda now depends on a released `conda-pypi`, so
+including an editable PyPI dependency in the same solve causes a conflict. The
+editable install uses the locked dependencies and build tools without resolving
+additional packages. Tests, benchmarks, and docs run `dev` automatically.
+
+Run `pixi run -e <environment> dev` before using the checkout in other commands,
+and again after reinstalling an environment. Changes to Python source files are
+available without reinstalling. Package versions continue to come from Git via
+hatch-vcs.
+
+Python 3.10 remains supported. Its build and test environments prioritize
+Anaconda's main channel and use conda-forge for dependencies unavailable there.
+The Python 3.10 feature also sets `CONDA_CHANNELS` for commands run inside these
+environments. Other environments use conda-forge, with Python 3.11 for docs.
+
 ### Initial Setup
 
 ```bash
@@ -59,18 +75,19 @@ pixi run dev
 
 ```bash
 # Run tests (Python 3.10)
-pixi run test
+pixi run -e test-py310 test
 
 # Run tests with specific Python version
 pixi run -e test-py311 test
 pixi run -e test-py312 test
 pixi run -e test-py313 test
+pixi run -e test-py314 test
 
 # Run linting and formatting
 pixi run pre-commit
 
 # Build documentation
-pixi run -e docs docs
+pixi run -e docs build-docs
 
 # Run benchmarks
 pixi run benchmark
@@ -92,14 +109,14 @@ conda-pypi/
 ├── tests/               # Test suite
 ├── docs/                # Documentation (Sphinx)
 ├── recipe/              # Conda recipe for building the package
-└── pixi.toml            # Project configuration
+└── pyproject.toml       # Python package and Pixi configuration
 ```
 
 ## Contributing
 
 When contributing to `conda-pypi`:
 
-1. **Test with Multiple Python Versions**: Use the provided pixi environments (`test-py310` through `test-py313`)
+1. **Test with Multiple Python Versions**: Use the provided pixi environments (`test-py310` through `test-py314`)
 2. **Run Pre-commit Hooks**: Always run `pixi run pre-commit` before committing
 3. **Update Documentation**: Keep documentation in sync with code changes
 4. **Write Tests**: Add tests for new features and bug fixes

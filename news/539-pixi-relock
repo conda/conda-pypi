@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* Fix Pixi dependency locking with recent conda releases by installing the development checkout after the dependency solve.
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Document editable development setup and the Anaconda channel used for Python 3.10 environments.
+
+### Other
+
+* Require conda-index 0.13.0 or newer and refresh the development lock file while retaining Python 3.10 support.
