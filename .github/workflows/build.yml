@@ -56,10 +56,11 @@ jobs:
           # See: https://github.com/actions/runner-images/blob/6d025759810a/images/ubuntu/scripts/build/install-python.sh#L15-L21
           sudo rm /etc/pip.conf
       - name: Setup project for building
+        env:
+          CHANNELS: ${{ matrix.python-version == '310' && 'https://repo.anaconda.com/pkgs/main, conda-forge' || 'conda-forge, defaults' }}
         run: |
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
-          pixi run --environment ${{ env.PIXI_ENV_NAME }} conda config --add channels defaults
-          pixi run --environment ${{ env.PIXI_ENV_NAME }} conda config --add channels conda-forge
+          echo "channels: [${{ env.CHANNELS }}]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
       - name: Debug conda environment
         run: |
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
