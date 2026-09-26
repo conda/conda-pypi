@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* Write `subdir`, `noarch`, `depends`, and `extra_depends` to `info/index.json` when extracting a wheel, so environments restored from explicit files or lockfiles keep the `noarch` subdir and are not relabelled as `pypi` in `conda list`. (#527 via #536)
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* Document that explicit exports cannot carry channel information for wheels and recommend `pixi.lock` exports via `conda-lockfiles` instead. (#527 via #536)
+
+### Other
+
+* <news item>

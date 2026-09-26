@@ -190,11 +190,45 @@ conda-pypi writes `info/index.json` with:
 - `build` — from WHEEL `Tag` / `Build` headers (prefer `py3-none-any`, else highest
   tag). Noarch tags other than `py3-none-any` are normalized to `py3_none_any_0` to
   match repodata v3, with an informational log when that happens.
+- `subdir` — always `noarch`
+- `noarch` — always `python`
+- `depends` and `extra_depends` — from `Requires-Python` and `Requires-Dist` metadata fields
+
+<!-- TODO: add extras syntax explanation with conda 26.9? -->
 
 These fields mirror repodata v3 channel records. They intentionally differ:
 `fn` identifies the wheel artifact, while `build` is the conda build string.
 Lockfile restore and `conda-meta` JSON filenames use `name`, `version`, and
 `build`, not `fn`.
+
+(wheel-lockfiles)=
+
+#### Exporting and restoring environments
+
+The record for a wheel installed from a wheel channel points at the URL for
+a wheel itself, i.e., a `https://files.pythonhosted.org/...` URL, not at a channel.
+This affects exports:
+
+- `conda export --format explicit` (and `conda list --explicit`) write only
+  those URLs. The file does not mention which channel a wheel came from, so an
+  environment restored from it lists the wheel under `<unknown>` instead of
+  `conda-pypi`. conda-pypi cannot recover this channel on the client side.
+  The package still installs correctly and keeps its `noarch` subdir
+  and dependencies because of the `index.json` fields above.
+- However, lockfile formats that store the channel list next to the package URLs
+  do keep the channel. Install the
+  [conda-lockfiles](https://github.com/conda-incubator/conda-lockfiles) plugin
+  and export a `pixi.lock` (rattler-lock v6) file instead:
+
+```bash
+conda install --name base conda-forge::conda-lockfiles
+conda export --name myenv --format rattler-lock-v6 --file pixi.lock
+conda create --name myenv-copy --file pixi.lock
+```
+
+On restore, `conda-lockfiles` maps PyPI wheel URLs back to the `conda-pypi`
+channel when that channel is listed in the lockfile, and `conda list` in the
+new environment matches the original.
 
 #### Extras and markers
 
