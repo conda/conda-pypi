@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        pixi-env: ["py310", "py311", "py312", "py313", "py314", "canary"]
+        pixi-env: ["py311", "py312", "py313", "py314", "canary"]
         include:
           - os: macos-latest
             pixi-env: "py314"

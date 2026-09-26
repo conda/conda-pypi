@@ -46,11 +46,17 @@ conda-pypi = "conda_pypi.plugin"
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64", "win-64", "linux-aarch64"]
+requires-pixi = ">=0.81"
+
+# conda >=26.7 depends on conda-pypi, so conda-forge's conda-pypi gets pulled into
+# the conda solve. Don't map it to the PyPI name, otherwise pixi pins
+# conda-pypi==<released version> and the editable install of this checkout fails.
+[tool.pixi.workspace.conda-pypi-map]
+conda-forge = { mapping = { conda-pypi = false } }
 
 [tool.pixi.dependencies]
 # must match project.dependencies (sans python and conda)
 python = ">=3.10"
-conda = ">=26.1"
 conda-index = ">=0.12.0"
 conda-package-streaming = ">=0.11"
 packaging = "*"
@@ -139,6 +145,7 @@ CONDA_QUIET = "true"
 
 
 [tool.pixi.feature.test.dependencies]
+conda = ">=26.7.0"
 pytest = "9.0.*"
 fmt = "!=10.2.0"
 pytest-mock = "3.12.0.*"
@@ -159,8 +166,8 @@ flit = "*"
 # Solver for wheel-augmented repodata tests
 conda-rattler-solver = ">=0.0.6"
 
-[tool.pixi.feature.py310.dependencies]
-python = "3.10.*"
+# No py310 test/build environments: conda >=26.7 requires conda-rattler-solver,
+# which requires python >=3.11.
 
 [tool.pixi.feature.py311.dependencies]
 python = "3.11.*"
@@ -178,21 +185,19 @@ python = "3.14.*"
 channels = ["conda-forge", {channel = "conda-canary/label/dev", priority = -1}]
 
 [tool.pixi.feature.canary.dependencies]
-conda = { version = ">=26.1", channel = "conda-canary/label/dev" }
+conda = { version = ">=26.7", channel = "conda-canary/label/dev" }
 
 [tool.pixi.feature.release.dependencies]
 rever = "*"
 
 [tool.pixi.environments]
 release = ["release"]
-build-py310 = ["build", "py310"]
 build-py311 = ["build", "py311"]
 build-py312 = ["build", "py312"]
 build-py313 = ["build", "py313"]
 build-py314 = ["build", "py314"]
 docs = ["docs"]
 lint = ["lint"]
-test-py310 = ["test", "py310"]
 test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
