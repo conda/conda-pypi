@@ -74,14 +74,14 @@ pixi run dev
 ### Common Development Tasks
 
 ```bash
-# Run tests (Python 3.10)
-pixi run -e test-py310 test
+# Run tests (Python 3.14)
+pixi run -e test-py314 test
 
-# Run tests with specific Python version
+# Run tests with another Python version
+pixi run -e test-py310 test
 pixi run -e test-py311 test
 pixi run -e test-py312 test
 pixi run -e test-py313 test
-pixi run -e test-py314 test
 
 # Run linting and formatting
 pixi run pre-commit

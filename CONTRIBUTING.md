@@ -8,7 +8,7 @@ You'll need `pixi` and `git` on your machine. Then:
    conda config --add channels conda-forge
    ```
    This ensures tests can find packages from conda-forge
-3. `pixi run -e test-py310 test` to run the tests. Choose another Python version by selecting its `test-py311` through `test-py314` environment.
+3. `pixi run -e test-py314 test` to run the tests. Choose another Python version by selecting its `test-py310` through `test-py313` environment.
 4. `pixi run -e docs build-docs` to build the docs and `pixi run -e docs serve-docs` to serve them in your browser.
 5. `pixi run lint` to run the pre-commit linters and formatters.
 6. `pixi run news` to create a news file for your Pull Request.

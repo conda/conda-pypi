@@ -8,10 +8,10 @@ This guide covers everything you need to know about testing `conda-pypi`, includ
 
 ### Basic Test Execution
 
-Run the full test suite with Python 3.10:
+Run the full test suite with Python 3.14:
 
 ```bash
-pixi run -e test-py310 test
+pixi run -e test-py314 test
 ```
 
 ### Testing with Different Python Versions
@@ -19,6 +19,9 @@ pixi run -e test-py310 test
 The project supports Python 3.10 through 3.14. Test your changes across all supported versions:
 
 ```bash
+# Python 3.10
+pixi run -e test-py310 test
+
 # Python 3.11
 pixi run -e test-py311 test
 
@@ -38,13 +41,13 @@ You can run specific test files or test functions:
 
 ```bash
 # Run a specific test file
-pixi run -e test-py310 test tests/test_build.py
+pixi run -e test-py314 test tests/test_build.py
 
 # Run a specific test function
-pixi run -e test-py310 test tests/test_build.py::test_indexable
+pixi run -e test-py314 test tests/test_build.py::test_indexable
 
 # Run tests matching a pattern
-pixi run -e test-py310 test -k "test_conda"
+pixi run -e test-py314 test -k "test_conda"
 ```
 
 ### Test Markers
@@ -56,7 +59,7 @@ Tests are organized using pytest markers:
 pixi run benchmark
 
 # Skip benchmark tests (default behavior)
-pixi run -e test-py310 test -m "not benchmark"
+pixi run -e test-py314 test -m "not benchmark"
 ```
 
 ### Verbose Output
@@ -65,13 +68,13 @@ For more detailed test output:
 
 ```bash
 # Show print statements
-pixi run -e test-py310 test -s
+pixi run -e test-py314 test -s
 
 # Verbose pytest output
-pixi run -e test-py310 test -v
+pixi run -e test-py314 test -v
 
 # Even more verbose
-pixi run -e test-py310 test -vv
+pixi run -e test-py314 test -vv
 ```
 
 ### Known upstream failures

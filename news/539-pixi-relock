@@ -12,7 +12,7 @@
 
 ### Docs
 
-* Document editable development setup and the Anaconda channel used for Python 3.10 environments.
+* Document editable development setup, use Python 3.14 in general testing examples, and explain the Anaconda channel used for Python 3.10 environments.
 
 ### Other
 
