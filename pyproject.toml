@@ -201,7 +201,7 @@ python = "3.14.*"
 channels = ["conda-forge", {channel = "conda-canary/label/dev", priority = -1}]
 
 [tool.pixi.feature.canary.dependencies]
-conda = { version = ">=26.1", channel = "conda-canary/label/dev" }
+conda = { version = ">=26.7.2", channel = "conda-canary/label/dev" }
 
 [tool.pixi.feature.release.dependencies]
 rever = "*"

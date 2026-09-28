@@ -17,5 +17,8 @@ def conda_drops_v3_records() -> bool:
     except ImportError:
         return False
 
-    repodata = {"v3": {"whl": {"demo_package-0.1.0-py3-none-any.whl": {"name": "demo-package"}}}}
+    repodata = {
+        "repodata_version": 3,
+        "v3": {"whl": {"demo_package-0.1.0-py3-none-any.whl": {"name": "demo-package"}}},
+    }
     return "demo-package" not in ShardLike(repodata).shards
