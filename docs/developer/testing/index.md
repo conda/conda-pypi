@@ -74,6 +74,12 @@ pixi run -e test-py310 test -v
 pixi run -e test-py310 test -vv
 ```
 
+### Known upstream failures
+
+Conda 26.7.2 drops wheel records when a local monolithic channel is used alongside a sharded channel ([conda#16676](https://github.com/conda/conda/issues/16676)). The two affected installation tests expect only the specific failures caused by this bug. Unexpected passes and unrelated failures still fail the suite.
+
+The tests check whether the installed conda preserves wheel records, so builds containing [the upstream fix](https://github.com/conda/conda/pull/16688) run the normal assertions. A [backport to `26.7.x`](https://github.com/conda/conda/pull/16771) is proposed. These markers do not repair wheel-channel installation in conda 26.7.2.
+
 ## Running Benchmarks
 
 Performance benchmarks use [pytest-benchmark](https://pytest-benchmark.readthedocs.io/) and are tracked in [Bencher](https://bencher.dev/). Run them locally with the Python 3.12 environment used in CI:

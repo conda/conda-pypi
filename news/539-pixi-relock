@@ -17,3 +17,4 @@
 ### Other
 
 * Require conda-index 0.13.0 or newer and refresh the development lock file while retaining Python 3.10 support.
+* Expect the two wheel-channel installation failures caused by conda#16676 only on conda builds that drop v3 records.

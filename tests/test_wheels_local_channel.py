@@ -1,5 +1,9 @@
+import pytest
 import requests
+from conda.exceptions import PackagesNotFoundInChannelsError
 from conda.testing.fixtures import TmpEnvFixture
+
+from tests import conda_drops_v3_records
 
 
 def test_wheels_local_channel_repodata(wheels_local_channel):
@@ -20,6 +24,15 @@ def test_wheels_local_channel_urls_are_local(wheels_local_channel):
         )
 
 
+@pytest.mark.xfail(
+    conda_drops_v3_records(),
+    reason="conda drops v3 wheel records: https://github.com/conda/conda/issues/16676",
+    raises=pytest.RaisesExc(
+        PackagesNotFoundInChannelsError,
+        check=lambda exc: tuple(map(str, exc.packages)) == ("demo-package",),
+    ),
+    strict=True,
+)
 def test_install_demo_package_from_wheels_local_channel(
     wheels_local_channel,
     with_rattler_solver,
