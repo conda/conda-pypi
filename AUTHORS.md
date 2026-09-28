@@ -3,6 +3,7 @@ Authors are sorted alphabetically.
 
 * Abdul Rehman Alvi
 * Agriya Khetarpal
+* Benjamin Inglis
 * Dan Yeaw
 * Daniel Holth
 * Daniel Petry
