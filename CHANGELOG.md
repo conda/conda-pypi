@@ -2,6 +2,45 @@
 
 [//]: # (current developments)
 
+## 0.13.0 (2026-09-28)
+
+### Enhancements
+
+* Derive `conda pypi convert` build numbers from the wheel filename build tag and add `--build-number` to override them. (#315 via #529)
+
+### Bug fixes
+
+* Write `subdir`, `noarch`, `depends`, and `extra_depends` to `info/index.json` when extracting a wheel, so environments restored from explicit files or lockfiles keep the `noarch` subdir and are not relabelled as `pypi` in `conda list`. (#527 via #536)
+* Fix Pixi dependency locking with recent conda releases by installing the development checkout after the dependency solve.
+
+### Docs
+
+* Document that explicit exports cannot carry channel information for wheels and recommend `pixi.lock` exports via `conda-lockfiles` instead. (#527 via #536)
+* Remove beta status from the conda-pypi documentation. Drop the Anaconda.org web UI limitation notes now that the channel is listed there, recommend conda 26.9 or later via `conda self update`, reframe the `conda search` troubleshooting entry as a conda 26.7.0 version requirement, and describe the `EXTERNALLY-MANAGED` placement as intended behavior rather than a beta limitation. (#531 via #534)
+* Document editable development setup, use Python 3.14 in general testing examples, and explain the Anaconda channel used for Python 3.10 environments.
+
+### Other
+
+* Switch the recipe back to Python noarch since the `EXTERNALLY_MANAGED` file isn't currently being used. (#518)
+* Track benchmarks with Bencher instead of CodSpeed, comparing base and PR revisions on the same Ubuntu 24.04 runner with fixed local wheel fixtures. (#525)
+* Rename the pip notification from the "conda-pypi beta tip" to the "conda-pypi tip" in user-facing strings and in the post-transaction action name. (#531 via #534)
+* Require conda-index 0.13.0 or newer and refresh the development lock file while retaining Python 3.10 support.
+* Expect the two wheel-channel installation failures caused by conda#16676 only on conda builds that drop v3 records.
+* Publish the noarch conda-canary package from one build job to avoid concurrent upload conflicts.
+
+### Contributors
+
+* @agriyakhetarpal
+* @bingliscodes
+* @danyeaw
+* @jezdez
+* @ForgottenProgramme
+* @conda-bot
+* @dependabot[bot]
+* @pre-commit-ci[bot]
+
+
+
 ## 0.12.0 (2026-09-03)
 
 ### Enhancements
