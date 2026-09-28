@@ -15,6 +15,7 @@ from conda.exceptions import ArgumentError
 from conda.testing.fixtures import CondaCLIFixture
 
 import conda_pypi.cli.install as install_cli
+from tests import conda_drops_v3_records
 
 
 def test_cli(conda_cli):
@@ -355,6 +356,12 @@ def test_install_package_with_hyphens(tmp_env, conda_cli):
         assert "typing_extensions" in out or "typing-extensions" in out
 
 
+@pytest.mark.xfail(
+    conda_drops_v3_records(),
+    reason="conda drops v3 wheel records: https://github.com/conda/conda/issues/16676",
+    raises=pytest.RaisesExc(AssertionError, match="^idna should come from "),
+    strict=True,
+)
 def test_install_from_whl_augmented_repodata(
     tmp_env, monkeypatch, conda_cli, conda_local_channel, with_rattler_solver
 ):

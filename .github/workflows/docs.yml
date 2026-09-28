@@ -9,6 +9,8 @@ on:
     paths:
       - ".github/workflows/docs.yml"
       - "docs/**"
+      - "pyproject.toml"
+      - "pixi.lock"
   workflow_dispatch:
 
 concurrency:
@@ -32,7 +34,6 @@ jobs:
           environments: docs
       - name: Setup project
         run: |
-          pixi reinstall --environment docs conda-pypi
           pixi run --environment docs dev
       - name: Build docs
         run: pixi run build-docs

@@ -77,9 +77,8 @@ jobs:
           sudo rm /etc/pip.conf
       - name: Setup project
         env:
-          CHANNELS: ${{ env.PIXI_ENV_NAME == 'test-canary' && 'conda-forge, conda-canary/label/dev' || 'conda-forge' }}
+          CHANNELS: ${{ matrix.pixi-env == 'py310' && 'https://repo.anaconda.com/pkgs/main, conda-forge' || matrix.pixi-env == 'canary' && 'conda-forge, conda-canary/label/dev' || 'conda-forge' }}
         run: |
-          pixi reinstall --environment ${{ env.PIXI_ENV_NAME }} conda-pypi
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
           echo "channels: [${{ env.CHANNELS }}]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
@@ -120,7 +119,6 @@ jobs:
           sudo rm -f /etc/pip.conf
       - name: Setup project
         run: |
-          pixi reinstall --environment ${{ env.PIXI_ENV_NAME }} conda-pypi
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
           echo "channels: [conda-forge]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc
           pixi run --environment ${{ env.PIXI_ENV_NAME }} conda info
