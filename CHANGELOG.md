@@ -31,7 +31,7 @@
 ### Contributors
 
 * @agriyakhetarpal
-* @bingliscodes
+* @bingliscodes made their first contribution in https://github.com/conda/conda-pypi/pull/534
 * @danyeaw
 * @jezdez
 * @ForgottenProgramme
