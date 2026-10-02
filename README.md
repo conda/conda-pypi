@@ -1,7 +1,7 @@
 # conda-pypi
 
 <p align="center">
-  <img src="./docs/_static/img/logo.png" alt="conda-pypi logo"/>
+  <img src="https://raw.githubusercontent.com/conda/conda-pypi/refs/heads/main/docs/_static/img/logo.png" alt="conda-pypi logo"/>
 </p>
 
 Better PyPI interoperability for the conda ecosystem.
