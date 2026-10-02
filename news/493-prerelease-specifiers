@@ -1,0 +1,19 @@
+### Enhancements
+
+* <news item>
+
+### Bug fixes
+
+* Append `a0` to non-pre-release `<` bounds in `conda pypi index` dependencies and `Requires-Python` so conda excludes pre-releases consistent with PEP 440 (e.g. `<3.12.0` → `<3.12.0a0` no longer matches `3.12.0rc1`). (#493 via #548)
+
+### Deprecations
+
+* <news item>
+
+### Docs
+
+* <news item>
+
+### Other
+
+* <news item>

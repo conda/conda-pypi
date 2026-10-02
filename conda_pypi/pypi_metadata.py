@@ -9,6 +9,7 @@ from typing import Any
 
 from packaging.requirements import Requirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import Version
 
 from conda_pypi.markers import (
     dependency_extras_suffix,
@@ -20,6 +21,26 @@ from conda_pypi.name_mapping import pypi_to_conda_name
 log = logging.getLogger(__name__)
 
 
+def specifier_bounds_to_conda(specifier: SpecifierSet) -> str:
+    """Return a conda MatchSpec version string built from PEP 440 specifiers.
+
+    Exclusive upper bounds (``<V``) that are not themselves pre-releases get ``a0``
+    appended. PEP 440's ``<V`` excludes pre-releases of ``V``, but conda's ``<`` only
+    compares versions, and pre-releases sort below ``V``, so ``<3.12`` would match
+    ``3.12.0rc1``. ``<3.12a0`` excludes them.
+
+    Bounds are sorted the same way as ``str(SpecifierSet)`` so the output is deterministic.
+    """
+    bounds = []
+    for spec in sorted(specifier, key=str):
+        new_bound = f"{spec.operator}{spec.version}"
+        if spec.operator == "<" and not Version(spec.version).is_prerelease:
+            new_bound += "a0"
+        bounds.append(new_bound)
+
+    return ",".join(bounds)
+
+
 def python_depend_from_requires_python(
     requires_python: str | None, *, package_name: str | None = None, warn: bool = False
 ) -> str:
@@ -29,7 +50,7 @@ def python_depend_from_requires_python(
         # Noarch python packages should still depend on python when PyPI omits requires_python
         return "python"
     try:
-        SpecifierSet(requires_python)
+        specifier = SpecifierSet(requires_python)
     except InvalidSpecifier:
         if warn:
             log.warning(
@@ -38,7 +59,7 @@ def python_depend_from_requires_python(
                 requires_python,
             )
         return "python"
-    return f"python {requires_python}"
+    return f"python {specifier_bounds_to_conda(specifier)}"
 
 
 def pypi_to_repodata(
@@ -75,7 +96,11 @@ def pypi_to_repodata(
         req.name = pypi_to_conda_name(req.name, pypi_to_conda_name_mapping)
         # Use CEP 44 MatchSpec spelling (including optional dependency extras). Rattler-safe
         # normalization applies only to wheel → .conda :func:`conda_pypi.translate.requires_to_conda`.
-        conda_dep = req.name + str(req.specifier) + dependency_extras_suffix(req.extras)
+        conda_dep = (
+            req.name
+            + specifier_bounds_to_conda(req.specifier)
+            + dependency_extras_suffix(req.extras)
+        )
 
         non_extra_condition, extra_names = (
             extract_marker_condition_and_extras(req.marker) if req.marker else (None, [])

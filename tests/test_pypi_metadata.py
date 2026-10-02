@@ -3,6 +3,8 @@
 import json
 import logging
 
+import pytest
+
 from conda_pypi.pypi_metadata import pypi_to_repodata, python_depend_from_requires_python
 
 
@@ -176,6 +178,43 @@ def test_python_depend_from_requires_python(caplog):
     assert (
         "Package 'demo' has an invalid Requires-Python: Invalid specifier: >='2.7'" in caplog.text
     )
+
+
+def test_pypi_to_repodata_excludes_upper_bound_prereleases():
+    pypi_data = {
+        "urls": [
+            {
+                "packagetype": "bdist_wheel",
+                "filename": "certifi-2026.4.22-py3-none-any.whl",
+                "url": "https://files.pythonhosted.org/packages/certifi-2026.4.22-py3-none-any.whl",
+                "digests": {},
+                "size": 0,
+            }
+        ],
+        "info": {
+            "name": "certifi",
+            "version": "2026.4.22",
+            "requires_dist": ["packagea>=3.9,<3.12.0"],
+        },
+    }
+    entry = pypi_to_repodata(pypi_data)
+    assert entry is not None
+    assert "packagea<3.12.0a0,>=3.9" in entry["depends"]
+
+
+@pytest.mark.parametrize(
+    ("requires_python", "expected"),
+    [
+        (">=3.9,<3.12", "python <3.12a0,>=3.9"),
+        ("<3.12.0,>=3.9", "python <3.12.0a0,>=3.9"),
+        (">=3.9,<3.12.0", "python <3.12.0a0,>=3.9"),
+        (">=3.9,<=3.12", "python <=3.12,>=3.9"),
+        (">=3.9,<3.12.0rc1", "python <3.12.0rc1,>=3.9"),
+    ],
+)
+def test_python_depend_excludes_upper_bound_prereleases(requires_python, expected):
+    condition = python_depend_from_requires_python(requires_python)
+    assert condition == expected
 
 
 def test_pypi_to_repodata_appends_python_when_requires_python_invalid():
