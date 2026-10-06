@@ -9,7 +9,8 @@ import logging
 from typing import Any
 
 import requests
-from conda_index.index import BaseCondaIndexCache, ChannelIndex
+from conda_index.index import ChannelIndex
+from conda_index.index.cache import BaseCondaIndexCache
 from conda_index.utils import CONDA_PACKAGE_EXTENSIONS
 
 from conda_pypi.exceptions import UnableToConvertToRepodataEntry

@@ -1,13 +1,12 @@
 {
   "info": {
-    "repodata_revisions": [
-      {
+    "repodata_revisions": {
+      "v3": {
         "n_packages": 0,
         "newest": null,
-        "oldest": null,
-        "revision": 3
+        "oldest": null
       }
-    ],
+    },
     "subdir": "osx-arm64"
   },
   "packages": {},
