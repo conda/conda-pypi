@@ -178,6 +178,32 @@ def test_python_depend_from_requires_python(caplog):
     )
 
 
+def test_pypi_to_repodata_converts_specifiers_to_conda():
+    pypi_data = {
+        "urls": [
+            {
+                "packagetype": "bdist_wheel",
+                "filename": "certifi-2026.4.22-py3-none-any.whl",
+                "url": "https://files.pythonhosted.org/packages/certifi-2026.4.22-py3-none-any.whl",
+                "digests": {},
+                "size": 0,
+            }
+        ],
+        "info": {
+            "name": "certifi",
+            "version": "2026.4.22",
+            "requires_dist": ["packagea>=3.9,<3.12.0"],
+        },
+    }
+    entry = pypi_to_repodata(pypi_data)
+    assert entry is not None
+    assert "packagea<3.12.0a0,>=3.9" in entry["depends"]
+
+
+def test_python_depend_from_requires_python_converts_specifiers_to_conda():
+    assert python_depend_from_requires_python(">=2.0,<3.12.0") == "python <3.12.0a0,>=2.0"
+
+
 def test_pypi_to_repodata_appends_python_when_requires_python_invalid():
     pypi_data = {
         "urls": [

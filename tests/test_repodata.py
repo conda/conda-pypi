@@ -45,6 +45,11 @@ def test_conda_to_requires_formats_exact_versions():
     assert str(requirement) == "twine==6.0.0"
 
 
+def test_conda_to_requires_converts_to_pep():
+    requirement = conda_to_requires(MatchSpec("httpx <1a0,>=0.25.0"))
+    assert str(requirement) == "httpx<1,>=0.25.0"
+
+
 def test_remap_matchspec_name_noop_for_unmapped():
     spec = MatchSpec("requests")
     remapped = remap_match_spec_name(spec, pypi_to_conda_name)

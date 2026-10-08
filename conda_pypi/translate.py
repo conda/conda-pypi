@@ -15,10 +15,12 @@ from typing import Any
 from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec
 from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
 
 from conda_pypi import __version__
 from conda_pypi.name_mapping import conda_to_pypi_name, pypi_to_conda_name
 from conda_pypi.pypi_metadata import python_depend_from_requires_python
+from conda_pypi.specifiers import specifier_bounds_to_conda, specifier_bounds_to_pep440
 
 log = logging.getLogger(__name__)
 
@@ -268,7 +270,7 @@ def requires_to_conda(requires: list[str] | None, pypi_to_conda_name_mapping: di
         # PEP 508 optional dependency extras (e.g. requests[security]) are intentionally
         # omitted here; wheel → .conda convert does not emit MatchSpec extras=[…] yet
         # (see #468). Wheel repodata uses dependency_extras_suffix / pypi_to_repodata.
-        as_conda = requirement.name + str(requirement.specifier)
+        as_conda = requirement.name + specifier_bounds_to_conda(requirement.specifier)
 
         # Wheel METADATA → conda depends: do not emit ``[when=…]`` (conda MatchSpec does not
         # parse it yet). Match main: only ``extra == …`` is routed to the extras map.
@@ -305,7 +307,7 @@ def conda_to_requires(match_spec: MatchSpec) -> Requirement | None:
         version_str = version_str.removesuffix(".*")
         if version_str and version_str[0] not in "<>=!~":
             version_str = f"=={version_str}"
-        return Requirement(f"{name}{version_str}")
+        return Requirement(f"{name}{specifier_bounds_to_pep440(SpecifierSet(version_str))}")
 
     return Requirement(name)
 

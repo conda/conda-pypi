@@ -16,6 +16,7 @@ from conda_pypi.markers import (
     extract_marker_condition_and_extras,
 )
 from conda_pypi.name_mapping import pypi_to_conda_name
+from conda_pypi.specifiers import specifier_bounds_to_conda
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def python_depend_from_requires_python(
         # Noarch python packages should still depend on python when PyPI omits requires_python
         return "python"
     try:
-        SpecifierSet(requires_python)
+        specifier = SpecifierSet(requires_python)
     except InvalidSpecifier:
         if warn:
             log.warning(
@@ -38,7 +39,7 @@ def python_depend_from_requires_python(
                 requires_python,
             )
         return "python"
-    return f"python {requires_python}"
+    return f"python {specifier_bounds_to_conda(specifier)}"
 
 
 def pypi_to_repodata(
@@ -75,7 +76,11 @@ def pypi_to_repodata(
         req.name = pypi_to_conda_name(req.name, pypi_to_conda_name_mapping)
         # Use CEP 44 MatchSpec spelling (including optional dependency extras). Rattler-safe
         # normalization applies only to wheel → .conda :func:`conda_pypi.translate.requires_to_conda`.
-        conda_dep = req.name + str(req.specifier) + dependency_extras_suffix(req.extras)
+        conda_dep = (
+            req.name
+            + specifier_bounds_to_conda(req.specifier)
+            + dependency_extras_suffix(req.extras)
+        )
 
         non_extra_condition, extra_names = (
             extract_marker_condition_and_extras(req.marker) if req.marker else (None, [])

@@ -123,6 +123,7 @@ def execute(args: Namespace) -> int:
     from conda_pypi.downloader import get_package_finder
     from conda_pypi.main import run_conda_install
     from conda_pypi.markers import dependency_extras_suffix
+    from conda_pypi.specifiers import specifier_bounds_to_conda
     from conda_pypi.translate import pypi_to_conda_name, remap_match_spec_name
     from conda_pypi.utils import get_prefix
 
@@ -208,7 +209,7 @@ def execute(args: Namespace) -> int:
             conda_name = pypi_to_conda_name(req.name)
             # Reconstruct properly using packaging's API
             extras = dependency_extras_suffix(req.extras)
-            version_spec = str(req.specifier) if req.specifier else ""
+            version_spec = specifier_bounds_to_conda(req.specifier) if req.specifier else ""
             pkg_spec = f"{conda_name}{version_spec}{extras}"
             match_specs.append(MatchSpec(pkg_spec))
         except InvalidRequirement:
