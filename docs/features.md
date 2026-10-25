@@ -76,6 +76,10 @@ index for wheel downloads, including missing dependencies. Repeat the option
 to search multiple indexes. Providing this option replaces the default PyPI
 index list. It does not configure editable builds or local conversion.
 
+Index lookups and wheel downloads follow the same networking settings as the
+rest of conda: `ssl_verify` (including `truststore` and custom CA bundles),
+`client_ssl_cert`, `client_ssl_cert_key`, and `proxy_servers`.
+
 Project names on PyPI are mapped to conda package names with a bundled Grayskull table, plus a
 simple normalization rule when a package is not listed. `conda pypi convert` can
 load a replacement table from a JSON file via `--name-mapping`. With `-e` /
