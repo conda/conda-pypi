@@ -100,21 +100,36 @@ the conda channel when available. For example, `django-modern-rest` depends on
 `django` and `typing_extensions`. If both are available in your conda channel, those
 dependencies will be installed from conda rather than PyPI.
 
+### Package names
+
+`conda install` uses conda package names, not PyPI project names. When a PyPI
+project appears under a different conda name, install it by the conda
+name. For example, conda-forge publishes the PyPI project
+`jupyterlab-code-formatter` as `jupyterlab_code_formatter`:
+
+```bash
+conda install jupyterlab_code_formatter
+```
+
+If a solve fails with `PackagesNotFoundInChannelsError`, check the package name
+on [anaconda.org](https://anaconda.org). The `conda pypi` subcommands accept
+PyPI names and translate them; `conda install` requires the conda name.
+
 ## Advanced usage
 
 :::{admonition} `conda pypi install` is pending deprecation
 :class: warning
 
-The `conda pypi install` command is pending deprecation and will be removed in version 27.9. Use `conda install` with `conda-pypi` channel configuration instead.
+The `conda pypi install` command is pending deprecation and will be removed in version 27.9. Use `conda install` with `conda-pypi` channel configuration instead. The command remains the only way to install editable local projects with `-e`, and it supports `--index-url` and `--ignore-channels`.
 :::
 
-You can also use the `conda pypi install` command to install Python distribution
-packages without using the `conda-pypi` channel. This method downloads missing
-wheels from PyPI and other package indexes and converts them to `.conda` format, then
-installs them. PyPI is the default index. Use `--index-url` to select another
-index for wheel downloads, including missing dependencies. Repeat the option
-to search multiple indexes. Providing this option replaces the default PyPI
-index list.
+You can also use the `conda pypi install` command without the `conda-pypi`
+channel. It downloads missing wheels from PyPI and other package indexes,
+converts them to `.conda` format, and installs them. Use `--index-url` to select
+another index for wheel downloads, including missing dependencies. Repeat the
+option to search multiple indexes. This replaces the default
+PyPI index list. Use `--ignore-channels` to fetch wheels without searching the
+configured conda channels first.
 
 :::{note}
 These instructions assume that you have done the following:
@@ -124,34 +139,12 @@ These instructions assume that you have done the following:
 :::
 
 ```bash
-conda pypi install build
-```
+# Use a private package index instead of PyPI
+conda pypi install --index-url https://example.com/simple some-package
 
-This will download and convert the `build` package from PyPI to `.conda`
-format if it is not already available from the configured conda channels or
-the local conversion cache.
-Its dependencies will preferentially come from conda channels when
-available.
-
-```bash
-conda pypi install some-package-with-many-deps
-```
-
-If `some-package-with-many-deps` is unavailable from the configured conda
-channels and the local conversion cache, it will be fetched from the configured
-package indexes and converted. For its dependencies, conda-pypi will:
-
-- Install dependencies like `numpy`, `pandas`, etc. from the conda channel (if
-  available)
-- Fetch and convert missing wheels from the configured package indexes
-
-```bash
+# Fetch a wheel without searching conda channels first
 conda pypi install --ignore-channels some-package
 ```
-
-This command bypasses the configured conda channels. Missing wheels are fetched
-from the configured package indexes, which default to PyPI. The local
-conversion cache remains available regardless of this flag.
 
 ### Converting packages without installing
 

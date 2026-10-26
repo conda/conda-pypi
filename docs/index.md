@@ -18,17 +18,15 @@ with the `conda-pypi` channel (hosted by Anaconda) and the Rattler solver,
 the tool makes pure Python packages from PyPI available through
 the `conda install` command, with no extra conversion needed.
 
-The tool also offers three commands for more advanced usage: `conda pypi install`
-for safer installation of Python distribution packages with an intelligent hybrid approach,
-and `conda pypi convert` for converting Python projects to `.conda` format
-without installing them. The installation strategy fetches missing wheels from
-PyPI and other package indexes while using packages from conda channels when available.
-PyPI is the default index, and `--index-url` selects an alternative for
-`conda pypi install`. The `conda pypi index` command is provided
-for indexing a local directory of `.whl` files to create a local conda channel.
+The tool also offers advanced commands: `conda pypi convert` for converting
+Python projects to `.conda` format without installing them, and `conda pypi
+index` for indexing a local directory of `.whl` files to create a local conda
+channel.
 
-`conda-pypi` includes support for development workflows through editable
-installations with the `-e` flag for local project directories.
+`conda pypi install` is pending deprecation and will be removed in version
+27.9. It remains useful for editable installs of local project directories with
+the `-e` flag and for fetching wheels from a custom package index with
+`--index-url`.
 
 `conda-pypi` also installs `EXTERNALLY-MANAGED` marker files when you install
 the plugin, discouraging direct `pip` use that can destabilize conda-managed
