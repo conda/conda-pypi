@@ -1,0 +1,3 @@
+### Docs
+
+* Explain that `conda install` uses conda package names, and add troubleshooting for `PackagesNotFoundInChannelsError`. The docs now make the `conda-pypi` channel the main path and keep `conda pypi install` for editable installs and custom indexes. (#537 via #567)
