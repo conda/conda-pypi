@@ -129,8 +129,8 @@ This command is pending deprecation.
 ```bash
 # Check the project name on pypi.org
 
-# Try common name variations with convert
-conda pypi convert python-package-name  # instead of package-name
+# Try common name variations
+conda pypi install python-package-name  # instead of package-name
 ```
 
 ### Dependency resolution timeout
