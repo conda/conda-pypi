@@ -23,7 +23,7 @@ from installer.records import Hash, RecordEntry  # noqa: TID253
 from installer.sources import WheelFile  # noqa: TID253
 from installer.utils import Scheme, construct_record_file, copyfileobj_with_hashing  # noqa: TID253
 
-from conda_pypi.conda_build_utils import PathType
+from .conda_build_utils import PathType
 
 log = logging.getLogger(__name__)
 

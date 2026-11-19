@@ -27,10 +27,10 @@ from conda.reporters import get_spinner
 from conda_index.index import ChannelIndex  # noqa: TID253
 from unearth import PackageFinder  # noqa: TID253
 
-from conda_pypi.build import build_conda
-from conda_pypi.downloader import find_and_fetch, get_package_finder
-from conda_pypi.index import update_index
-from conda_pypi.utils import SuppressOutput
+from .build import build_conda
+from .downloader import find_and_fetch, get_package_finder
+from .index import update_index
+from .utils import SuppressOutput
 
 log = logging.getLogger(__name__)
 

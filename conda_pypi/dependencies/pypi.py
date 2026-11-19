@@ -11,8 +11,8 @@ from pathlib import Path
 
 from conda.cli.main import main_subshell
 
-from conda_pypi import paths
-from conda_pypi.translate import requires_to_conda
+from .. import paths
+from ..translate import requires_to_conda
 
 
 class MissingDependencyError(Exception):
