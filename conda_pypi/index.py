@@ -8,8 +8,8 @@ from conda_index.index import ChannelIndex  # noqa: TID253
 from conda_index.index.cache import BaseCondaIndexCache  # noqa: TID253
 from conda_index.utils import CONDA_PACKAGE_EXTENSIONS  # noqa: TID253
 
-from conda_pypi.exceptions import UnableToConvertToRepodataEntry
-from conda_pypi.pypi_metadata import pypi_to_repodata
+from .exceptions import UnableToConvertToRepodataEntry
+from .pypi_metadata import pypi_to_repodata
 
 
 def create_channel_index(path):

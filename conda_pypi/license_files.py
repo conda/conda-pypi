@@ -12,7 +12,7 @@ import shutil
 from importlib.metadata import PackageMetadata
 from pathlib import Path
 
-from conda_pypi.translate import FileDistribution
+from .translate import FileDistribution
 
 log = logging.getLogger(__name__)
 
