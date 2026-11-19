@@ -16,16 +16,18 @@ from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
 
 
 @pytest.fixture
-def local_build_project(
-    tmp_path: Path,
-    pypi_demo_package_wheel_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> Callable[[list[str], list[str]], Path]:
+def forbid_build_dependency_install(monkeypatch: pytest.MonkeyPatch) -> None:
     def forbid_install(*args: object, **kwargs: object) -> None:
         pytest.fail("Build unexpectedly tried to install dependencies")
 
     monkeypatch.setattr(dependencies, "ensure_requirements", forbid_install)
 
+
+@pytest.fixture
+def local_build_project(
+    tmp_path: Path,
+    pypi_demo_package_wheel_path: Path,
+) -> Callable[[list[str], list[str]], Path]:
     def create(build_system: list[str], backend: list[str]) -> Path:
         project = tmp_path / "project"
         project.mkdir()
@@ -52,14 +54,14 @@ def local_build_project(
 
 
 @pytest.mark.parametrize("build_function", [build_pypa, pypa_to_conda])
-@pytest.mark.parametrize("phase", ["build-system", "backend", "build-package"])
+@pytest.mark.parametrize("phase", ["build-system", "backend"])
 @pytest.mark.parametrize(
     "distribution_options", [{"distribution": "wheel"}, {}], ids=["wheel", "editable-default"]
 )
 def test_local_build_rejects_missing_dependencies_without_installing(
     local_build_project: Callable[[list[str], list[str]], Path],
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    forbid_build_dependency_install: None,
     build_function: Callable[..., str | Path],
     phase: str,
     distribution_options: dict[str, str],
@@ -69,14 +71,6 @@ def test_local_build_rejects_missing_dependencies_without_installing(
         [missing] if phase == "build-system" else [],
         [missing] if phase == "backend" else [],
     )
-    if phase == "build-package":
-        missing = "build"
-
-        def cannot_check(*args: object, **kwargs: object) -> None:
-            raise dependencies.MissingDependencyError([missing])
-
-        monkeypatch.setattr(dependencies, "check_dependencies", cannot_check)
-
     with pytest.raises(dependencies.MissingDependencyError) as exc:
         build_function(
             project,
@@ -97,6 +91,7 @@ def test_local_build_rejects_missing_dependencies_without_installing(
 )
 def test_local_build_uses_preinstalled_dependencies(
     local_build_project: Callable[[list[str], list[str]], Path],
+    forbid_build_dependency_install: None,
     tmp_path: Path,
     build_function: Callable[..., str | Path],
     options: dict[str, bool],
@@ -113,6 +108,33 @@ def test_local_build_uses_preinstalled_dependencies(
         **distribution_options,
     )
     assert Path(package).is_file()
+
+
+@pytest.mark.parametrize("install", [True, False], ids=["install-missing", "preinstalled-only"])
+def test_local_build_in_separate_prefix(
+    local_build_project: Callable[[list[str], list[str]], Path],
+    tmp_env: TmpEnvFixture,
+    tmp_path: Path,
+    mocker,
+    install: bool,
+) -> None:
+    project = local_build_project(["six"], ["flit-core"])
+    preinstalled = [] if install else ["six", "flit-core"]
+    installer = mocker.spy(dependencies, "ensure_requirements")
+    with tmp_env("python=3.12", *preinstalled) as prefix:
+        wheel = build_pypa(
+            project, tmp_path, prefix, distribution="wheel", install_build_dependencies=install
+        )
+        assert Path(wheel).is_file()
+        assert dependencies.check_dependencies(["six", "flit-core", "build"], prefix) == ["build"]
+        assert installer.call_args_list == (
+            [
+                mocker.call(["six"], prefix=prefix, yes=True),
+                mocker.call(["flit-core"], prefix=prefix, yes=True),
+            ]
+            if install
+            else []
+        )
 
 
 def _build_demo_conda_and_paths(

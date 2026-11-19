@@ -125,18 +125,12 @@ def build_pypa(
         Check if requirements are missing. If so, invoke conda to install into target prefix.
         """
         for _retry in range(2):
-            try:
-                missing = dependencies.check_dependencies(requirements, prefix=prefix)
-                if missing:
-                    if not install_build_dependencies:
-                        raise dependencies.MissingDependencyError(missing)
-                    dependencies.ensure_requirements(missing, prefix=prefix, yes=yes)
-                    continue
-                break
-            except dependencies.MissingDependencyError as e:
-                if not install_build_dependencies:
-                    raise
-                dependencies.ensure_requirements(e.dependencies, prefix=prefix, yes=yes)
+            missing = dependencies.check_dependencies(requirements, prefix=prefix)
+            if not missing:
+                return
+            if not install_build_dependencies:
+                raise dependencies.MissingDependencyError(missing)
+            dependencies.ensure_requirements(missing, prefix=prefix, yes=yes)
 
     build_system_requires = builder.build_system_requires
     log.debug(f"Ensure requirements for build system: {build_system_requires}")
