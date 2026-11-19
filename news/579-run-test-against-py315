@@ -16,4 +16,4 @@
 
 ### Other
 
-* Switch the recipe back to Python noarch since the `EXTERNALLY_MANAGED` file isn't currently being used. (#518)
+* Add python 3.15 to the ci matrix for tests and builds. (#579)

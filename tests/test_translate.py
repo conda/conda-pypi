@@ -9,6 +9,7 @@ from conda_pypi import __version__
 from conda_pypi.translate import (
     CondaMetadata,
     FileDistribution,
+    build_number_from_build_tag,
     requires_to_conda,
     validate_name_mapping_format,
 )
@@ -141,6 +142,22 @@ def test_requires_to_conda_marker_extra_and_platform():
     assert "dev" in extras
     assert any(x.startswith("requests>=") for x in extras["dev"])
     assert requires == []
+
+
+def test_requires_to_conda_excludes_upper_bound_prereleases():
+    """Test that ``a0`` appended to < requirements that are not pre-releases"""
+    requires, _ = requires_to_conda(
+        ["httpx<=3.12", "pytorch<3.12.0rc1", "requests>=2,<3.12.0"],
+    )
+    assert requires == ["httpx<=3.12", "pytorch<3.12.0rc1", "requests<3.12.0a0,>=2"]
+
+
+def test_requires_to_conda_converts_compatible_releases():
+    """Test that ``~=`` is converted to ``<`` and ``>=`` specifiers"""
+    requires, _ = requires_to_conda(
+        ["httpx<=3.12", "pytorch<3.12.0rc1", "requests~=3.12.0"],
+    )
+    assert requires == ["httpx<=3.12", "pytorch<3.12.0rc1", "requests<3.13.0a0,>=3.12.0"]
 
 
 class _EntryPointDistribution(FileDistribution):
@@ -298,3 +315,17 @@ def test_link_json_entry_points_are_parseable_by_conda():
         # Raises ValueError for "app [cli]" before this fix.
         command, module, func = parse_entry_point_def(entry_point)
         assert (command, module, func) == ("demo-script", "pkg.cli", "app")
+
+
+@pytest.mark.parametrize(
+    ("build_tag", "expected"),
+    [
+        (None, 0),
+        ("1", 1),
+        ("1dev", 1),
+        ("7ks", 7),
+    ],
+)
+def test_build_number_from_build_tag(build_tag: str | None, expected: int):
+    """Use the leading digits of a wheel build tag; default to 0."""
+    assert build_number_from_build_tag(build_tag) == expected

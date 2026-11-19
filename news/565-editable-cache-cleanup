@@ -1,0 +1,3 @@
+### Bug fixes
+
+* Install editable package archives offline in a separate conda process, preventing background repodata prefetches from racing temporary-cache cleanup and preserving the caller's conda configuration. (#565)

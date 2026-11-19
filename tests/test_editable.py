@@ -1,11 +1,16 @@
+import importlib
+import io
 import json
+import os
 import subprocess
+import sys
+import tarfile
 from pathlib import Path
 from types import SimpleNamespace
 
 import build
 import pytest
-from conda.base.context import context
+from conda.base.context import context, reset_context
 from conda.cli.main import main_subshell
 from conda.core.prefix_data import PrefixData
 from packaging.requirements import InvalidRequirement
@@ -116,7 +121,7 @@ def test_install_ephemeral_conda_prompt_state(yes, source, monkeypatch, mocker, 
         staticmethod(lambda: cache),
     )
     monkeypatch.setattr(installer, "confirm_yn", confirm)
-    monkeypatch.setattr(installer, "main_subshell", install)
+    monkeypatch.setattr(installer.subprocess, "run", install)
 
     installer.install_ephemeral_conda(
         prefix,
@@ -125,13 +130,21 @@ def test_install_ephemeral_conda_prompt_state(yes, source, monkeypatch, mocker, 
         source=source,
     )
 
-    if yes:
-        expected_calls = [mocker.call.install("install", "--prefix", str(prefix), str(package))]
-    else:
-        expected_calls = [
-            mocker.call.confirm(f"Install editable package from {source} into {prefix}"),
-            mocker.call.install("install", "--prefix", str(prefix), str(package)),
-        ]
+    command = [
+        sys.executable,
+        "-m",
+        "conda",
+        "install",
+        "--offline",
+        "--prefix",
+        str(prefix),
+        str(package),
+    ]
+    expected_calls = [mocker.call.install(command, env=mocker.ANY, check=True)]
+    if not yes:
+        expected_calls.insert(
+            0, mocker.call.confirm(f"Install editable package from {source} into {prefix}")
+        )
     assert calls.mock_calls == expected_calls
 
 
@@ -200,3 +213,113 @@ def test_dependencies_subprocess():
     # A list per checked dependency, if that dependency or its dependencies are
     # missing.
     assert json.loads(missing_dependencies) == [["xyzzy"]]
+
+
+@pytest.fixture
+def ephemeral_package(tmp_path):
+    package = tmp_path / "editable-demo-1.0-0.tar.bz2"
+    index = {
+        "name": "editable-demo",
+        "version": "1.0",
+        "build": "0",
+        "build_number": 0,
+        "subdir": "noarch",
+        "depends": [],
+    }
+    with tarfile.open(package, "w:bz2") as archive:
+        for name, content in {
+            "info/index.json": json.dumps(index).encode(),
+            "info/files": b"editable-demo.txt\n",
+            "editable-demo.txt": b"installed\n",
+        }.items():
+            member = tarfile.TarInfo(name)
+            member.size = len(content)
+            archive.addfile(member, io.BytesIO(content))
+    return package
+
+
+@pytest.fixture
+def ephemeral_environment(tmp_path, monkeypatch):
+    cache = tmp_path / "pkgs"
+    cache.mkdir()
+    prefix = tmp_path / "env"
+    (prefix / "conda-meta").mkdir(parents=True)
+    (prefix / "conda-meta" / "history").touch()
+    try:
+        with monkeypatch.context() as env:
+            env.setenv("CONDA_PKGS_DIRS", str(cache))
+            env.setenv("CONDA_OFFLINE", "false")
+            reset_context()
+            yield prefix, cache
+    finally:
+        reset_context()
+
+
+@pytest.mark.parametrize("valid_package", [True, False])
+def test_install_ephemeral_conda_preserves_package_cache(
+    valid_package, ephemeral_package, ephemeral_environment
+):
+    prefix, cache = ephemeral_environment
+    if valid_package:
+        installer.install_ephemeral_conda(prefix, ephemeral_package)
+        assert (prefix / "editable-demo.txt").read_text() == "installed\n"
+    else:
+        ephemeral_package.write_bytes(b"not a package archive")
+        with pytest.raises(SystemExit) as exc_info:
+            installer.install_ephemeral_conda(prefix, ephemeral_package)
+        assert exc_info.value.code != 0
+        assert not (prefix / "editable-demo.txt").exists()
+    assert context.pkgs_dirs == (str(cache),)
+    assert context.offline is False
+    assert not list(cache.glob("ephemeral*"))
+
+
+def test_install_ephemeral_conda_disables_network_prefetch(
+    ephemeral_package, ephemeral_environment, tmp_path, monkeypatch
+):
+    prefix, cache = ephemeral_environment
+    plugin_source = """
+import json
+import os
+from pathlib import Path
+from conda.base.context import context
+from conda.plugins import hookimpl
+from conda.plugins.types import CondaPreCommand
+
+def prefetch(command):
+    assert context.offline, "Repodata prefetch can outlive the temporary package cache"
+    Path(os.environ["PREFETCH_RECORD"]).write_text(json.dumps(context.pkgs_dirs))
+
+@hookimpl
+def conda_pre_commands():
+    yield CondaPreCommand(name="test-prefetch", action=prefetch, run_for={"install"})
+"""
+    (tmp_path / "ephemeral_install_guard.py").write_text(plugin_source)
+    metadata = tmp_path / "ephemeral_install_guard-1.0.dist-info"
+    metadata.mkdir()
+    (metadata / "METADATA").write_text("Name: ephemeral-install-guard\nVersion: 1.0\n")
+    (metadata / "entry_points.txt").write_text(
+        "[conda]\nephemeral-install-guard = ephemeral_install_guard\n"
+    )
+    monkeypatch.setenv(
+        "PYTHONPATH",
+        os.pathsep.join(value for value in [str(tmp_path), os.getenv("PYTHONPATH")] if value),
+    )
+    record = tmp_path / "prefetch.json"
+    monkeypatch.setenv("PREFETCH_RECORD", str(record))
+    monkeypatch.syspath_prepend(str(tmp_path))
+    plugin = importlib.import_module("ephemeral_install_guard")
+    manager = context.plugin_manager
+    manager.register(plugin)
+    try:
+        installer.install_ephemeral_conda(prefix, ephemeral_package)
+
+        assert (prefix / "editable-demo.txt").read_text() == "installed\n"
+        (temporary_cache,) = json.loads(record.read_text())
+        assert Path(temporary_cache).parent == cache
+        assert not Path(temporary_cache).exists()
+        assert context.offline is False
+        assert context.pkgs_dirs == (str(cache),)
+    finally:
+        manager.unregister(plugin)
+        sys.modules.pop("ephemeral_install_guard", None)

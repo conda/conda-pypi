@@ -16,6 +16,8 @@ from installer.utils import Scheme, parse_wheel_filename  # noqa: TID253
 from packaging.tags import parse_tag
 
 from conda_pypi.license_files import copy_into_info_licenses, package_metadata_from_metadata_body
+from conda_pypi.pypi_metadata import python_depend_from_requires_python
+from conda_pypi.translate import requires_to_conda
 from conda_pypi.utils import sha256_base64url_to_hex
 
 logger = getLogger(__name__)
@@ -176,9 +178,25 @@ class MyWheelDestination(WheelDestination):
         wheel_filename = self.whl_full_path.name
 
         wheel_meta = HeaderParser().parsestr(source.read_dist_info("WHEEL"))
+        wheel_metadata = package_metadata_from_metadata_body(source.read_dist_info("METADATA"))
 
         build_string, build_number = _create_build_string_from_wheel_meta_and_filename(
             wheel_meta, wheel_filename
+        )
+
+        # conda only falls back to index.json when there is no channel record to
+        # go with the artifact. That can happen when we install from explicit files,
+        # lockfiles, and direct .whl installs.
+        # We include repodata v3 record fields here to ensure proper handling, such
+        # that those installs do not end up with ``subdir: None`` or a record that
+        # does not depend on ``python`` (which makes ``conda list`` relabel it as
+        # ``pypi``).
+        depends, extra_depends = requires_to_conda(wheel_metadata.get_all("Requires-Dist"))
+        depends.insert(
+            0,
+            python_depend_from_requires_python(
+                wheel_metadata.get("Requires-Python"), package_name=package_name, warn=True
+            ),
         )
 
         index_json_data = {
@@ -186,13 +204,16 @@ class MyWheelDestination(WheelDestination):
             "version": package_version,
             "build": build_string,
             "build_number": build_number,
+            "depends": depends,
+            "extra_depends": extra_depends,
             "fn": wheel_filename,
+            "noarch": "python",
+            "subdir": "noarch",
         }
         write_as_json_to_file(info_dir / "index.json", index_json_data)
 
         dist_infos = sorted(self.sp_dir.glob("*.dist-info"))
         if dist_infos:
-            wheel_metadata = package_metadata_from_metadata_body(source.read_dist_info("METADATA"))
             copy_into_info_licenses(dist_infos[0], info_dir, wheel_metadata)
 
     def finalize_installation(

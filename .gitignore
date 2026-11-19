@@ -146,7 +146,8 @@ conda_pypi/_version.py
 synthetic_repodata.json
 synthetic_repo/
 
-.codspeed/
+.benchmarks/
+benchmark_results.json
 
 # If we conda pypi convert ourselves
 conda-pypi-output/

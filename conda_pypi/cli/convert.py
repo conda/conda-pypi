@@ -1,7 +1,17 @@
-from argparse import Namespace, _SubParsersAction
+from argparse import ArgumentTypeError, Namespace, _SubParsersAction
 from pathlib import Path
 
 from conda.auxlib.ish import dals
+
+
+def non_negative_int(value: str) -> int:
+    try:
+        number = int(value)
+    except ValueError:
+        raise ArgumentTypeError(f"{value!r} is not an integer") from None
+    if number < 0:
+        raise ArgumentTypeError("build number must be a non-negative integer")
+    return number
 
 
 def configure_parser(parser: _SubParsersAction) -> None:
@@ -26,6 +36,10 @@ def configure_parser(parser: _SubParsersAction) -> None:
         Convert a package and save to a specific output folder::
 
             conda pypi convert --output-folder ./conda-packages ./numpy-2.3.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+
+        Override the conda build number::
+
+            conda pypi convert --build-number 2 ./requests-2.32.5-py3-none-any.whl
 
         Convert a local Python project to an editable package::
 
@@ -81,6 +95,16 @@ def configure_parser(parser: _SubParsersAction) -> None:
         "--name-mapping",
         help="Path to json file containing pypi to conda name mapping",
         type=Path,
+        required=False,
+        default=None,
+    )
+    convert.add_argument(
+        "--build-number",
+        help=(
+            "Build number for the converted package. Defaults to the "
+            "leading digits of the wheel filename build tag, or 0 if absent."
+        ),
+        type=non_negative_int,
         required=False,
         default=None,
     )
@@ -146,6 +170,7 @@ def execute(args: Namespace) -> int:
                 test_dir=test_dir,
                 pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
                 channels=tuple(context.channels),
+                build_number=args.build_number,
             )
     else:
         # Build from source (project directory or sdist)
@@ -158,6 +183,7 @@ def execute(args: Namespace) -> int:
             test_dir=test_dir,
             pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
             channels=tuple(context.channels),
+            build_number=args.build_number,
         )
 
     print(f"Conda package at {package_path} built successfully. Output folder: {output_folder}.")

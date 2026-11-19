@@ -15,10 +15,12 @@ from typing import Any
 from conda.exceptions import ArgumentError
 from conda.models.match_spec import MatchSpec
 from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
 
 from conda_pypi import __version__
 from conda_pypi.name_mapping import conda_to_pypi_name, pypi_to_conda_name
 from conda_pypi.pypi_metadata import python_depend_from_requires_python
+from conda_pypi.specifiers import specifier_bounds_to_conda, specifier_bounds_to_pep440
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +31,20 @@ URL_LABEL_MAP: dict[str, tuple] = {
     "dev_url": ("source", "repository", "source code", "development", "github"),
     "doc_url": ("documentation", "docs"),
 }
+
+
+def build_number_from_build_tag(build_tag: str | None) -> int:
+    """Derive a conda build number from an installer wheel ``build_tag``.
+
+    PEP 427 tags start with digits and may have a string remainder. Only the
+    leading integer is used. ``None`` maps to ``0``.
+    """
+    if not build_tag:
+        return 0
+    match = re.match(r"(\d+)", build_tag)
+    if match is None:
+        return 0
+    return int(match.group(1))
 
 
 def short_description(text: str) -> str:
@@ -156,6 +172,7 @@ class CondaMetadata:
         distribution: Distribution,
         pypi_to_conda_name_mapping: dict | None = None,
         channels: Iterable[str] = (),
+        build_number: int = 0,
     ):
         metadata = distribution.metadata
 
@@ -212,7 +229,7 @@ class CondaMetadata:
         version = getattr(distribution, "version", None) or distribution.metadata.get("version")
 
         package_record = PackageRecord(
-            build_number=0,
+            build_number=build_number,
             depends=depends,
             extras=extras,
             license=about["license"] or "",
@@ -253,7 +270,7 @@ def requires_to_conda(requires: list[str] | None, pypi_to_conda_name_mapping: di
         # PEP 508 optional dependency extras (e.g. requests[security]) are intentionally
         # omitted here; wheel → .conda convert does not emit MatchSpec extras=[…] yet
         # (see #468). Wheel repodata uses dependency_extras_suffix / pypi_to_repodata.
-        as_conda = requirement.name + str(requirement.specifier)
+        as_conda = requirement.name + specifier_bounds_to_conda(requirement.specifier)
 
         # Wheel METADATA → conda depends: do not emit ``[when=…]`` (conda MatchSpec does not
         # parse it yet). Match main: only ``extra == …`` is routed to the extras map.
@@ -290,7 +307,7 @@ def conda_to_requires(match_spec: MatchSpec) -> Requirement | None:
         version_str = version_str.removesuffix(".*")
         if version_str and version_str[0] not in "<>=!~":
             version_str = f"=={version_str}"
-        return Requirement(f"{name}{version_str}")
+        return Requirement(f"{name}{specifier_bounds_to_pep440(SpecifierSet(version_str))}")
 
     return Requirement(name)
 

@@ -29,7 +29,7 @@ from installer.utils import parse_wheel_filename  # noqa: TID253
 from conda_pypi import dependencies, installer, paths
 from conda_pypi.conda_build_utils import PathType, sha256_checksum
 from conda_pypi.license_files import copy_into_info_licenses
-from conda_pypi.translate import CondaMetadata
+from conda_pypi.translate import CondaMetadata, build_number_from_build_tag
 from conda_pypi.utils import sha256_as_base64url
 
 log = logging.getLogger(__name__)
@@ -162,6 +162,7 @@ def build_conda(
     is_editable=False,
     pypi_to_conda_name_mapping: dict | None = None,
     channels: Iterable[str] = (),
+    build_number: int | None = None,
 ) -> Path:
     if not build_path.exists():
         build_path.mkdir()
@@ -184,10 +185,14 @@ def build_conda(
         # This is mainly for METADATA and entry_points.txt. It would be
         # straightforward to write or find a WheelDistribution() to grab these
         # files from the wheel archive directly, instead of PathDistribution():
+        if build_number is None:
+            build_number = build_number_from_build_tag(parsed.build_tag)
+
         metadata = CondaMetadata.from_distribution(
             PathDistribution(dist_info),
             pypi_to_conda_name_mapping,
             channels=channels,
+            build_number=build_number,
         )
         record = metadata.package_record.to_index_json()
         file_id = f"{record['name']}-{record['version']}-{record['build']}"
@@ -290,6 +295,7 @@ def pypa_to_conda(
     pypi_to_conda_name_mapping: dict | None = None,
     channels: Iterable[str] = (),
     yes: bool = True,
+    build_number: int | None = None,
     install_build_dependencies: bool = True,
 ):
     """Build and convert a project, optionally requiring preinstalled build dependencies."""
@@ -325,6 +331,7 @@ def pypa_to_conda(
             is_editable=distribution == "editable",
             pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
             channels=channels,
+            build_number=build_number,
         )
 
     return package_conda

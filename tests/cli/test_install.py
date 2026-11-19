@@ -15,6 +15,7 @@ from conda.exceptions import ArgumentError
 from conda.testing.fixtures import CondaCLIFixture
 
 import conda_pypi.cli.install as install_cli
+from tests import conda_drops_v3_records
 
 
 def test_cli(conda_cli):
@@ -355,6 +356,12 @@ def test_install_package_with_hyphens(tmp_env, conda_cli):
         assert "typing_extensions" in out or "typing-extensions" in out
 
 
+@pytest.mark.xfail(
+    conda_drops_v3_records(),
+    reason="conda drops v3 wheel records: https://github.com/conda/conda/issues/16676",
+    raises=pytest.RaisesExc(AssertionError, match="^idna should come from "),
+    strict=True,
+)
 def test_install_from_whl_augmented_repodata(
     tmp_env, monkeypatch, conda_cli, conda_local_channel, with_rattler_solver
 ):
@@ -385,3 +392,29 @@ def test_install_from_whl_augmented_repodata(
         assert conda_local_channel in idna_action.get("base_url", ""), (
             f"idna should come from {conda_local_channel}"
         )
+
+
+def test_install_converts_specifiers_to_conda(tmp_path, monkeypatch, mocker, conda_cli):
+    converter = mocker.Mock()
+    converter.repo.as_uri.return_value = "file:///fake-repo"
+    converter.convert_tree.return_value = None
+    monkeypatch.setattr("conda_pypi.convert_tree.ConvertTree", mocker.Mock(return_value=converter))
+
+    run_install = mocker.Mock(return_value=0)
+    monkeypatch.setattr("conda_pypi.main.run_conda_install", run_install)
+
+    with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
+        conda_cli(
+            "pypi",
+            "--yes",
+            "install",
+            "--ignore-channels",
+            "--prefix",
+            tmp_path,
+            "httpx>=2.0,<3.12.0",
+            "requests~=3.12.0",
+        )
+
+    match_specs = run_install.call_args.args[1]
+    assert str(match_specs[0]) == "httpx[version='<3.12.0a0,>=2.0']"
+    assert str(match_specs[1]) == "requests[version='<3.13.0a0,>=3.12.0']"

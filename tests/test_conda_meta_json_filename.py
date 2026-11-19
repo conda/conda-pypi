@@ -119,3 +119,90 @@ def test_extract_whl_sets_fn_correctly(
     assert index_data["version"] == "0.1.0"
     assert index_data["build"] == "py3_none_any_0"
     assert index_data["build_number"] == 0
+
+
+def test_extract_whl_index_json_matches_channel_record_fields(
+    pypi_demo_package_wheel_path: Path,
+    tmp_path: Path,
+):
+    """
+    See https://github.com/conda/conda-pypi/issues/527.
+
+    Explicit and lockfile installs build the record from index.json only.
+
+    Without subdir, conda derives it from the wheel URL, which is None for PyPI URLs.
+    Without a python dependency, `conda list` shows the package as pypi_0.
+    """
+    extract_whl_as_conda_pkg(pypi_demo_package_wheel_path, tmp_path)
+
+    index_data = json.loads((tmp_path / "info" / "index.json").read_text())
+
+    assert index_data["subdir"] == "noarch"
+    assert index_data["noarch"] == "python"
+    # The demo wheel has Requires-Python >=3.6 and no Requires-Dist.
+    assert index_data["depends"] == ["python >=3.6"]
+    assert index_data["extra_depends"] == {}
+
+
+def _write_wheel(
+    path: Path,
+    name: str,
+    version: str,
+    *,
+    requires_dist: list[str],
+    requires_python: str | None = None,
+) -> Path:
+    """Write a pure Python wheel with the given Requires-* metadata"""
+    import zipfile
+
+    dist_info = f"{name}-{version}.dist-info"
+    metadata = ["Metadata-Version: 2.5", f"Name: {name}", f"Version: {version}"]
+    if requires_python:
+        metadata.append(f"Requires-Python: {requires_python}")
+    metadata.extend(f"Requires-Dist: {dep}" for dep in requires_dist)
+    wheel = ["Wheel-Version: 1.0", "Generator: test", "Root-Is-Purelib: true", "Tag: py3-none-any"]
+    files = {
+        f"{name}/__init__.py": "",
+        f"{dist_info}/METADATA": "\n".join(metadata) + "\n",
+        f"{dist_info}/WHEEL": "\n".join(wheel) + "\n",
+    }
+    record = "".join(f"{fn},,\n" for fn in files) + f"{dist_info}/RECORD,,\n"
+    files[f"{dist_info}/RECORD"] = record
+
+    wheel_path = path / f"{name}-{version}-py3-none-any.whl"
+    with zipfile.ZipFile(wheel_path, "w") as zf:
+        for fn, content in files.items():
+            zf.writestr(fn, content)
+    return wheel_path
+
+
+def test_extract_whl_index_json_depends_are_matchspec_safe(tmp_path: Path):
+    """
+    Depends in index.json have to parse with conda's MatchSpec.
+
+    TODO: with conda >= 26.9, we should emit the full wheel repodata syntax, so
+    we should expect the [when=...] and extras=[...] entries instead here
+    """
+    from conda.models.match_spec import MatchSpec
+
+    wheel_path = _write_wheel(
+        tmp_path,
+        "marker_pkg",
+        "1.0",
+        requires_python=">=3.9",
+        requires_dist=[
+            "requests>=2.0",
+            'tomli>=1.1.0; python_version < "3.11"',
+            'colorama; sys_platform == "win32"',
+            'pytest>=7; extra == "test"',
+            "urllib3[socks]>=2",
+        ],
+    )
+    extract_whl_as_conda_pkg(wheel_path, tmp_path / "pkg")
+
+    index_data = json.loads((tmp_path / "pkg" / "info" / "index.json").read_text())
+
+    assert index_data["depends"] == ["python >=3.9", "requests>=2.0", "urllib3>=2"]
+    assert index_data["extra_depends"] == {"test": ["pytest>=7"]}
+    for dep in index_data["depends"]:
+        assert MatchSpec(dep).name == dep.split(">=")[0].strip()

@@ -80,3 +80,12 @@
    :undoc-members:
    :show-inheritance:
 ```
+
+## specifiers
+
+```{eval-rst}
+.. automodule:: conda_pypi.specifiers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+```

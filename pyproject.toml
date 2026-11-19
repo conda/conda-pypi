@@ -21,6 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -28,7 +29,9 @@ requires-python = ">=3.10"
 dependencies = [
   # "conda >=25.11.0",
   "build",
-  "conda-index >=0.12.0",
+  # Transitive dependency, excludes the compromised eMudhra CA bundle (conda/conda#16880)
+  "certifi >=2026.10.19",
+  "conda-index >=0.13.0",
   "conda-package-streaming >=0.11",
   "installer >=1.0",
   "packaging",
@@ -47,19 +50,35 @@ conda-pypi = "conda_pypi.plugin"
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64", "win-64", "linux-aarch64"]
 
+# Anaconda uses the same names for this project's Python dependencies.
+[tool.pixi.workspace.conda-pypi-map]
+"https://repo.anaconda.com/pkgs/main" = "https://raw.githubusercontent.com/prefix-dev/parselmouth/main/files/compressed_mapping.json"
+
 [tool.pixi.dependencies]
 # must match project.dependencies (sans python and conda)
 python = ">=3.10"
 conda = ">=26.1"
-conda-index = ">=0.12.0"
+conda-index = ">=0.13.0"
 conda-package-streaming = ">=0.11"
 packaging = "*"
 unearth = "*"
+python-build = "*"
+python-installer = ">=1.0"
+platformdirs = "*"
 
-[tool.pixi.pypi-dependencies]
-"conda-pypi" = { path  = ".", editable = true }
+# Install the checkout after the conda solve, which can pull in released conda-pypi.
+pip = "*"
+hatchling = ">=1.26"
+hatch-vcs = "*"
+editables = "*"
+git = "*"
+
+[tool.pixi.tasks.install-dev]
+cmd = "python -m pip install --editable . --no-deps --no-build-isolation --break-system-packages"
+description = "Install the checkout in editable mode using the locked dependencies."
 
 [tool.pixi.tasks.dev]
+depends-on = ["install-dev"]
 cmd = 'python -c "from conda_pypi.python_paths import ensure_externally_managed as e; e()"'
 description = """Set up the environment for development
             This calls `conda_pypi.python_paths.ensure_externally_managed`:
@@ -91,6 +110,7 @@ cmd = "pre-commit"
 description = "Run pre-commit hooks to lint the codebase. Alias for `pre-commit` task."
 
 [tool.pixi.feature.docs.tasks.build-docs]
+depends-on = ["dev"]
 cmd = "sphinx-build -M dirhtml . _build"
 cwd = "docs"
 description = "Build the documentation using Sphinx. The output will be in docs/_build/dirhtml"
@@ -98,7 +118,7 @@ description = "Build the documentation using Sphinx. The output will be in docs/
 [tool.pixi.feature.docs.tasks.serve-docs]
 cmd = "python -m http.server"
 cwd = "docs/_build/dirhtml"
-description = "Serve the built documentation locally at http://localhost:8000/ Run `pixi docs` first to build the documentation before serving it."
+description = "Serve the built documentation locally at http://localhost:8000/ Run `pixi run -e docs build-docs` first to build the documentation before serving it."
 
 [tool.pixi.feature.docs.tasks.make-docs]
 depends-on = ["build-docs", "serve-docs"]
@@ -110,7 +130,7 @@ cwd = "docs"
 description = "Clean the documentation build directory"
 
 [tool.pixi.feature.docs.dependencies]
-python = "3.10.*"
+python = "3.11.*"
 conda-sphinx-theme = "*"
 linkify-it-py = "*"
 myst-parser = "*"
@@ -127,9 +147,15 @@ description = "Run the test suite using pytest, excluding benchmarks. This calls
 depends-on = ["dev"]
 
 [tool.pixi.feature.test.tasks.benchmark]
-cmd = "python -mpytest --codspeed"
-description = "Run the benchmark tests using pytest-codspeed. This calls task `dev` first to ensure the environment is set up correctly for testing."
+cmd = "python -m pytest -m benchmark --benchmark-only"
+description = "Run the benchmark tests using pytest-benchmark. This calls task `dev` first to ensure the environment is set up correctly for testing."
 depends-on = ["dev"]
+default-environment = "test-py312"
+
+[tool.pixi.feature.test.tasks.benchmark.env]
+CONDA_CHANNELS = "conda-forge"
+PYTHONHASHSEED = "0"
+CONDA_QUIET = "true"
 
 
 [tool.pixi.feature.test.dependencies]
@@ -137,7 +163,7 @@ pytest = "9.0.*"
 fmt = "!=10.2.0"
 pytest-mock = "3.12.0.*"
 pytest-xprocess = "*"
-pytest-codspeed = ">=3.0.0,<5"
+pytest-benchmark = ">=5.1.0"
 # Build system dependencies
 unearth = ">=0.17.2"
 python-build = "*"
@@ -152,6 +178,12 @@ zstandard = "*"  # Will be in stdlib as compression.zstd in Python 3.14+
 flit = "*"
 # Solver for wheel-augmented repodata tests
 conda-rattler-solver = ">=0.0.6"
+
+[tool.pixi.feature.py310]
+channels = [{ channel = "https://repo.anaconda.com/pkgs/main", priority = 1 }]
+
+[tool.pixi.feature.py310.activation.env]
+CONDA_CHANNELS = "https://repo.anaconda.com/pkgs/main,conda-forge"
 
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
@@ -168,11 +200,14 @@ python = "3.13.*"
 [tool.pixi.feature.py314.dependencies]
 python = "3.14.*"
 
+[tool.pixi.feature.py315.dependencies]
+python = "3.15.*"
+
 [tool.pixi.feature.canary]
 channels = ["conda-forge", {channel = "conda-canary/label/dev", priority = -1}]
 
 [tool.pixi.feature.canary.dependencies]
-conda = { version = ">=26.1", channel = "conda-canary/label/dev" }
+conda = { version = ">=26.7.2", channel = "conda-canary/label/dev" }
 
 [tool.pixi.feature.release.dependencies]
 rever = "*"
@@ -184,6 +219,7 @@ build-py311 = ["build", "py311"]
 build-py312 = ["build", "py312"]
 build-py313 = ["build", "py313"]
 build-py314 = ["build", "py314"]
+build-py315 = ["build", "py315"]
 docs = ["docs"]
 lint = ["lint"]
 test-py310 = ["test", "py310"]
@@ -191,6 +227,7 @@ test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
 test-py313 = ["test", "py313"]
 test-py314 = ["test", "py314"]
+test-py315 = ["test", "py315"]
 test-canary = ["test", "py313", "canary"]
 
 [tool.hatch.version]

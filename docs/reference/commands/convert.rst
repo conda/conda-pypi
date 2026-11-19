@@ -49,3 +49,15 @@ Usage example:
 
 The mapping will be used during conversion to determine the conda package name
 for dependencies and the main package being converted.
+
+Build Number
+============
+
+When converting a wheel, the conda ``build_number`` is taken from the optional
+PEP 427 build tag in the wheel filename (leading digits only). If the filename
+has no build tag, the build number defaults to ``0``. Use ``--build-number`` to
+override that value:
+
+.. code-block:: bash
+
+   conda pypi convert --build-number 2 ./my-package-1.0.0-py3-none-any.whl

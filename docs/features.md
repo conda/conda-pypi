@@ -27,6 +27,11 @@ that makes pure Python packages from PyPI available through `conda install`.
 After you add this channel, conda's solver can find and install these packages
 alongside your regular conda packages in a single step.
 
+`conda install` resolves conda package names. conda does not translate PyPI
+project names for this command, so a package whose PyPI and conda names differ
+must be installed by its conda name. For example, `jupyterlab-code-formatter`
+on PyPI is `jupyterlab_code_formatter` on conda-forge.
+
 For instructions on how to set up the `conda-pypi` channel, see
 the {doc}`quickstart`.
 
@@ -60,40 +65,33 @@ main subcommands that handle different aspects of Python packaging integration.
 :::{admonition} `conda pypi install` is pending deprecation
 :class: warning
 
-The `conda pypi install` command is pending deprecation and will be removed in version 27.9. Use `conda install` with `conda-pypi` channel configuration instead.
+The `conda pypi install` command is pending deprecation and will be removed in version
+27.9. Use `conda install` with `conda-pypi` channel configuration instead. The command
+remains the only way to install editable local projects with `-e`, and it supports
+`--index-url` and `--ignore-channels`.
 :::
 
-The install command fetches missing wheels from PyPI and other package indexes and
-converts them to `.conda` format. It resolves the requested packages using
-the configured conda channels and the local conversion cache. For
-dependencies, `conda-pypi` chooses the best source using a
-conda-first approach. If a dependency is available on conda channels, it will
-be installed with `conda` directly. If not available on conda channels, the
-dependency is fetched from the configured package indexes and converted to `.conda` format.
+The install command fetches missing wheels from the configured package indexes
+and converts them to `.conda` format. Dependencies use a conda-first approach:
+conda installs packages that exist on conda channels, and conda-pypi converts
+missing ones from wheels.
 
-PyPI is the default package index. Use `--index-url` to select another
-index for wheel downloads, including missing dependencies. Repeat the option
-to search multiple indexes. Providing this option replaces the default PyPI
-index list. It does not configure editable builds or local conversion.
-
-Project names on PyPI are mapped to conda package names with a bundled Grayskull table, plus a
-simple normalization rule when a package is not listed. `conda pypi convert` can
-load a replacement table from a JSON file via `--name-mapping`. With `-e` /
-`--editable`, a `.conda` package containing a link to the local project
-directory is built and installed using [PEP
-660](https://peps.python.org/pep-0660/).
-
-You can preview what would be installed without making changes using
-`--dry-run`, install packages in editable development mode with `--editable`
-or `-e`, and search the configured package indexes without searching
-configured conda channels using `--ignore-channels`.
+PyPI is the default index. Use `--index-url` to select another index, repeat
+the option to search multiple indexes, or use `--ignore-channels` to skip conda
+channels entirely. With `-e` / `--editable`, the command builds and installs a
+`.conda` package that links to a local project directory using
+[PEP 660](https://peps.python.org/pep-0660/). Use `--dry-run` to preview the
+transaction.
 
 #### `conda pypi convert`
 
 The convert command transforms Python projects to `.conda` format without
 installing them, which is useful for creating conda packages from Python
-distributions or preparing packages for offline installation. You can specify
-where to save the converted packages using `-d`, `--dest`, or `--output-dir`.
+distributions or preparing packages for offline installation. Project names on
+PyPI are mapped to conda package names with a bundled Grayskull table plus a
+simple normalization rule for unlisted names. Load a replacement table from a
+JSON file with `--name-mapping`. You can specify where to save the converted
+packages using `-d`, `--dest`, or `--output-dir`.
 The command supports converting multiple packages at once and can skip conda
 channel checks entirely with `--ignore-channels` to convert directly from
 PyPI.
@@ -190,11 +188,45 @@ conda-pypi writes `info/index.json` with:
 - `build` — from WHEEL `Tag` / `Build` headers (prefer `py3-none-any`, else highest
   tag). Noarch tags other than `py3-none-any` are normalized to `py3_none_any_0` to
   match repodata v3, with an informational log when that happens.
+- `subdir` — always `noarch`
+- `noarch` — always `python`
+- `depends` and `extra_depends` — from `Requires-Python` and `Requires-Dist` metadata fields
+
+<!-- TODO: add extras syntax explanation with conda 26.9? -->
 
 These fields mirror repodata v3 channel records. They intentionally differ:
 `fn` identifies the wheel artifact, while `build` is the conda build string.
 Lockfile restore and `conda-meta` JSON filenames use `name`, `version`, and
 `build`, not `fn`.
+
+(wheel-lockfiles)=
+
+#### Exporting and restoring environments
+
+The record for a wheel installed from a wheel channel points at the URL for
+a wheel itself, i.e., a `https://files.pythonhosted.org/...` URL, not at a channel.
+This affects exports:
+
+- `conda export --format explicit` (and `conda list --explicit`) write only
+  those URLs. The file does not mention which channel a wheel came from, so an
+  environment restored from it lists the wheel under `<unknown>` instead of
+  `conda-pypi`. conda-pypi cannot recover this channel on the client side.
+  The package still installs correctly and keeps its `noarch` subdir
+  and dependencies because of the `index.json` fields above.
+- However, lockfile formats that store the channel list next to the package URLs
+  do keep the channel. Install the
+  [conda-lockfiles](https://github.com/conda-incubator/conda-lockfiles) plugin
+  and export a `pixi.lock` (rattler-lock v6) file instead:
+
+```bash
+conda install --name base conda-forge::conda-lockfiles
+conda export --name myenv --format rattler-lock-v6 --file pixi.lock
+conda create --name myenv-copy --file pixi.lock
+```
+
+On restore, `conda-lockfiles` maps PyPI wheel URLs back to the `conda-pypi`
+channel when that channel is listed in the lockfile, and `conda list` in the
+new environment matches the original.
 
 #### Extras and markers
 

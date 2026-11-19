@@ -7,103 +7,80 @@ from conda.testing.fixtures import CondaCLIFixture
 
 from conda_pypi.build import build_conda
 from conda_pypi.convert_tree import ConvertTree
-from conda_pypi.downloader import find_and_fetch, get_package_finder
+from conda_pypi.downloader import get_package_finder
+from tests import PYPI_LOCAL_INDEX
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize(
     "packages",
     [
-        pytest.param(("imagesize",), id="imagesize"),  # small package, few dependencies
-        pytest.param(("certifi",), id="certifi"),  # another small package
-        pytest.param(("click>=8.0",), id="click>=8.0"),  # package with version constraint
+        pytest.param(("demo-package",), id="demo-package"),
+        pytest.param(("entrypoint-pkg",), id="entrypoint-pkg"),
+        pytest.param(("script-pkg",), id="script-pkg"),
     ],
 )
-def test_convert_tree(
+def test_convert_local_tree(
     tmp_path_factory,
     conda_cli: CondaCLIFixture,
     python_template_env: Path,
     packages: tuple[str],
+    pypi_local_index: str,
     benchmark,
 ):
-    """Benchmark convert_tree. This test overrides channels so the whole
-    dependency tree is converted.
-
-    Note: We use small packages to keep benchmark runtime reasonable.
-    Larger packages like jupyterlab were removed as they took 2+ hours.
-
-    Optimization: Uses `conda create --clone` from a session-scoped template
-    instead of running a full `conda create` each time. This is faster because
-    it skips the solver and package downloads while still properly handling
-    prefix relocation.
-    """
-    # Track setup iteration for unique paths
-    setup_counter = 0
+    """Convert fixed local wheels with a fresh prefix and repository per round."""
 
     def setup():
-        nonlocal setup_counter
-        setup_counter += 1
-        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo-{setup_counter}")
-        prefix = str(tmp_path_factory.mktemp(f"{'-'.join(packages)}-{setup_counter}"))
+        repo_dir = tmp_path_factory.mktemp(f"{'-'.join(packages)}-pkg-repo")
+        prefix = str(tmp_path_factory.mktemp("-".join(packages)))
 
         conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
 
-        tree_converter = ConvertTree(prefix, True, repo_dir)
+        finder = get_package_finder(prefix, (pypi_local_index,))
+        tree_converter = ConvertTree(prefix, True, repo_dir, finder=finder)
         return (tree_converter,), {}
 
     def target(tree_converter):
         match_specs = [MatchSpec(pkg) for pkg in packages]
         tree_converter.convert_tree(match_specs)
 
+    # Keep conversion measurements while suppressing alerts until they stabilize.
+    benchmark.fullname += "_bencher_ignore"
     benchmark.pedantic(
         target,
         setup=setup,
-        rounds=1,
-        warmup_rounds=0,  # no warm up, cleaning the cache every time
+        rounds=5,
+        warmup_rounds=1,
     )
 
 
 @pytest.mark.benchmark
 @pytest.mark.parametrize(
-    "package",
+    "wheel",
     [
-        pytest.param("imagesize", id="imagesize"),
-        pytest.param("certifi", id="certifi"),
+        pytest.param("demo-package/demo_package-0.1.0-py3-none-any.whl", id="demo-package"),
+        pytest.param("entrypoint-pkg/entrypoint_pkg-1.0.0-py3-none-any.whl", id="entrypoint-pkg"),
     ],
 )
-def test_build_conda(
+def test_build_local_wheel(
     tmp_path_factory,
     conda_cli: CondaCLIFixture,
     python_template_env: Path,
-    package: str,
+    wheel: str,
     benchmark,
 ):
-    """Benchmark building the conda package from a wheel.
-
-    Note: We use small packages to keep benchmark runtime reasonable.
-    Larger packages like jupyterlab were removed as they took 2+ hours.
-
-    Optimization: Uses `conda create --clone` from a session-scoped template
-    instead of running a full `conda create` each time. This is faster because
-    it skips the solver and package downloads while still properly handling
-    prefix relocation.
-    """
-    wheel_dir = tmp_path_factory.mktemp("wheel_dir")
-    # Track setup iteration for unique paths
-    setup_counter = 0
+    """Build a fixed local wheel with fresh prefix, build, and output directories."""
+    wheel_path = PYPI_LOCAL_INDEX / wheel
+    package = wheel_path.parent.name
 
     def setup():
-        nonlocal setup_counter
-        setup_counter += 1
-        prefix = str(tmp_path_factory.mktemp(f"{package}-{setup_counter}"))
-        build_path = tmp_path_factory.mktemp(f"build-{package}-{setup_counter}")
-        output_path = tmp_path_factory.mktemp(f"output-{package}-{setup_counter}")
+        prefix = str(tmp_path_factory.mktemp(package))
+        build_path = tmp_path_factory.mktemp(f"build-{package}")
+        output_path = tmp_path_factory.mktemp(f"output-{package}")
 
         conda_cli("create", "--clone", str(python_template_env), "--prefix", prefix, "--yes")
 
         python_exe = Path(prefix, get_python_short_path())
-        finder = get_package_finder(prefix)
-        wheel_path = find_and_fetch(finder, wheel_dir, package)
 
         return (wheel_path, python_exe, build_path, output_path), {}
 
@@ -119,6 +96,6 @@ def test_build_conda(
     benchmark.pedantic(
         target,
         setup=setup,
-        rounds=1,
-        warmup_rounds=0,  # no warm up, cleaning the cache every time
+        rounds=5,
+        warmup_rounds=1,
     )

@@ -1,14 +1,10 @@
 # conda-pypi
 
 <p align="center">
-  <img src="./docs/_static/img/logo.png" alt="conda-pypi logo"/>
+  <img src="https://raw.githubusercontent.com/conda/conda-pypi/refs/heads/main/docs/_static/img/logo.png" alt="conda-pypi logo"/>
 </p>
 
 Better PyPI interoperability for the conda ecosystem.
-
-> [!IMPORTANT]
-> This project is still in early stages of development. Don't use it in production (yet).
-> We do welcome feedback on what the expected behaviour should have been if something doesn't work!
 
 ## Project Status
 
@@ -27,10 +23,16 @@ Python wheels from PyPI available to users natively through `conda install`.
 
 ## Using `conda-pypi`
 
-`conda-pypi` is available in conda 26.5 or later. To update:
+For the best experience with `conda-pypi`, update to conda 26.9 or later. To update:
 
 ```bash
-conda install --name base "conda>=26.5"
+conda self update
+```
+
+or if updating from older versions of conda without `conda-self` you can also run:
+
+```bash
+conda install --name base "conda>=26.9"
 ```
 
 To opt in, enable the Rattler solver and add the `conda-pypi` channel:
@@ -40,14 +42,15 @@ conda config --set solver rattler
 conda config --append channels conda-pypi
 ```
 
-During the beta, the `conda-pypi` channel might not appear in the
-Anaconda.org web UI and some commands such as `conda search` can fail because
-they request classic `repodata.json` metadata. Use `conda install` or
-`conda create --dry-run` to check whether the solver can use the channel.
-
 After configuring, you can use packages from PyPI alongside conda packages in
 your normal conda workflows, without needing to convert the wheel files
 to conda files.
+
+`conda install` uses conda package names, which sometimes differ from the PyPI
+project name. For example, conda-forge publishes the PyPI project
+`jupyterlab-code-formatter` as `jupyterlab_code_formatter`, so run
+`conda install jupyterlab_code_formatter`. The `conda pypi` subcommands accept
+PyPI names and translate them.
 
 ## Advanced options
 
@@ -58,12 +61,12 @@ conda and wheels and work with cutting-edge plugin features.
 You can use the following commands with the `conda pypi` subcommand to do more
 with the `conda-pypi` plugin:
 
-- `conda pypi install`: Converts wheels from PyPI and other package indexes to `.conda` format for safer installation. PyPI is the default index. Use `--index-url` to select another index.
-- `conda pypi install -e .`: Converts a path to an editable `.conda` format package.
 - `conda pypi convert`: Convert Python projects to `.conda` format without installing them.
 - `conda pypi index`: Index a local directory of `.whl` files to create a local conda channel.
 - `conda install` from wheel channels (experimental): channels can serve pure Python wheels directly in `repodata.json`.
 - A warning when running `conda create` or `conda install` with `pip` in the environment.
+
+`conda pypi install` is pending deprecation. See the [features documentation](docs/features.md) for its remaining use cases, such as editable installs.
 
 ## Why?
 
@@ -75,9 +78,10 @@ for more details.
 
 ## Attribution
 
-- This project now incorporates [conda-pupa](https://github.com/dholth/conda-pupa)
+- This project incorporates [conda-pupa](https://github.com/dholth/conda-pupa)
 by Daniel Holth, which provides the core wheel-to-conda conversion functionality.
 - The conda-pypi platypus logo is by [James Turner](http://www.eruditebaboon.co.uk/).
+- Ideas for improved version specifier conversion comes from [reroll](https://github.com/intentionally-left-nil/reroll) by Anil Kulkarni.
 
 ## Contributing
 

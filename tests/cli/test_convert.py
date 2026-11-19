@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 
 import conda_package_streaming.package_streaming as cps
 import pytest
@@ -23,6 +24,13 @@ def _read_about_json(package_path):
         if member.name == "info/about.json":
             return json.load(tar.extractfile(member))
     raise AssertionError("info/about.json not found")
+
+
+def _read_index_json(package_path):
+    for tar, member in cps.stream_conda_info(str(package_path)):
+        if member.name == "info/index.json":
+            return json.load(tar.extractfile(member))
+    raise AssertionError("info/index.json not found")
 
 
 @pytest.mark.parametrize(
@@ -371,3 +379,32 @@ def test_convert_wheel_with_entrypoints_uses_link_json(tmp_path):
         f"bin/ scripts must not appear in paths.json; found: "
         f"{[p for p in path_names if p.startswith('bin/')]}"
     )
+
+
+@pytest.mark.parametrize(
+    "extra_args, build_number",
+    [
+        ((), 7),
+        (("--build-number", "2"), 2),
+    ],
+)
+def test_convert_wheel_build_number(tmp_path, extra_args, build_number):
+    """Derive build number from the filename tag; --build-number wins."""
+    wheel = tmp_path / "demo_package-0.1.0-7ks-py3-none-any.whl"
+    shutil.copy(DEMO_WHEEL, wheel)
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+
+    main_subshell("pypi", "convert", "--output-folder", str(out_dir), *extra_args, str(wheel))
+
+    pkg = next(out_dir.glob("*.conda"))
+    assert pkg.name == f"demo-package-0.1.0-pypi_{build_number}.conda"
+    assert _read_index_json(pkg)["build_number"] == build_number
+
+
+@pytest.mark.parametrize("value", ["-1", "foo"])
+def test_convert_rejects_invalid_build_number(value):
+    """Reject negative and non-integer --build-number values."""
+    with pytest.raises(SystemExit) as exc:
+        main_subshell("pypi", "convert", "--build-number", value, DEMO_WHEEL)
+    assert exc.value.code == 2

@@ -7,15 +7,15 @@ from __future__ import annotations
 import base64
 import logging
 import os
+import subprocess
+import sys
 import tarfile
 import tempfile
 from collections.abc import Iterable
 from pathlib import Path
 from typing import BinaryIO
-from unittest.mock import patch
 
 from conda.cli.install import confirm_yn
-from conda.cli.main import main_subshell
 from conda.core.package_cache_data import PackageCacheData
 from installer import install  # noqa: TID253
 from installer.destinations import SchemeDictionaryDestination  # noqa: TID253
@@ -186,11 +186,27 @@ def install_ephemeral_conda(
     Should we automatically install the project's dependencies also?
     """
     persistent_pkgs = PackageCacheData.first_writable().pkgs_dir
-    with (
-        tempfile.TemporaryDirectory(dir=persistent_pkgs, prefix="ephemeral") as cache_dir,
-        patch.dict(os.environ, {"CONDA_PKGS_DIRS": cache_dir}),
-    ):
+    with tempfile.TemporaryDirectory(dir=persistent_pkgs, prefix="ephemeral") as cache_dir:
         if not yes:
             source_text = source if source is not None else package.name
             confirm_yn(f"Install editable package from {source_text} into {prefix}")
-        main_subshell("install", "--prefix", str(prefix), str(package))
+        # Local archives need no network access. Offline mode also prevents plugins
+        # from starting repodata prefetches that outlive this temporary cache.
+        # A separate process keeps conda's context changes out of the caller.
+        try:
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "conda",
+                    "install",
+                    "--offline",
+                    "--prefix",
+                    str(prefix),
+                    str(package),
+                ],
+                env={**os.environ, "CONDA_PKGS_DIRS": cache_dir},
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            raise SystemExit(exc.returncode) from None

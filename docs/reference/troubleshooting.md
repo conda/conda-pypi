@@ -35,14 +35,36 @@ conda env list
 conda create -n myenv python=3.10
 
 # Use correct environment name or path
-conda pypi install -n myenv package-name
+conda install -n myenv package-name
 ```
+
+### Restored environment shows `<unknown>` for wheel packages
+
+**Problem**: After `conda export --format explicit` (or `conda list --explicit`)
+and `conda create --file`, packages that came from the `conda-pypi` channel show
+up as `<unknown>` during installation or in `conda list`.
+
+**Cause**: Explicit files only contain package URLs. A wheel's URL points at
+PyPI and not at a channel. Therefore, there is no channel information to restore.
+
+**Solution**: Use a lockfile format that stores channels. With the
+[conda-lockfiles](https://github.com/conda-incubator/conda-lockfiles) plugin
+installed, `pixi.lock` files map wheels back to the `conda-pypi` channel:
+
+```bash
+conda install --name base conda-forge::conda-lockfiles
+conda export --name myenv --format rattler-lock-v6 --file pixi.lock
+conda create --name myenv-copy --file pixi.lock
+```
+
+See {ref}`wheel-lockfiles` for details.
 
 ## Package Resolution Issues
 
 ### `conda search` reports missing `repodata.json`
 
-**Problem**: Checking the `conda-pypi` channel with `conda search` fails.
+**Problem**: Checking the `conda-pypi` channel with `conda search` fails on
+conda versions older than 26.7.0.
 
 **Error messages**:
 ```
@@ -51,13 +73,14 @@ UnavailableInvalidChannel: HTTP 404 Not Found for channel conda-pypi
 Artifact noarch/repodata.json not found
 ```
 
-**Cause**: During the beta, the `conda-pypi` channel is served through wheel
-metadata for solver/install workflows. It might not appear in the Anaconda.org
-web UI, and commands such as `conda search` can still request classic
-`repodata.json` metadata. Search support for sharded repodata is tracked in
-[`conda/conda#16134`](https://github.com/conda/conda/issues/16134).
+**Cause**: `conda search` gained support for sharded repodata in conda 26.7.0
+([`conda/conda#16134`](https://github.com/conda/conda/issues/16134)). Earlier
+versions request classic `repodata.json` metadata, which the `conda-pypi`
+channel does not serve.
 
-**Solutions**:
+**Solutions**: Upgrade to conda 26.7.0 or later. On earlier versions, use a
+dry-run solve to check the channel instead:
+
 ```bash
 # Make sure the supported solver path is enabled
 conda config --set solver rattler
@@ -67,8 +90,31 @@ conda config --append channels conda-pypi
 conda create --dry-run -n conda-pypi-test django-modern-rest
 ```
 
-If a dry-run solve or install also fails while using conda 26.5 or newer and
+If a dry-run solve or install also fails while using conda 26.7 or newer and
 the Rattler solver, report the full error in the GitHub issue tracker.
+
+### `PackagesNotFoundInChannelsError` for a package that exists on PyPI
+
+**Problem**: `conda install some-package` fails with
+`PackagesNotFoundInChannelsError`, but the package is available on PyPI and
+perhaps on conda-forge as well.
+
+**Cause**: The name you used does not match the conda package name.
+`conda install` matches names literally and does not translate PyPI project
+names. Many PyPI projects use a different conda name, often replacing hyphens
+with underscores.
+
+**Solution**: Look up the conda name on [anaconda.org](https://anaconda.org)
+and install that name. For example, conda-forge publishes the PyPI project
+`jupyterlab-code-formatter` as `jupyterlab_code_formatter`:
+
+```bash
+conda install jupyterlab_code_formatter
+```
+
+The `conda pypi` subcommands are the only ones that translate PyPI names.
+`conda pypi install jupyterlab-code-formatter` accepts the PyPI spelling.
+This command is pending deprecation.
 
 ### Package not found on PyPI
 
@@ -81,8 +127,7 @@ the Rattler solver, report the full error in the GitHub issue tracker.
 
 **Solutions**:
 ```bash
-# Check package name on PyPI
-pip search package-name  # or visit pypi.org
+# Check the project name on pypi.org
 
 # Try common name variations
 conda pypi install python-package-name  # instead of package-name
@@ -103,11 +148,11 @@ conda pypi install --ignore-channels package-name
 
 # Install dependencies from conda first
 conda install numpy pandas scipy
-conda pypi install your-package
+conda install your-package
 
 # Try installing packages individually
-conda pypi install package1
-conda pypi install package2
+conda install package1
+conda install package2
 ```
 
 ### Conflicting dependencies
@@ -117,7 +162,7 @@ conda pypi install package2
 **Solutions**:
 ```bash
 # Preview what would be installed
-conda pypi install --dry-run package-name
+conda install --dry-run package-name
 
 # Check existing packages
 conda list
@@ -125,7 +170,7 @@ conda list
 # Create a fresh environment for testing
 conda create -n test python=3.10 pip
 conda activate test
-conda pypi install package-name
+conda install package-name
 ```
 
 ## Network and Connectivity Issues
@@ -145,7 +190,7 @@ conda pypi install package-name
 ping pypi.org
 
 # Try with verbose output to see connection details
-conda -v pypi install package-name
+conda -v install package-name
 
 # Check conda's network configuration
 conda config --show channels
@@ -159,16 +204,16 @@ For detailed debugging information:
 
 ```bash
 # Basic verbose output
-conda -v pypi install package-name
+conda -v install package-name
 
 # INFO level logging (repeat -v twice)
-conda -vv pypi install package-name
+conda -vv install package-name
 
 # DEBUG level logging (repeat -v three times) - most useful for troubleshooting
-conda -vvv pypi install package-name
+conda -vvv install package-name
 
 # TRACE level logging (repeat -v four times) - maximum detail
-conda -vvvv pypi install package-name
+conda -vvvv install package-name
 ```
 
 ## When to Seek Further Help
