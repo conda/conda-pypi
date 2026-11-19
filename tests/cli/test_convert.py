@@ -5,7 +5,7 @@ import shutil
 import conda_package_streaming.package_streaming as cps
 import pytest
 from conda.base.context import context
-from conda.cli.main import main_subshell
+from conda.cli.main import main, main_subshell
 from conda.common.compat import on_win
 from conda.exceptions import ArgumentError
 
@@ -55,6 +55,30 @@ def test_convert_writes_output(tmp_path, source, editable):
 
     assert files[0].is_file()
     assert os.path.getsize(files[0]) > 0
+
+
+def test_convert_without_installing_build_dependencies(tmp_path, mocker, capsys):
+    missing = "missing-build-dependency>=1"
+    (tmp_path / "pyproject.toml").write_text(
+        f'[build-system]\nrequires = ["{missing}"]\n',
+        encoding="utf-8",
+    )
+    install = mocker.patch("conda_pypi.dependencies.ensure_requirements")
+
+    result = main(
+        "pypi",
+        "--json",
+        "convert",
+        str(tmp_path),
+        "--output-folder",
+        str(tmp_path / "out"),
+        "--no-install-build-dependencies",
+    )
+    assert result == 1
+    error = json.loads(capsys.readouterr().out)
+    assert error["exception_name"] == "MissingDependencyError"
+    assert error["dependencies"] == [missing]
+    install.assert_not_called()
 
 
 def test_convert_wheel(tmp_path):

@@ -1,13 +1,140 @@
+from __future__ import annotations
+
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
+import pytest
 from conda.common.path import get_python_short_path
 from conda.testing.fixtures import TmpEnvFixture
 from conda_package_streaming import package_streaming
 
-from conda_pypi.build import build_conda
+from conda_pypi import dependencies
+from conda_pypi.build import build_conda, build_pypa, pypa_to_conda
 from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
+
+
+@pytest.fixture
+def forbid_build_dependency_install(monkeypatch: pytest.MonkeyPatch) -> None:
+    def forbid_install(*args: object, **kwargs: object) -> None:
+        pytest.fail("Build unexpectedly tried to install dependencies")
+
+    monkeypatch.setattr(dependencies, "ensure_requirements", forbid_install)
+
+
+@pytest.fixture
+def local_build_project(
+    tmp_path: Path,
+    pypi_demo_package_wheel_path: Path,
+) -> Callable[[list[str], list[str]], Path]:
+    def create(build_system: list[str], backend: list[str]) -> Path:
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / "pyproject.toml").write_text(
+            f"[build-system]\nrequires = {build_system!r}\n"
+            'build-backend = "backend"\nbackend-path = ["."]\n',
+            encoding="utf-8",
+        )
+        (project / "backend.py").write_text(
+            "import shutil\nfrom pathlib import Path\n"
+            "def get_requires_for_build_wheel(config_settings=None):\n"
+            f"    return {backend!r}\n"
+            "def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):\n"
+            f"    source = Path({str(pypi_demo_package_wheel_path)!r})\n"
+            "    shutil.copyfile(source, Path(wheel_directory) / source.name)\n"
+            "    return source.name\n"
+            "get_requires_for_build_editable = get_requires_for_build_wheel\n"
+            "build_editable = build_wheel\n",
+            encoding="utf-8",
+        )
+        return project
+
+    return create
+
+
+@pytest.mark.parametrize("build_function", [build_pypa, pypa_to_conda])
+@pytest.mark.parametrize("phase", ["build-system", "backend"])
+@pytest.mark.parametrize(
+    "distribution_options", [{"distribution": "wheel"}, {}], ids=["wheel", "editable-default"]
+)
+def test_local_build_rejects_missing_dependencies_without_installing(
+    local_build_project: Callable[[list[str], list[str]], Path],
+    tmp_path: Path,
+    forbid_build_dependency_install: None,
+    build_function: Callable[..., str | Path],
+    phase: str,
+    distribution_options: dict[str, str],
+) -> None:
+    missing = "missing-build-dependency>=1"
+    project = local_build_project(
+        [missing] if phase == "build-system" else [],
+        [missing] if phase == "backend" else [],
+    )
+    with pytest.raises(dependencies.MissingDependencyError) as exc:
+        build_function(
+            project,
+            output_path=tmp_path / "output",
+            prefix=Path(sys.prefix),
+            install_build_dependencies=False,
+            **distribution_options,
+        )
+    assert exc.value.dependencies == [missing]
+
+
+@pytest.mark.parametrize("build_function", [build_pypa, pypa_to_conda])
+@pytest.mark.parametrize(
+    "options", [{}, {"install_build_dependencies": False}], ids=["default", "preinstalled-only"]
+)
+@pytest.mark.parametrize(
+    "distribution_options", [{"distribution": "wheel"}, {}], ids=["wheel", "editable-default"]
+)
+def test_local_build_uses_preinstalled_dependencies(
+    local_build_project: Callable[[list[str], list[str]], Path],
+    forbid_build_dependency_install: None,
+    tmp_path: Path,
+    build_function: Callable[..., str | Path],
+    options: dict[str, bool],
+    distribution_options: dict[str, str],
+) -> None:
+    project = local_build_project(["packaging"], ["build"])
+    output = tmp_path / "output"
+    output.mkdir()
+    package = build_function(
+        project,
+        output_path=output,
+        prefix=Path(sys.prefix),
+        **options,
+        **distribution_options,
+    )
+    assert Path(package).is_file()
+
+
+@pytest.mark.parametrize("install", [True, False], ids=["install-missing", "preinstalled-only"])
+def test_local_build_in_separate_prefix(
+    local_build_project: Callable[[list[str], list[str]], Path],
+    tmp_env: TmpEnvFixture,
+    tmp_path: Path,
+    mocker,
+    install: bool,
+) -> None:
+    project = local_build_project(["six"], ["flit-core"])
+    preinstalled = [] if install else ["six", "flit-core"]
+    installer = mocker.spy(dependencies, "ensure_requirements")
+    with tmp_env("python=3.12", *preinstalled) as prefix:
+        wheel = build_pypa(
+            project, tmp_path, prefix, distribution="wheel", install_build_dependencies=install
+        )
+        assert Path(wheel).is_file()
+        assert dependencies.check_dependencies(["six", "flit-core", "build"], prefix) == ["build"]
+        assert installer.call_args_list == (
+            [
+                mocker.call(["six"], prefix=prefix, yes=True),
+                mocker.call(["flit-core"], prefix=prefix, yes=True),
+            ]
+            if install
+            else []
+        )
 
 
 def _build_demo_conda_and_paths(

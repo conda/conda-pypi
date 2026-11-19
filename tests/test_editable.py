@@ -13,6 +13,7 @@ import pytest
 from conda.base.context import context, reset_context
 from conda.cli.main import main_subshell
 from conda.core.prefix_data import PrefixData
+from packaging.markers import default_environment
 from packaging.requirements import InvalidRequirement
 
 import conda_pypi.dependencies.pypi as pypi_dependencies
@@ -148,16 +149,41 @@ def test_install_ephemeral_conda_prompt_state(yes, source, monkeypatch, mocker, 
     assert calls.mock_calls == expected_calls
 
 
-def test_check_dependencies_flattens_missing_dependencies(mocker):
-    mocker.patch("conda_pypi.dependencies.pypi.paths.get_python_executable", return_value=Path())
-    subprocess_run = mocker.patch("conda_pypi.dependencies.pypi.subprocess.run")
-    subprocess_run.return_value.stdout = json.dumps(
-        [["hatchling>=1.26"], ["setuptools>=65", "packaging>=23"]]
+def test_check_dependencies_checks_target_versions_markers_and_extras(tmp_path, mocker):
+    def install_metadata(name, version, *requires):
+        metadata_dir = tmp_path / f"{name}-{version}.dist-info"
+        metadata_dir.mkdir()
+        (metadata_dir / "METADATA").write_text(
+            f"Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n"
+            + "".join(f"Requires-Dist: {requirement}\n" for requirement in requires)
+        )
+
+    install_metadata(
+        "backend",
+        "2.0",
+        "ordinary>=2",
+        "backport; python_version < '3.9'",
+        "future; python_version >= '3.9'",
+        "optional; extra == 'tools'",
+        "unrequested; extra == 'docs'",
+        "cycle",
+    )
+    install_metadata("ordinary", "1.0")
+    install_metadata("cycle", "1.0", "backend")
+    target = {"sys_path": [str(tmp_path)], "markers": {"python_version": "3.8"}}
+    mocker.patch.object(
+        pypi_dependencies.subprocess,
+        "run",
+        return_value=SimpleNamespace(stdout=json.dumps(target)),
     )
 
-    missing = check_dependencies(["hatchling>=1.26", "setuptools>=65"], prefix=Path())
-
-    assert missing == ["hatchling>=1.26", "packaging>=23"]
+    # packaging is installed alongside conda-pypi, but absent from this prefix.
+    assert check_dependencies(["backend[tools]>=2", "packaging"], prefix=tmp_path) == [
+        "ordinary>=2",
+        'backport; python_version < "3.9"',
+        'optional; extra == "tools"',
+        "packaging",
+    ]
 
 
 def test_filter_coverage():
@@ -203,16 +229,7 @@ def test_build_in_env(tmp_path):
 
 
 def test_dependencies_subprocess():
-    """
-    Normally called in a way that doesn't measure coverage.
-    """
-    dependencies = ["xyzzy", "conda"]
-    missing_dependencies = conda_pypi.dependencies_subprocess.main(
-        ["-", "-r", json.dumps(dependencies)]
-    )
-    # A list per checked dependency, if that dependency or its dependencies are
-    # missing.
-    assert json.loads(missing_dependencies) == [["xyzzy"]]
+    assert conda_pypi.dependencies_subprocess.marker_environment() == default_environment()
 
 
 @pytest.fixture

@@ -83,6 +83,12 @@ def configure_parser(parser: _SubParsersAction) -> None:
         help="Build an editable package linking PROJECT to the target conda environment when installed.",
     )
     convert.add_argument(
+        "--no-install-build-dependencies",
+        dest="install_build_dependencies",
+        action="store_false",
+        help="Require all build dependencies to be installed in the target environment.",
+    )
+    convert.add_argument(
         "-t",
         "--test-dir",
         type=Path,
@@ -180,6 +186,7 @@ def execute(args: Namespace) -> int:
             distribution=distribution,
             output_path=output_folder,
             prefix=prefix_path,
+            install_build_dependencies=args.install_build_dependencies,
             test_dir=test_dir,
             pypi_to_conda_name_mapping=pypi_to_conda_name_mapping,
             channels=tuple(context.channels),

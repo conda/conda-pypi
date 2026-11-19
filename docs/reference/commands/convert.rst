@@ -9,6 +9,18 @@
    :nodefault:
    :nodefaultconst:
 
+Build Dependencies
+==================
+
+When building from source, ``conda pypi convert`` installs missing build
+dependencies into the target environment by default. Use
+``--no-install-build-dependencies`` to have the build fail if a requirement
+from ``pyproject.toml`` or the build backend is missing.
+
+.. code-block:: bash
+
+   conda pypi --name my-env convert ./my-project --no-install-build-dependencies
+
 Custom Name Mapping
 ===================
 
