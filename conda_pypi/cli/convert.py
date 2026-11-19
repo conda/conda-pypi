@@ -121,8 +121,8 @@ def execute(args: Namespace) -> int:
     from conda.base.context import context
     from conda.exceptions import ArgumentError
 
-    from conda_pypi import build, paths
-    from conda_pypi.translate import validate_name_mapping_format
+    from .. import build, paths
+    from ..translate import validate_name_mapping_format
 
     prefix_path = Path(context.target_prefix)
     if not Path(args.project_path).exists():

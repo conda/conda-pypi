@@ -119,13 +119,13 @@ def execute(args: Namespace) -> int:
     from conda.models.match_spec import MatchSpec
     from packaging.requirements import InvalidRequirement, Requirement
 
-    from conda_pypi import build, convert_tree, installer
-    from conda_pypi.downloader import get_package_finder
-    from conda_pypi.main import run_conda_install
-    from conda_pypi.markers import dependency_extras_suffix
-    from conda_pypi.specifiers import specifier_bounds_to_conda
-    from conda_pypi.translate import pypi_to_conda_name, remap_match_spec_name
-    from conda_pypi.utils import get_prefix
+    from .. import build, convert_tree, installer
+    from ..downloader import get_package_finder
+    from ..main import run_conda_install
+    from ..markers import dependency_extras_suffix
+    from ..specifiers import specifier_bounds_to_conda
+    from ..translate import pypi_to_conda_name, remap_match_spec_name
+    from ..utils import get_prefix
 
     editable_projects = args.editable or ()
     if isinstance(editable_projects, str):

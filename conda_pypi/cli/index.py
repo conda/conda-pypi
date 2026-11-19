@@ -81,7 +81,7 @@ def validate_dir_and_return_whl_files(directory: Path) -> list[Path]:
 
 def pypi_data_dict(wheel: Path, wheel_metadata: PackageMetadata, url: str):
     """Return expected dict structure of pypi metadata with the relevant fields"""
-    from conda_pypi.conda_build_utils import sha256_checksum
+    from ..conda_build_utils import sha256_checksum
 
     # convert to json format using the `json` property of the PackageMetadata class
     wheel_metadata_json = wheel_metadata.json
@@ -113,9 +113,9 @@ def execute(args: Namespace) -> int:
     from installer.sources import WheelFile
     from packaging.requirements import InvalidRequirement
 
-    from conda_pypi.exceptions import UnableToConvertToRepodataEntry
-    from conda_pypi.index import create_channel_index, store_pypi_metadata, update_index
-    from conda_pypi.license_files import package_metadata_from_metadata_body
+    from ..exceptions import UnableToConvertToRepodataEntry
+    from ..index import create_channel_index, store_pypi_metadata, update_index
+    from ..license_files import package_metadata_from_metadata_body
 
     directory = Path(args.directory).expanduser()
 
