@@ -11,8 +11,8 @@ from conda.gateways.connection.download import download
 from conda.models.match_spec import MatchSpec
 from unearth import PackageFinder, TargetPython  # noqa: TID253
 
-from conda_pypi.exceptions import CondaPypiError
-from conda_pypi.translate import conda_to_requires
+from .exceptions import CondaPypiError
+from .translate import conda_to_requires
 
 log = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from conda.plugins.types import (
 
 @hookimpl
 def conda_subcommands():
-    from conda_pypi import cli
+    from . import cli
 
     yield CondaSubcommand(
         name="pypi",
@@ -24,7 +24,7 @@ def conda_subcommands():
 
 @hookimpl
 def conda_post_transaction_actions():
-    from conda_pypi.main import NotifyCondaPypiTipAction
+    from .main import NotifyCondaPypiTipAction
 
     yield CondaPostTransactionAction(
         name="conda-pypi-notify-pip-tip",
@@ -34,7 +34,7 @@ def conda_post_transaction_actions():
 
 @hookimpl
 def conda_package_extractors():
-    from conda_pypi.package_extractors.whl import extract_whl_as_conda_pkg
+    from .package_extractors.whl import extract_whl_as_conda_pkg
 
     yield CondaPackageExtractor(
         name="wheel-package",
@@ -45,7 +45,7 @@ def conda_package_extractors():
 
 @hookimpl
 def conda_health_checks():
-    from conda_pypi.health_checks.external_packages import (
+    from .health_checks.external_packages import (
         migrate_to_conda,
         print_external_packages,
     )

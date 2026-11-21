@@ -10,13 +10,13 @@ from typing import Any
 from packaging.requirements import Requirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 
-from conda_pypi.markers import (
+from .markers import (
     dependency_extras_suffix,
     dependency_when,
     extract_marker_condition_and_extras,
 )
-from conda_pypi.name_mapping import pypi_to_conda_name
-from conda_pypi.specifiers import specifier_bounds_to_conda
+from .name_mapping import pypi_to_conda_name
+from .specifiers import specifier_bounds_to_conda
 
 log = logging.getLogger(__name__)
 

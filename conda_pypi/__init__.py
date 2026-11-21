@@ -3,7 +3,7 @@ conda-pypi
 """
 
 try:
-    from ._version import __version__  # noqa: TID252
+    from ._version import __version__
 except ImportError:
     # _version.py is only created after running `pip install`
     try:

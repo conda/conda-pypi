@@ -52,7 +52,7 @@ def build_migration_plan(
 ) -> tuple[list[str], list[PrefixRecord]]:
     """Determine which packages can be safely migrated to conda."""
 
-    from conda_pypi.name_mapping import pypi_to_conda_name
+    from ..name_mapping import pypi_to_conda_name
 
     safe_pkgs_conda_names = []
     safe_pkgs_pypi = []

@@ -1,3 +1,3 @@
-from conda_pypi.cli import main
+from . import main
 
 __all__ = ["main"]

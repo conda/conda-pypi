@@ -1,6 +1,6 @@
 """Public dependency-checking API."""
 
-from conda_pypi.dependencies.pypi import (
+from .pypi import (
     MissingDependencyError,
     check_dependencies,
     ensure_requirements,

@@ -15,10 +15,10 @@ from installer.sources import WheelFile  # noqa: TID253
 from installer.utils import Scheme, parse_wheel_filename  # noqa: TID253
 from packaging.tags import parse_tag
 
-from conda_pypi.license_files import copy_into_info_licenses, package_metadata_from_metadata_body
-from conda_pypi.pypi_metadata import python_depend_from_requires_python
-from conda_pypi.translate import requires_to_conda
-from conda_pypi.utils import sha256_base64url_to_hex
+from ..license_files import copy_into_info_licenses, package_metadata_from_metadata_body
+from ..pypi_metadata import python_depend_from_requires_python
+from ..translate import requires_to_conda
+from ..utils import sha256_base64url_to_hex
 
 logger = getLogger(__name__)
 

@@ -14,7 +14,7 @@ from conda.models.match_spec import MatchSpec
 from conda.models.records import PackageRecord
 from packaging.version import Version
 
-from conda_pypi.python_paths import (
+from .python_paths import (
     ensure_externally_managed,
     get_externally_managed_paths,
 )

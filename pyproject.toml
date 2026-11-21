@@ -242,11 +242,11 @@ line-length = 99
 [tool.ruff.lint]
 extend-select = [
   "I", # sort imports
-  "TID", # use absolute imports
+  "TID", # tidy imports
 ]
+ignore = ["TID252"] # allow package-relative imports
 
 [tool.ruff.lint.flake8-tidy-imports]
-ban-relative-imports = "all"
 banned-module-level-imports = ["unearth", "build", "installer", "conda_index"]
 
 [tool.ruff.lint.per-file-ignores]
