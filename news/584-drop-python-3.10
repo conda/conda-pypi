@@ -16,4 +16,4 @@
 
 ### Other
 
-* Drop Python 3.10 support. conda-pypi now requires Python 3.11 or newer.
+* Drop Python 3.10 support. conda-pypi now requires Python 3.11 or newer. (#584)
