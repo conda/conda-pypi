@@ -12,18 +12,10 @@ Marker conversion includes:
 """
 
 import json
-import sys
+from enum import StrEnum
 from typing import Any
 
 from packaging.markers import Marker
-
-if sys.version_info >= (3, 11):
-    from enum import StrEnum
-else:
-    from enum import Enum
-
-    class StrEnum(str, Enum):
-        pass
 
 
 class MarkerVar(StrEnum):

@@ -55,11 +55,6 @@ and again after reinstalling an environment. Changes to Python source files are
 available without reinstalling. Package versions continue to come from Git via
 hatch-vcs.
 
-Python 3.10 remains supported. Its build and test environments prioritize
-Anaconda's main channel and use conda-forge for dependencies unavailable there.
-The Python 3.10 feature also sets `CONDA_CHANNELS` for commands run inside these
-environments. Other environments use conda-forge, with Python 3.11 for docs.
-
 ### Initial Setup
 
 ```bash
@@ -74,14 +69,15 @@ pixi run dev
 ### Common Development Tasks
 
 ```bash
-# Run tests (Python 3.14)
-pixi run -e test-py314 test
+# Run tests (Python 3.15)
+pixi run -e test-py315 test
 
 # Run tests with another Python version
-pixi run -e test-py310 test
 pixi run -e test-py311 test
 pixi run -e test-py312 test
 pixi run -e test-py313 test
+pixi run -e test-py314 test
+pixi run -e test-py315 test
 
 # Run linting and formatting
 pixi run pre-commit
@@ -116,7 +112,7 @@ conda-pypi/
 
 When contributing to `conda-pypi`:
 
-1. **Test with Multiple Python Versions**: Use the provided pixi environments (`test-py310` through `test-py314`)
+1. **Test with Multiple Python Versions**: Use the provided pixi environments (`test-py311` through `test-py315`)
 2. **Run Pre-commit Hooks**: Always run `pixi run pre-commit` before committing
 3. **Update Documentation**: Keep documentation in sync with code changes
 4. **Write Tests**: Add tests for new features and bug fixes

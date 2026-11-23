@@ -3,8 +3,7 @@ Conversion from PyPI metadata to repodata.json v3.whl entries.
 """
 
 import logging
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from packaging.requirements import Requirement
@@ -120,8 +119,5 @@ def _upload_time_to_ms(upload_time: str | None) -> int:
     """Convert a PyPI upload_time ISO string to Unix milliseconds."""
     if not upload_time:
         return 0
-    if sys.version_info >= (3, 11):
-        dt = datetime.fromisoformat(upload_time).replace(tzinfo=timezone.utc)
-    else:
-        dt = datetime.strptime(upload_time, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+    dt = datetime.fromisoformat(upload_time).replace(tzinfo=UTC)
     return int(dt.timestamp() * 1000)
