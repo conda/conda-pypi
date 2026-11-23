@@ -13,7 +13,7 @@ let `pip` manage the project dependencies.
 This is what that typically looks like:
 
 ```console
-$ conda create -n pip-environment python=3.10 pip
+$ conda create -n pip-environment python=3.11 pip
 $ conda activate pip-environment
 $ pip install ...
 ```

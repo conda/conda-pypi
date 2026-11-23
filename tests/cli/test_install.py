@@ -226,7 +226,7 @@ def test_install_editable_installs_multiple_projects_in_order(
 
 
 def test_index_urls(tmp_env, conda_cli, pypi_local_index):
-    with tmp_env("python=3.10") as prefix:
+    with tmp_env("python=3.11") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
             out, _err, rc = conda_cli(
                 "pypi",
@@ -273,7 +273,7 @@ def test_install_output(tmp_env, conda_cli):
 
 
 def test_install_jupyterlab_package(tmp_env, conda_cli):
-    with tmp_env("python=3.10") as prefix:
+    with tmp_env("python=3.11") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
             _out, _err, rc = conda_cli(
                 "pypi",
@@ -314,7 +314,7 @@ def test_json_output(tmp_env, monkeypatch, conda_cli):
     monkeypatch.setenv("CONDA_JSON", "true")
     reset_context()
 
-    with tmp_env("python=3.10") as prefix:
+    with tmp_env("python=3.11") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
             out, _err, rc = conda_cli(
                 "pypi",
@@ -336,7 +336,7 @@ def test_install_package_with_hyphens(tmp_env, conda_cli):
     This ensures packages like 'huggingface-hub' are converted to 'huggingface_hub'
     and can be found by the solver after conversion.
     """
-    with tmp_env("python=3.10") as prefix:
+    with tmp_env("python=3.11") as prefix:
         with pytest.deprecated_call(match=r"`conda pypi install` for package installs"):
             # Use a simple package with hyphens in the name
             out, _err, rc = conda_cli(

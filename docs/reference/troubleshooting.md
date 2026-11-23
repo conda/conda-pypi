@@ -12,10 +12,10 @@ This guide covers the most common issues you may encounter when using `conda-pyp
 
 ```bash
 # Install Python in your environment
-conda install -n myenv python>=3.10
+conda install -n myenv python>=3.11
 
 # Or when creating a new environment
-conda create -n myenv python>=3.10
+conda create -n myenv python>=3.11
 ```
 
 ### Invalid environment
@@ -32,7 +32,7 @@ conda create -n myenv python>=3.10
 conda env list
 
 # Create the environment if it doesn't exist
-conda create -n myenv python=3.10
+conda create -n myenv python=3.11
 
 # Use correct environment name or path
 conda install -n myenv package-name
@@ -168,7 +168,7 @@ conda install --dry-run package-name
 conda list
 
 # Create a fresh environment for testing
-conda create -n test python=3.10 pip
+conda create -n test python=3.14 pip
 conda activate test
 conda install package-name
 ```

@@ -41,14 +41,14 @@ Hash of a regular Python package is something like py312hca03da5_0
 1. PEP 668 / `EXTERNALLY-MANAGED` — marker *files* that discourage naive `pip` use (user-facing docs: [Environment marker files](../features.md#environment-marker-files)).
 2. PEP 508 dependency markers — boolean expressions on individual `Requires-Dist` lines. See {doc}`marker-conversion`.
 
-The internal implementation walks the `Marker._markers` AST directly. The AST is a nested list of `(Variable, Op, Value)` tuples interleaved with "and" / "or" strings. For example, `python_version > "3.10"` or `(python_version == "3.11" and os_name == "unix")` parses to:
+The internal implementation walks the `Marker._markers` AST directly. The AST is a nested list of `(Variable, Op, Value)` tuples interleaved with "and" / "or" strings. For example, `python_version > "3.11"` or `(python_version == "3.12" and os_name == "unix")` parses to:
 
 ```python
 [
-    (Variable("python_version"), Op(">"), Value("3.10")),
+    (Variable("python_version"), Op(">"), Value("3.11")),
     "or",
     [
-        (Variable("python_version"), Op("=="), Value("3.11")),
+        (Variable("python_version"), Op("=="), Value("3.12")),
         "and",
         (Variable("os_name"), Op("=="), Value("unix")),
     ],

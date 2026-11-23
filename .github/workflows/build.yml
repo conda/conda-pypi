@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["310", "311", "312", "313", "314", "315"]
+        python-version: ["311", "312", "313", "314", "315"]
         os: [ubuntu-latest, windows-latest, macos-latest]
     env:
       PIXI_ENV_NAME: build-py${{ matrix.python-version }}
@@ -58,7 +58,7 @@ jobs:
           sudo rm /etc/pip.conf
       - name: Setup project for building
         env:
-          CHANNELS: ${{ matrix.python-version == '310' && 'https://repo.anaconda.com/pkgs/main, conda-forge' || 'conda-forge, defaults' }}
+          CHANNELS: 'conda-forge, defaults'
         run: |
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
           echo "channels: [${{ env.CHANNELS }}]" > .pixi/envs/${{ env.PIXI_ENV_NAME }}/.condarc

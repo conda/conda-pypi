@@ -16,12 +16,9 @@ pixi run -e test-py314 test
 
 ### Testing with Different Python Versions
 
-The project supports Python 3.10 through 3.14. Test your changes across all supported versions:
+The project supports Python 3.11 through 3.15. Test your changes across all supported versions:
 
 ```bash
-# Python 3.10
-pixi run -e test-py310 test
-
 # Python 3.11
 pixi run -e test-py311 test
 
@@ -33,6 +30,9 @@ pixi run -e test-py313 test
 
 # Python 3.14
 pixi run -e test-py314 test
+
+# Python 3.15
+pixi run -e test-py315 test
 ```
 
 ### Running Specific Tests
@@ -270,7 +270,7 @@ For more information on the conda channel server, see the [Mock Channel Server G
 
 Tests run automatically on GitHub Actions for:
 
-- All supported Python versions (3.10-3.13)
+- All supported Python versions (3.11-3.15)
 - Multiple operating systems (Linux, macOS, Windows)
 - Pull requests and main branch commits
 
