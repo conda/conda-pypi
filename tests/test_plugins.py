@@ -1,12 +1,9 @@
-import contextlib
-import os
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 from conda.base.context import context, reset_context
 from conda.core.prefix_data import PrefixData
-from conda.models.channel import Channel
 from conda.plugins.types import CondaSetting
 from conda.testing.fixtures import CondaCLIFixture, TmpEnvFixture
 from pytest_mock import MockerFixture
@@ -73,29 +70,30 @@ def _prec(name: str) -> SimpleNamespace:
     return SimpleNamespace(name=name)
 
 
-def _notify(
-    mocker: MockerFixture,
-    tmp_path: Path,
-    *,
-    link: tuple[str, ...] = ("pip",),
-    unlink: tuple[str, ...] = (),
-    target: str = "env",
-    channels: tuple[str | Channel, ...] = (),
-):
-    ctx = mocker.patch("conda_pypi.main.context")
-    ctx.conda_prefix = str(tmp_path / "base")
-    ctx.target_prefix = str(tmp_path / target)
-    ctx.channels = channels
-    ctx.channel_alias = Channel("https://conda.anaconda.org")
-    ctx._custom_channels = {}
-    ctx.plugins.conda_pypi_pip_warning = True
-    mock_logger = mocker.patch("conda_pypi.main.logger")
-    notify_conda_pypi_tip(
-        target_prefix=str(tmp_path / target),
-        link_precs=[_prec(name) for name in link],
-        unlink_precs=[_prec(name) for name in unlink],
-    )
-    return mock_logger
+@pytest.fixture
+def notify_with_condarc(isolated_conda_context, mocker: MockerFixture, tmp_path: Path):
+    """Factory fixture to run notify_conda_pypi_tip under a real condarc configuration."""
+
+    def _run(
+        condarc_yaml: str,
+        *,
+        link: tuple[str, ...] = ("pip",),
+        unlink: tuple[str, ...] = (),
+        target: str = "env",
+    ):
+        condarc_file = tmp_path / "condarc.yaml"
+        condarc_file.write_text(condarc_yaml, encoding="utf-8")
+        reset_context([str(condarc_file)])
+        target_path = str(context.conda_prefix) if target == "base" else str(tmp_path / target)
+        mock_logger = mocker.patch("conda_pypi.main.logger")
+        notify_conda_pypi_tip(
+            target_prefix=target_path,
+            link_precs=[_prec(name) for name in link],
+            unlink_precs=[_prec(name) for name in unlink],
+        )
+        return mock_logger
+
+    return _run
 
 
 @pytest.mark.parametrize(
@@ -116,57 +114,46 @@ def test_pip_newly_linked(link, unlink, expected):
     )
 
 
-def test_notify_logs_tip_when_pip_newly_linked(mocker: MockerFixture, tmp_path: Path):
-    """Happy path: pip linked"""
-    mock_logger = _notify(mocker, tmp_path)
+def test_notify_logs_tip_when_pip_newly_linked(notify_with_condarc):
+    """Happy path: pip linked with unrelated channel shows tip."""
+    mock_logger = notify_with_condarc("channels:\n  - conda-forge\n")
     mock_logger.warning.assert_called_once()
 
 
-def test_notify_skips_build_env(mocker: MockerFixture, monkeypatch, tmp_path: Path):
-    """pip linked but CONDA_BUILD_STATE set to BUILD, no tip shown"""
+def test_notify_skips_build_env(notify_with_condarc, monkeypatch):
+    """pip linked but CONDA_BUILD_STATE set to BUILD, no tip shown."""
     monkeypatch.setenv("CONDA_BUILD_STATE", "BUILD")
-    mock_logger = _notify(mocker, tmp_path)
+    mock_logger = notify_with_condarc("channels:\n  - conda-forge\n")
     mock_logger.warning.assert_not_called()
 
 
-def test_notify_skips_base_prefix(mocker: MockerFixture, tmp_path: Path):
-    """pip linked but env is base, no tip shown"""
-    mock_logger = _notify(mocker, tmp_path, target="base")
+def test_notify_skips_base_prefix(notify_with_condarc):
+    """pip linked but env is base, no tip shown."""
+    mock_logger = notify_with_condarc("channels:\n  - conda-forge\n", target="base")
     mock_logger.warning.assert_not_called()
 
 
-def test_notify_skips_when_pip_not_in_transaction(mocker: MockerFixture, tmp_path: Path):
-    """no pip linked, no tip shown"""
-    mock_logger = _notify(
-        mocker, tmp_path, link=("python", "numpy")
-    )  # this transaction did not link pip
-
+def test_notify_skips_when_pip_not_in_transaction(notify_with_condarc):
+    """no pip linked, no tip shown."""
+    mock_logger = notify_with_condarc("channels:\n  - conda-forge\n", link=("python", "numpy"))
     mock_logger.warning.assert_not_called()
 
 
-def test_notify_skips_pip_upgrade(mocker: MockerFixture, tmp_path: Path):
-    """pip was upgraded, not newly installed, no tip shown"""
-    mock_logger = _notify(mocker, tmp_path, link=("pip",), unlink=("pip",))
-    mock_logger.warning.assert_not_called()
-
-
-def test_notify_skips_when_pip_warning_disabled(mocker: MockerFixture, tmp_path: Path):
-    """When conda_pypi_pip_warning is False the tip must not be emitted and channels not checked."""
-    ctx = mocker.patch("conda_pypi.main.context")
-    ctx.conda_prefix = str(tmp_path / "base")
-    ctx.target_prefix = str(tmp_path / "env")
-    ctx.channels = ()
-    ctx.channel_alias = Channel("https://conda.anaconda.org")
-    ctx._custom_channels = {}
-    ctx.plugins.conda_pypi_pip_warning = False
-    mock_logger = mocker.patch("conda_pypi.main.logger")
-    spy_channel_check = mocker.spy(conda_pypi.main, "_has_conda_pypi_channel")
-
-    notify_conda_pypi_tip(
-        target_prefix=str(tmp_path / "env"),
-        link_precs=[_prec("pip")],
-        unlink_precs=[],
+def test_notify_skips_pip_upgrade(notify_with_condarc):
+    """pip was upgraded, not newly installed, no tip shown."""
+    mock_logger = notify_with_condarc(
+        "channels:\n  - conda-forge\n", link=("pip",), unlink=("pip",)
     )
+    mock_logger.warning.assert_not_called()
+
+
+def test_notify_skips_when_pip_warning_disabled(
+    notify_with_condarc, mocker: MockerFixture, monkeypatch
+):
+    """When conda_pypi_pip_warning is False the tip must not be emitted and channels not checked."""
+    monkeypatch.setenv("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING", "false")
+    spy_channel_check = mocker.spy(conda_pypi.main, "_has_conda_pypi_channel")
+    mock_logger = notify_with_condarc("channels:\n  - conda-forge\n")
 
     spy_channel_check.assert_not_called()
     mock_logger.warning.assert_not_called()
@@ -226,288 +213,135 @@ def test_pip_warning_setting_in_context(monkeypatch, tmp_path: Path):
     assert context.plugins.conda_pypi_pip_warning is True
 
 
-@contextlib.contextmanager
-def _conda_context_isolation(monkeypatch, tmp_path: Path):
-    try:
-        with monkeypatch.context() as m:
-            m.delenv("CONDA_CHANNELS", raising=False)
-            m.delenv("CONDA_CHANNEL_ALIAS", raising=False)
-            m.delenv("CONDA_CUSTOM_CHANNELS", raising=False)
-            m.delenv("CONDA_CUSTOM_MULTICHANNELS", raising=False)
-            m.delenv("CONDA_DEFAULT_CHANNELS", raising=False)
-            m.delenv("CONDA_BUILD_STATE", raising=False)
-            m.setenv("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING", "true")
-            yield tmp_path
-    finally:
-        reset_context()
-
-
-@pytest.fixture
-def isolated_conda_context(monkeypatch, tmp_path: Path):
-    """Fixture that isolates conda config and restores context/channel caches after each case."""
-    with _conda_context_isolation(monkeypatch, tmp_path) as path:
-        yield path
-
-
-def test_isolated_conda_context_restores_inherited_channels(monkeypatch, tmp_path: Path):
-    """Prove inherited CONDA_CHANNELS is visible in Conda context after isolation scope exits."""
-    try:
-        with monkeypatch.context() as outer:
-            outer.setenv("CONDA_CHANNELS", "conda-forge")
-            reset_context()
-            assert context.channels == ("conda-forge",)
-
-            with _conda_context_isolation(outer, tmp_path) as isolated_path:
-                assert isolated_path == tmp_path
-                assert "CONDA_CHANNELS" not in os.environ
-
-                # Simulate a test case that loaded a custom condarc
-                condarc = isolated_path / "condarc.yaml"
-                condarc.write_text("channels:\n  - conda-pypi\n", encoding="utf-8")
-                reset_context(search_path=(str(condarc),))
-                assert context.channels == ("conda-pypi",)
-
-            # After isolation teardown, inherited CONDA_CHANNELS must be restored and visible in context
-            assert os.environ.get("CONDA_CHANNELS") == "conda-forge"
-            assert context.channels == ("conda-forge",)
-    finally:
-        reset_context()
-
-
-def test_isolated_conda_context_restores_on_test_failure(monkeypatch, tmp_path: Path):
-    """Prove inherited CONDA_CHANNELS is restored even if an exception occurs during the test."""
-    try:
-        with monkeypatch.context() as outer:
-            outer.setenv("CONDA_CHANNELS", "conda-forge")
-            reset_context()
-            assert context.channels == ("conda-forge",)
-
-            with (
-                pytest.raises(RuntimeError, match="simulated failure"),
-                _conda_context_isolation(outer, tmp_path),
-            ):
-                assert "CONDA_CHANNELS" not in os.environ
-                raise RuntimeError("simulated failure")
-
-            assert os.environ.get("CONDA_CHANNELS") == "conda-forge"
-            assert context.channels == ("conda-forge",)
-    finally:
-        reset_context()
-
-
-def test_isolated_conda_context_clears_build_and_opt_out(monkeypatch, tmp_path: Path):
-    """Prove inherited CONDA_BUILD_STATE and warning opt-out are isolated so tests cannot silently skip."""
-    try:
-        with monkeypatch.context() as outer:
-            outer.setenv("CONDA_BUILD_STATE", "BUILD")
-            outer.setenv("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING", "false")
-
-            with _conda_context_isolation(outer, tmp_path):
-                assert "CONDA_BUILD_STATE" not in os.environ
-                assert os.environ.get("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING") == "true"
-
-            assert os.environ.get("CONDA_BUILD_STATE") == "BUILD"
-            assert os.environ.get("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING") == "false"
-    finally:
-        reset_context()
-
-
-def _run_notify_with_real_context(tmp_path: Path, mocker: MockerFixture, condarc_yaml: str):
-    condarc_file = tmp_path / "condarc.yaml"
-    condarc_file.write_text(condarc_yaml, encoding="utf-8")
-    reset_context(search_path=(str(condarc_file),))
-    mock_logger = mocker.patch("conda_pypi.main.logger")
-    notify_conda_pypi_tip(
-        target_prefix=str(tmp_path / "env"),
-        link_precs=[_prec("pip")],
-        unlink_precs=[],
+def test_conda_context_exposes_custom_channels_mapping(isolated_conda_context, tmp_path: Path):
+    """Ensure supported Conda context exposes _custom_channels mapping for short-name resolution."""
+    condarc = tmp_path / "condarc.yaml"
+    condarc.write_text(
+        "custom_channels:\n  conda-pypi: https://custom-channel.repo.org\n",
+        encoding="utf-8",
     )
-    return mock_logger
-
-
-def test_notify_skips_when_channel_is_short_name(mocker: MockerFixture, tmp_path: Path):
-    """Tip is suppressed when channels include conda-pypi by short name."""
-    mock_logger = _notify(mocker, tmp_path, channels=("conda-pypi",))
-    mock_logger.warning.assert_not_called()
+    reset_context([str(condarc)])
+    custom_channels = getattr(context, "_custom_channels", {})
+    assert custom_channels.get("conda-pypi") == "https://custom-channel.repo.org"
 
 
 @pytest.mark.parametrize(
-    "channel",
+    "condarc_yaml,should_suppress",
     [
-        "https://conda.anaconda.org/conda-pypi",
-        "https://conda.anaconda.org/conda-pypi/",
-        "https://conda.anaconda.org/conda-pypi/linux-64",
-        "conda-pypi/linux-64",
-        "conda-pypi/noarch",
-        "https://conda.anaconda.org/conda-pypi/noarch",
+        pytest.param("channels:\n  - conda-pypi\n", True, id="short-name"),
+        pytest.param(
+            "channels:\n  - https://conda.anaconda.org/conda-pypi\n",
+            True,
+            id="public-url",
+        ),
+        pytest.param(
+            "channels:\n  - https://conda.anaconda.org/conda-pypi/\n",
+            True,
+            id="public-url-trailing-slash",
+        ),
+        pytest.param(
+            "channels:\n  - https://conda.anaconda.org/conda-pypi/linux-64\n",
+            True,
+            id="public-url-subdir-linux64",
+        ),
+        pytest.param(
+            "channels:\n  - https://conda.anaconda.org/conda-pypi/noarch\n",
+            True,
+            id="public-url-subdir-noarch",
+        ),
+        pytest.param(
+            "channels:\n  - conda-pypi/linux-64\n",
+            True,
+            id="short-name-subdir-linux64",
+        ),
+        pytest.param(
+            "channels:\n  - conda-pypi/noarch\n",
+            True,
+            id="short-name-subdir-noarch",
+        ),
+        pytest.param("channels: []\n", False, id="empty-channels"),
+        pytest.param("channels:\n  - conda-forge\n", False, id="unrelated-channel"),
+        pytest.param(
+            "channels:\n  - conda-pypi-extra\n",
+            False,
+            id="extended-name-prefix",
+        ),
+        pytest.param(
+            "channels:\n  - https://example.invalid/conda-pypi\n",
+            False,
+            id="unrelated-host-same-name",
+        ),
+        pytest.param(
+            "channels:\n  - https://example.invalid/conda-pypi/linux-64\n",
+            False,
+            id="unrelated-host-same-name-linux64",
+        ),
+        pytest.param(
+            "channel_alias: https://custom.internal.org\nchannels:\n  - conda-pypi\n",
+            True,
+            id="alias-short-name",
+        ),
+        pytest.param(
+            "channel_alias: https://custom.internal.org\nchannels:\n  - https://custom.internal.org/conda-pypi\n",
+            True,
+            id="alias-explicit-url",
+        ),
+        pytest.param(
+            "channel_alias: https://custom.internal.org\nchannels:\n  - https://conda.anaconda.org/conda-pypi\n",
+            True,
+            id="alias-public-url",
+        ),
+        pytest.param(
+            "channel_alias: https://custom.internal.org\nchannels:\n  - https://example.invalid/conda-pypi\n",
+            False,
+            id="alias-unrelated-host",
+        ),
+        pytest.param(
+            "custom_channels:\n  conda-pypi: https://custom-channel.repo.org\nchannels:\n  - conda-pypi\n",
+            True,
+            id="custom-mapping-short-name",
+        ),
+        pytest.param(
+            "custom_channels:\n  conda-pypi: https://custom-channel.repo.org\nchannels:\n  - https://custom-channel.repo.org/conda-pypi\n",
+            True,
+            id="custom-mapping-explicit-url",
+        ),
+        pytest.param(
+            "custom_channels:\n  conda-pypi: https://custom-channel.repo.org\nchannels:\n  - https://conda.anaconda.org/conda-pypi\n",
+            True,
+            id="custom-mapping-public-url",
+        ),
+        pytest.param(
+            "custom_channels:\n  conda-pypi: https://custom-channel.repo.org\nchannels:\n  - https://example.invalid/conda-pypi\n",
+            False,
+            id="custom-mapping-unrelated-host",
+        ),
+        pytest.param(
+            "custom_multichannels:\n  my_mc:\n    - https://conda.anaconda.org/conda-pypi\n    - conda-forge\nchannels:\n  - my_mc\n",
+            True,
+            id="multichannel-recognized-member",
+        ),
+        pytest.param(
+            "custom_multichannels:\n  unrelated_mc:\n    - https://example.invalid/conda-pypi\nchannels:\n  - unrelated_mc\n",
+            False,
+            id="multichannel-unrelated-host-member",
+        ),
+        pytest.param(
+            "custom_channels:\n  conda-pypi: https://custom-channel.repo.org\ncustom_multichannels:\n  wrong_host_mc:\n    - https://example.invalid/conda-pypi\nchannels:\n  - wrong_host_mc\n",
+            False,
+            id="custom-mapping-with-wrong-host-mc-select-mc",
+        ),
+        pytest.param(
+            "custom_channels:\n  conda-pypi: https://custom-channel.repo.org\ncustom_multichannels:\n  wrong_host_mc:\n    - https://example.invalid/conda-pypi\nchannels:\n  - conda-pypi\n",
+            True,
+            id="custom-mapping-with-wrong-host-mc-select-short-name",
+        ),
     ],
 )
-def test_notify_skips_when_channel_is_public_url_variants(
-    mocker: MockerFixture, tmp_path: Path, channel: str
-):
-    """Tip is suppressed for public URL, trailing-slash, and platform-qualified forms."""
-    mock_logger = _notify(mocker, tmp_path, channels=(channel,))
-    mock_logger.warning.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    "channels",
-    [
-        (),
-        ("conda-forge",),
-        ("conda-pypi-extra",),
-        ("https://example.invalid/conda-pypi",),
-        ("https://example.invalid/conda-pypi/linux-64",),
-    ],
-)
-def test_notify_warns_for_unrelated_or_absent_channels(
-    mocker: MockerFixture, tmp_path: Path, channels: tuple[str, ...]
-):
-    """Tip warns once for absent, unrelated channels, conda-pypi-extra, or unrelated hosts."""
-    mock_logger = _notify(mocker, tmp_path, channels=channels)
-    mock_logger.warning.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    "channel,should_suppress",
-    [
-        ("conda-pypi", True),
-        ("https://conda.anaconda.org/conda-pypi", True),
-        ("https://custom.internal.org/conda-pypi", True),
-        ("https://example.invalid/conda-pypi", False),
-    ],
-)
-def test_notify_custom_channel_alias(
-    isolated_conda_context, mocker: MockerFixture, channel: str, should_suppress: bool
-):
-    """With custom channel_alias: short-name and public URL suppress, unrelated host warns."""
-    condarc = f"""
-channel_alias: https://custom.internal.org
-channels:
-  - {channel}
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
+def test_notify_channel_scenarios(notify_with_condarc, condarc_yaml: str, should_suppress: bool):
+    """Test notification suppression behavior across channel configuration scenarios."""
+    mock_logger = notify_with_condarc(condarc_yaml)
     if should_suppress:
         mock_logger.warning.assert_not_called()
     else:
         mock_logger.warning.assert_called_once()
-
-
-def test_notify_multichannel_with_recognized_member(isolated_conda_context, mocker: MockerFixture):
-    """A multichannel containing a recognized conda-pypi member suppresses the tip."""
-    condarc = """
-custom_multichannels:
-  my_multichannel:
-    - https://conda.anaconda.org/conda-pypi
-    - conda-forge
-channels:
-  - my_multichannel
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
-    mock_logger.warning.assert_not_called()
-
-
-def test_notify_multichannel_with_unrelated_host_member(
-    isolated_conda_context, mocker: MockerFixture
-):
-    """An unrelated multichannel with only a same-named channel on a different host warns."""
-    condarc = """
-custom_multichannels:
-  unrelated_multichannel:
-    - https://example.invalid/conda-pypi
-channels:
-  - unrelated_multichannel
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
-    mock_logger.warning.assert_called_once()
-
-
-def test_notify_real_config_short_name_suppresses(isolated_conda_context, mocker: MockerFixture):
-    """Real condarc loading with short-name conda-pypi suppresses tip."""
-    condarc = """
-channels:
-  - conda-pypi
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
-    mock_logger.warning.assert_not_called()
-
-
-def test_notify_real_config_public_url_suppresses(isolated_conda_context, mocker: MockerFixture):
-    """Real condarc loading with public URL conda-pypi suppresses tip."""
-    condarc = """
-channels:
-  - https://conda.anaconda.org/conda-pypi
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
-    mock_logger.warning.assert_not_called()
-
-
-def test_notify_real_config_unrelated_channel_warns(isolated_conda_context, mocker: MockerFixture):
-    """Real condarc loading with unrelated channel warns once."""
-    condarc = """
-channels:
-  - conda-forge
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
-    mock_logger.warning.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    "channel,should_suppress",
-    [
-        ("conda-pypi", True),
-        ("https://custom-channel.repo.org/conda-pypi", True),
-        ("https://conda.anaconda.org/conda-pypi", True),
-        ("https://example.invalid/conda-pypi", False),
-    ],
-)
-def test_notify_custom_channels_mapping(
-    isolated_conda_context, mocker: MockerFixture, channel: str, should_suppress: bool
-):
-    """With custom_channels mapping: mapped short-name and public URL suppress, unrelated warns."""
-    condarc = f"""
-custom_channels:
-  conda-pypi: https://custom-channel.repo.org
-channels:
-  - {channel}
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
-    if should_suppress:
-        mock_logger.warning.assert_not_called()
-    else:
-        mock_logger.warning.assert_called_once()
-
-
-def test_notify_custom_channels_mapping_with_wrong_host_multichannel(
-    isolated_conda_context, mocker: MockerFixture
-):
-    """Explicit custom_channels mapping combined with a wrong-host multichannel entry.
-
-    The short-name conda-pypi and custom channel URL suppress the tip.
-    The unrelated multichannel with the same-named channel on a different host warns.
-    """
-    condarc = """
-custom_channels:
-  conda-pypi: https://custom-channel.repo.org
-custom_multichannels:
-  wrong_host_mc:
-    - https://example.invalid/conda-pypi
-channels:
-  - wrong_host_mc
-"""
-    mock_logger = _run_notify_with_real_context(isolated_conda_context, mocker, condarc)
-    mock_logger.warning.assert_called_once()
-
-    condarc_suppressed = """
-custom_channels:
-  conda-pypi: https://custom-channel.repo.org
-custom_multichannels:
-  wrong_host_mc:
-    - https://example.invalid/conda-pypi
-channels:
-  - conda-pypi
-"""
-    mock_logger2 = _run_notify_with_real_context(
-        isolated_conda_context, mocker, condarc_suppressed
-    )
-    mock_logger2.warning.assert_not_called()

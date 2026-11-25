@@ -143,7 +143,8 @@ def _has_conda_pypi_channel() -> bool:
     public_pypi = Channel("https://conda.anaconda.org/conda-pypi")
     # Read configured custom_channels mapping directly to avoid Conda's
     # custom_channels property deriving short names from unrelated multichannels.
-    custom_url = context._custom_channels.get("conda-pypi")
+    # Guard against private attribute changes across conda releases.
+    custom_url = getattr(context, "_custom_channels", {}).get("conda-pypi")
     short_pypi = Channel.make_simple_channel(context.channel_alias, custom_url, "conda-pypi")
 
     recognized = {
@@ -151,6 +152,8 @@ def _has_conda_pypi_channel() -> bool:
         (short_pypi.location, short_pypi.name),
     }
 
+    # Mirrors with different paths (e.g. Artifactory remotes) cannot be reliably
+    # identified without network calls, so they may still show the harmless tip.
     for ch in context.channels:
         channel = Channel(ch)
         for sub_channel in channel.channels:
