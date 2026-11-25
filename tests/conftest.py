@@ -139,3 +139,19 @@ def wheels_local_channel(tmp_path_factory, session_conda_cli):
     yield f"http://{host}:{port}"
 
     http.shutdown()
+
+
+@pytest.fixture
+def isolated_conda_context(monkeypatch):
+    """Isolate Conda channel and build settings with an empty context search path."""
+    for var in (
+        "CONDA_CHANNELS",
+        "CONDA_CHANNEL_ALIAS",
+        "CONDA_CUSTOM_CHANNELS",
+        "CONDA_CUSTOM_MULTICHANNELS",
+        "CONDA_DEFAULT_CHANNELS",
+        "CONDA_BUILD_STATE",
+    ):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("CONDA_PLUGINS_CONDA_PYPI_PIP_WARNING", "true")
+    reset_context([])
