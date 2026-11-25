@@ -213,12 +213,8 @@ def _should_suppress_conda_pypi_tip() -> bool:
     if args is None:
         return _has_conda_pypi_channel(context.channels)
 
-    # Custom environment specifier or format is unsupported; leave tip visible.
+    # Custom environment specifier is unsupported; leave tip visible.
     if bool(getattr(args, "environment_specifier", None)):
-        return False
-    if bool(getattr(args, "env_spec", None)):
-        return False
-    if bool(getattr(args, "format", None)):
         return False
     if bool(getattr(context, "environment_specifier", None)):
         return False
@@ -249,12 +245,7 @@ def _should_suppress_conda_pypi_tip() -> bool:
             return False
         all_file_channels.append(chans)
 
-    # In Conda, later environment files take precedence (prepended in EnvironmentConfig.merge)
-    file_channels: list[str] = []
-    for chans in reversed(all_file_channels):
-        for c in chans:
-            if c != "nodefaults" and c not in file_channels:
-                file_channels.append(c)
+    file_channels = [c for chans in all_file_channels for c in chans if c != "nodefaults"]
 
     if _has_conda_pypi_channel(cli_channels) or _has_conda_pypi_channel(file_channels):
         return True

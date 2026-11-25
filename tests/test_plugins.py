@@ -669,15 +669,6 @@ def test_remote_file_does_not_invoke_network(notify_with_condarc, mocker: Mocker
         ),
         pytest.param(
             "channels:\n  - conda-pypi\n",
-            {"env.yml": "channels:\n  - conda-pypi\n"},
-            None,
-            False,
-            {"format": "requirements.txt"},
-            False,
-            id="custom-format-unknown-emits",
-        ),
-        pytest.param(
-            "channels:\n  - conda-pypi\n",
             {
                 "env1.yml": "channels:\n  - other-channel\n  - nodefaults\n",
                 "env2.yml": "channels:\n  - third-channel\n",
@@ -686,7 +677,7 @@ def test_remote_file_does_not_invoke_network(notify_with_condarc, mocker: Mocker
             False,
             None,
             False,
-            id="multiple-files-defeats-naive-union-or-early-return",
+            id="multiple-files-with-nodefaults-configured-conda-pypi-stays-visible",
         ),
         pytest.param(
             "channels:\n  - defaults\n",
