@@ -7,6 +7,7 @@ from pathlib import Path
 
 from conda.base.context import context
 from conda.cli.main import main_subshell
+from conda.common.serialize import yaml
 from conda.core.path_actions import Action
 from conda.core.prefix_data import PrefixData
 from conda.exceptions import CondaError
@@ -14,6 +15,7 @@ from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PackageRecord
 from packaging.version import Version
+from ruamel.yaml.error import YAMLError
 
 from .python_paths import (
     ensure_externally_managed,
@@ -135,9 +137,11 @@ def pip_newly_linked(
     return "pip" in _package_names(link_precs) and "pip" not in _package_names(unlink_precs)
 
 
-def _has_conda_pypi_channel() -> bool:
-    """True if conda-pypi is already enabled in effective context.channels."""
-    if not context.channels:
+def _has_conda_pypi_channel(channels: Iterable[str | Channel] | None = None) -> bool:
+    """True if conda-pypi is enabled in the provided channels (defaults to context.channels)."""
+    if channels is None:
+        channels = context.channels
+    if not channels:
         return False
 
     public_pypi = Channel("https://conda.anaconda.org/conda-pypi")
@@ -154,12 +158,108 @@ def _has_conda_pypi_channel() -> bool:
 
     # Mirrors with different paths (e.g. Artifactory remotes) cannot be reliably
     # identified without network calls, so they may still show the harmless tip.
-    for ch in context.channels:
-        channel = Channel(ch)
+    for ch in channels:
+        channel = ch if isinstance(ch, Channel) else Channel(ch)
         for sub_channel in channel.channels:
             if (sub_channel.location, sub_channel.name) in recognized:
                 return True
     return False
+
+
+def _load_local_yaml_channels(path_str: str) -> list[str] | None:
+    """Read channel declarations from a local environment YAML file, expanding environment variables.
+
+    Returns a list of channel strings (empty list when 'channels' is omitted from a valid environment YAML),
+    or None if the path is remote, missing, unreadable, invalid YAML, or not a recognized environment specification.
+    """
+    if "://" in path_str:
+        return None
+    try:
+        p = Path(path_str)
+        if not p.is_file():
+            return None
+        content = p.read_bytes()
+        try:
+            text = content.decode("utf-8")
+        except UnicodeDecodeError:
+            text = content.decode("utf-16")
+        data = yaml.loads(text)
+    except (OSError, UnicodeDecodeError, YAMLError, ValueError, TypeError, CondaError):
+        return None
+
+    if not isinstance(data, dict):
+        return None
+
+    if "channels" in data:
+        raw_channels = data["channels"]
+        if not isinstance(raw_channels, (list, tuple)) or not all(
+            isinstance(c, str) for c in raw_channels
+        ):
+            return None
+        return [os.path.expandvars(c) for c in raw_channels]
+
+    # When 'channels' is omitted, only treat as known environment YAML if
+    # standard environment specification keys (such as 'dependencies') are present.
+    deps = data.get("dependencies")
+    if deps is not None and isinstance(deps, (list, tuple, dict)):
+        return []
+
+    return None
+
+
+def _should_suppress_conda_pypi_tip() -> bool:
+    """True if conda-pypi channel is enabled in effective CLI/file/context channels."""
+    args = getattr(context, "_argparse_args", None)
+    if args is None:
+        return _has_conda_pypi_channel(context.channels)
+
+    # Custom environment specifier is unsupported; leave tip visible.
+    if bool(getattr(args, "environment_specifier", None)):
+        return False
+    if bool(getattr(context, "environment_specifier", None)):
+        return False
+
+    raw_files = getattr(args, "file", None)
+    if raw_files is None or (isinstance(raw_files, (list, tuple)) and len(raw_files) == 0):
+        return _has_conda_pypi_channel(context.channels)
+
+    if isinstance(raw_files, (str, os.PathLike)):
+        filenames = [str(raw_files)]
+    elif isinstance(raw_files, (list, tuple)) and all(
+        isinstance(f, (str, os.PathLike)) for f in raw_files
+    ):
+        filenames = [str(f) for f in raw_files]
+    else:
+        # Unsupported argument shape; leave tip visible.
+        return False
+
+    cli_channels = list(getattr(args, "channel", None) or [])
+    if getattr(args, "override_channels", False):
+        return _has_conda_pypi_channel(cli_channels)
+
+    all_file_channels: list[list[str]] = []
+    for f in filenames:
+        chans = _load_local_yaml_channels(f)
+        if chans is None:
+            # File unreadable, malformed, remote, or not valid environment YAML; leave tip visible.
+            return False
+        all_file_channels.append(chans)
+
+    file_channels = [c for chans in all_file_channels for c in chans if c != "nodefaults"]
+
+    if _has_conda_pypi_channel(cli_channels) or _has_conda_pypi_channel(file_channels):
+        return True
+
+    has_nodefaults = any("nodefaults" in chans for chans in all_file_channels)
+    if has_nodefaults:
+        # When nodefaults is declared in YAML, configured channel retention is command-
+        # and version-dependent across Conda releases (e.g. 26.7.2 create retains context
+        # channels, while legacy 26.3.2 scalar env create and CEP-24 main exclude them).
+        # Without executing full solve or version-sniffing, this boundary is ambiguous;
+        # return False (UNKNOWN) to leave the tip visible safely.
+        return False
+
+    return _has_conda_pypi_channel(context.channels)
 
 
 def notify_conda_pypi_tip(
@@ -184,8 +284,8 @@ def notify_conda_pypi_tip(
     # Opt-out disables the tip; do not inspect channels if warning is disabled.
     if not context.plugins.conda_pypi_pip_warning:
         return
-    # Suppress tip when conda-pypi is already in effective channels.
-    if _has_conda_pypi_channel():
+    # Suppress tip when conda-pypi is enabled in effective command channels.
+    if _should_suppress_conda_pypi_tip():
         return
 
     logger.warning(
