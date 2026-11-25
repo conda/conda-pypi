@@ -1,0 +1,3 @@
+### Bug fixes
+
+* Suppress conda-pypi tip when conda-pypi is already configured as an effective channel. (conda/conda#16998)

@@ -10,6 +10,7 @@ from conda.cli.main import main_subshell
 from conda.core.path_actions import Action
 from conda.core.prefix_data import PrefixData
 from conda.exceptions import CondaError
+from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.models.records import PackageRecord
 from packaging.version import Version
@@ -134,6 +135,30 @@ def pip_newly_linked(
     return "pip" in _package_names(link_precs) and "pip" not in _package_names(unlink_precs)
 
 
+def _has_conda_pypi_channel() -> bool:
+    """True if conda-pypi is already enabled in effective context.channels."""
+    if not context.channels:
+        return False
+
+    public_pypi = Channel("https://conda.anaconda.org/conda-pypi")
+    # Read configured custom_channels mapping directly to avoid Conda's
+    # custom_channels property deriving short names from unrelated multichannels.
+    custom_url = context._custom_channels.get("conda-pypi")
+    short_pypi = Channel.make_simple_channel(context.channel_alias, custom_url, "conda-pypi")
+
+    recognized = {
+        (public_pypi.location, public_pypi.name),
+        (short_pypi.location, short_pypi.name),
+    }
+
+    for ch in context.channels:
+        channel = Channel(ch)
+        for sub_channel in channel.channels:
+            if (sub_channel.location, sub_channel.name) in recognized:
+                return True
+    return False
+
+
 def notify_conda_pypi_tip(
     target_prefix: str | None = None,
     link_precs: Iterable[PackageRecord] | None = None,
@@ -153,14 +178,19 @@ def notify_conda_pypi_tip(
     # Only when this transaction newly links pip (not upgrades or already-present pip).
     if not pip_newly_linked(link_precs, unlink_precs):
         return
+    # Opt-out disables the tip; do not inspect channels if warning is disabled.
+    if not context.plugins.conda_pypi_pip_warning:
+        return
+    # Suppress tip when conda-pypi is already in effective channels.
+    if _has_conda_pypi_channel():
+        return
 
-    if context.plugins.conda_pypi_pip_warning:
-        logger.warning(
-            "\n"
-            "  Did you know? You can install many PyPI packages with conda\n"
-            "  using conda-pypi. Get started:\n"
-            "    https://bit.ly/4xXYt0B\n"
-        )
+    logger.warning(
+        "\n"
+        "  Did you know? You can install many PyPI packages with conda\n"
+        "  using conda-pypi. Get started:\n"
+        "    https://bit.ly/4xXYt0B\n"
+    )
 
 
 class NotifyCondaPypiTipAction(Action):
